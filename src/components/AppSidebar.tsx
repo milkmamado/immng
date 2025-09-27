@@ -41,10 +41,10 @@ const managementItems = [
 ];
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { open } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
-  const isCollapsed = state === "collapsed";
+  const isCollapsed = !open;
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive 
