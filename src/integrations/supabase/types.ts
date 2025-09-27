@@ -59,6 +59,13 @@ export type Database = {
             foreignKeyName: "medical_info_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "patient_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_info_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patients"
             referencedColumns: ["id"]
           },
@@ -129,6 +136,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "packages_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_summary"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "packages_patient_id_fkey"
             columns: ["patient_id"]
@@ -273,6 +287,13 @@ export type Database = {
             foreignKeyName: "treatment_history_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "patient_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_history_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patients"
             referencedColumns: ["id"]
           },
@@ -304,9 +325,46 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      manager_stats: {
+        Row: {
+          email: string | null
+          id: string | null
+          manager_name: string | null
+          new_patients_this_month: number | null
+          total_outstanding: number | null
+          total_patients: number | null
+          total_revenue: number | null
+        }
+        Relationships: []
+      }
+      patient_summary: {
+        Row: {
+          age: number | null
+          assigned_manager: string | null
+          cancer_stage: string | null
+          cancer_type: string | null
+          created_at: string | null
+          first_visit_date: string | null
+          gender: string | null
+          id: string | null
+          manager_name: string | null
+          name: string | null
+          outstanding_balance: number | null
+          package_type: string | null
+          patient_number: string | null
+          phone: string | null
+          total_cost: number | null
+          updated_at: string | null
+          visit_type: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      generate_patient_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["user_role"]
