@@ -33,12 +33,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 .from('user_roles')
                 .select('role')
                 .eq('user_id', session.user.id)
+                .eq('approval_status', 'approved')
                 .single();
               
-              setUserRole(roleData?.role || 'manager');
+              setUserRole(roleData?.role || null);
             } catch (error) {
               console.error('역할 조회 실패:', error);
-              setUserRole('manager'); // 기본값
+              setUserRole(null); // 승인되지 않은 경우 null
             }
           }, 0);
         } else {
@@ -61,12 +62,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .from('user_roles')
               .select('role')
               .eq('user_id', session.user.id)
+              .eq('approval_status', 'approved')
               .single();
             
-            setUserRole(roleData?.role || 'manager');
+            setUserRole(roleData?.role || null);
           } catch (error) {
             console.error('역할 조회 실패:', error);
-            setUserRole('manager');
+            setUserRole(null);
           }
           setLoading(false);
         }, 0);
