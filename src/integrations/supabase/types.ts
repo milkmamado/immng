@@ -370,6 +370,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_master_access: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       generate_patient_number: {
         Args: Record<PropertyKey, never>
         Returns: string
