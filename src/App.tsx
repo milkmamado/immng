@@ -9,6 +9,8 @@ import Layout from "./components/Layout";
 import { Dashboard } from "./components/Dashboard";
 import Auth from "./pages/Auth";
 import AccountManagement from "./pages/AccountManagement";
+import PatientManagement from "./pages/PatientManagement";
+import PatientRegistration from "./pages/PatientRegistration";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,7 +54,7 @@ function AppRoutes() {
           path="/patients" 
           element={
             <ProtectedRoute>
-              <div className="p-6">환자 관리 페이지 (개발 예정)</div>
+              <PatientManagement />
             </ProtectedRoute>
           } 
         />
@@ -60,7 +62,7 @@ function AppRoutes() {
           path="/patients/new" 
           element={
             <ProtectedRoute>
-              <div className="p-6">신규 환자 등록 (개발 예정)</div>
+              <PatientRegistration />
             </ProtectedRoute>
           } 
         />
