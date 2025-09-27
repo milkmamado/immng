@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Layout from "./components/Layout";
 import { Dashboard } from "./components/Dashboard";
 import Auth from "./pages/Auth";
+import AccountManagement from "./pages/AccountManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -116,6 +117,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <div className="p-6">설정 (개발 예정)</div>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/account-management" 
+          element={
+            <ProtectedRoute requiredRole="master">
+              <AccountManagement />
             </ProtectedRoute>
           } 
         />

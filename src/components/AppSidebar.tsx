@@ -8,9 +8,11 @@ import {
   Home,
   UserPlus,
   ClipboardList,
-  Heart
+  Heart,
+  Shield
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 import {
   Sidebar,
@@ -40,8 +42,13 @@ const managementItems = [
   { title: "설정", url: "/settings", icon: Settings },
 ];
 
+const adminItems = [
+  { title: "계정 관리", url: "/account-management", icon: Shield, requiredRole: 'master' as const },
+];
+
 export function AppSidebar() {
   const { open } = useSidebar();
+  const { userRole } = useAuth();
   const location = useLocation();
   const currentPath = location.pathname;
   const isCollapsed = !open;
@@ -120,6 +127,34 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* 마스터 전용 메뉴 */}
+        {userRole === 'master' && (
+          <SidebarGroup className="mt-4">
+            <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground px-3">
+              {!isCollapsed && "시스템 관리"}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink 
+                        to={item.url} 
+                        end 
+                        className={getNavCls}
+                        title={isCollapsed ? item.title : undefined}
+                      >
+                        <item.icon className="h-4 w-4 flex-shrink-0 text-gray-600" />
+                        {!isCollapsed && <span className="ml-2 text-gray-800 font-medium">{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
     </Sidebar>
   );

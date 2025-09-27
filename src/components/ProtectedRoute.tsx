@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'master' | 'manager';
+  requiredRole?: 'master' | 'manager' | 'admin';
 }
 
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
@@ -33,9 +33,10 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
           <p className="text-muted-foreground mb-4">
             이 페이지에 접근할 권한이 없습니다.
             {requiredRole === 'master' && ' 마스터 권한이 필요합니다.'}
+            {requiredRole === 'admin' && ' 관리자 권한이 필요합니다.'}
           </p>
           <p className="text-sm text-muted-foreground">
-            현재 권한: {userRole === 'master' ? '마스터' : '매니저'}
+            현재 권한: {userRole === 'master' ? '마스터' : userRole === 'admin' ? '관리자' : '매니저'}
           </p>
         </div>
       </div>
