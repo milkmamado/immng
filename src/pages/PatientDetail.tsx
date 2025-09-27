@@ -5,7 +5,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,7 +42,7 @@ interface AdmissionCycle {
   cycle_number: number;
   admission_date: string;
   discharge_date?: string;
-  status: string; // 'admitted' | 'discharged'에서 string으로 변경
+  status: string;
   admission_type: string;
   discharge_reason?: string;
   created_at: string;
@@ -52,7 +51,7 @@ interface AdmissionCycle {
 interface PatientNote {
   id: string;
   admission_cycle_id?: string;
-  note_type: string; // 'general' | 'medical' | 'financial' | 'family'에서 string으로 변경
+  note_type: string;
   title?: string;
   content: string;
   is_important: boolean;
@@ -163,7 +162,7 @@ export default function PatientDetail() {
         setAdmissionCycles(cycleData || []);
       }
 
-      // 환자 메모 (간소화)
+      // 환자 메모
       const { data: noteData, error: noteError } = await supabase
         .from('patient_notes')
         .select('*')
@@ -173,10 +172,9 @@ export default function PatientDetail() {
       if (noteError && noteError.code !== 'PGRST116') {
         console.error('환자 메모 조회 실패:', noteError);
       } else {
-        // 생성자 이름은 일단 기본값으로 설정
         const notesWithCreatorNames = (noteData || []).map(note => ({
           ...note,
-          creator_name: '관리자' // 임시로 설정
+          creator_name: '관리자'
         }));
         setPatientNotes(notesWithCreatorNames);
       }
@@ -293,7 +291,7 @@ export default function PatientDetail() {
 
       setShowNewAdmissionModal(false);
       setNewAdmissionData({ admission_date: '', admission_type: '입원' });
-      fetchPatientData(); // 데이터 새로고침
+      fetchPatientData();
     } catch (error: any) {
       console.error('입원 등록 실패:', error);
       toast({
@@ -327,7 +325,7 @@ export default function PatientDetail() {
         description: "환자가 성공적으로 퇴원 처리되었습니다.",
       });
 
-      fetchPatientData(); // 데이터 새로고침
+      fetchPatientData();
     } catch (error: any) {
       console.error('퇴원 처리 실패:', error);
       toast({
@@ -369,7 +367,7 @@ export default function PatientDetail() {
         content: '',
         is_important: false
       });
-      fetchPatientData(); // 데이터 새로고침
+      fetchPatientData();
     } catch (error: any) {
       console.error('메모 추가 실패:', error);
       toast({
@@ -581,21 +579,160 @@ export default function PatientDetail() {
         </Card>
       </div>
 
-      {/* 상세 정보 탭 */}
-      <Tabs defaultValue="cycles" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="cycles">입퇴원 이력</TabsTrigger>
-          <TabsTrigger value="basic">기본 정보</TabsTrigger>
-          <TabsTrigger value="medical">의료 정보</TabsTrigger>
-          <TabsTrigger value="packages">패키지</TabsTrigger>
-          <TabsTrigger value="notes">메모/코멘트</TabsTrigger>
-        </TabsList>
+      {/* 상세 정보 그리드 레이아웃 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 왼쪽: 통합된 기본정보 + 의료정보 */}
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="w-5 h-5" />
+                환자 정보
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* 개인정보 섹션 */}
+              <div>
+                <h3 className="font-semibold text-sm mb-3 text-muted-foreground">개인 정보</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">나이</p>
+                    <p className="font-medium">{patient.age || '미등록'}세</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">성별</p>
+                    <p className="font-medium">{patient.gender || '미등록'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">연락처</p>
+                    <p className="font-medium">{patient.phone || '미등록'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">응급연락처</p>
+                    <p className="font-medium">{patient.emergency_contact || '미등록'}</p>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <p className="text-sm text-muted-foreground">주소</p>
+                  <p className="font-medium">{patient.address || '미등록'}</p>
+                </div>
+                
+                {/* 보호자 정보 */}
+                {(patient.guardian_name || patient.guardian_phone) && (
+                  <div className="mt-4 pt-4 border-t">
+                    <h4 className="font-medium text-sm mb-2">보호자 정보</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      {patient.guardian_name && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">보호자명</p>
+                          <p className="font-medium">{patient.guardian_name}</p>
+                        </div>
+                      )}
+                      {patient.guardian_relationship && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">관계</p>
+                          <p className="font-medium">{patient.guardian_relationship}</p>
+                        </div>
+                      )}
+                      {patient.guardian_phone && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">연락처</p>
+                          <p className="font-medium">{patient.guardian_phone}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
 
-        <TabsContent value="cycles">
+              {/* 의료정보 섹션 */}
+              <div className="pt-4 border-t">
+                <h3 className="font-semibold text-sm mb-3 text-muted-foreground">의료 정보</h3>
+                {medicalInfo.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">등록된 의료 정보가 없습니다.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {medicalInfo.map((info) => (
+                      <div key={info.id} className="space-y-3">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground">암 종류</p>
+                            <p className="font-medium">{info.cancer_type}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">병기</p>
+                            <p className="font-medium">{info.cancer_stage || '미등록'}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">주치의</p>
+                            <p className="font-medium">{info.primary_doctor || '미등록'}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">진단일</p>
+                            <p className="font-medium">
+                              {info.diagnosis_date ? format(new Date(info.diagnosis_date), 'yyyy-MM-dd') : '미등록'}
+                            </p>
+                          </div>
+                        </div>
+                        {info.metastasis_status && (
+                          <div>
+                            <p className="text-sm text-muted-foreground">전이 여부</p>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="destructive">전이 있음</Badge>
+                              {info.metastasis_sites && info.metastasis_sites.length > 0 && (
+                                <span className="text-sm">- {info.metastasis_sites.join(', ')}</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {info.biopsy_result && (
+                          <div>
+                            <p className="text-sm text-muted-foreground">조직검사 결과</p>
+                            <p className="font-medium">{info.biopsy_result}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 방문 정보 섹션 */}
+              <div className="pt-4 border-t">
+                <h3 className="font-semibold text-sm mb-3 text-muted-foreground">방문 정보</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">첫 방문일</p>
+                    <p className="font-medium">
+                      {patient.first_visit_date ? format(new Date(patient.first_visit_date), 'yyyy-MM-dd') : '미등록'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">방문 유형</p>
+                    <div className="flex items-center gap-2">
+                      {getVisitTypeBadge(patient.visit_type)}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">내원 경로</p>
+                    <p className="font-medium">{patient.referral_source || '미등록'}</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* 오른쪽: 입퇴원이력, 패키지, 메모/코멘트 */}
+        <div className="space-y-6">
+          {/* 입퇴원 이력 */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>입퇴원 이력</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  입퇴원 이력
+                </CardTitle>
                 <Dialog open={showNoteModal} onOpenChange={setShowNoteModal}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
@@ -634,10 +771,10 @@ export default function PatientDetail() {
                         <Label>메모 유형</Label>
                         <Select 
                           value={newNoteData.note_type} 
-          onValueChange={(value) => setNewNoteData({
-            ...newNoteData,
-            note_type: value
-          })}
+                          onValueChange={(value) => setNewNoteData({
+                            ...newNoteData,
+                            note_type: value
+                          })}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -747,39 +884,67 @@ export default function PatientDetail() {
                             )}
                           </div>
                         </div>
-                        
-                        {/* 해당 사이클의 패키지와 치료 이력 */}
-                        <div className="mt-4 pt-4 border-t">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 패키지 */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="w-5 h-5" />
+                패키지
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {packages.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>등록된 패키지가 없습니다.</p>
+                  </div>
+                ) : (
+                  packages.map((pkg) => (
+                    <Card key={pkg.id} className="border">
+                      <CardContent className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-semibold">{pkg.package_type}</h4>
+                            <Badge variant={pkg.outstanding_balance > 0 ? 'destructive' : 'secondary'}>
+                              {pkg.outstanding_balance > 0 ? '미납' : '완납'}
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
-                              <h4 className="font-medium text-sm mb-2">이 사이클의 패키지</h4>
-                              {packages.filter(pkg => pkg.admission_cycle_id === cycle.id).length === 0 ? (
-                                <p className="text-xs text-muted-foreground">등록된 패키지 없음</p>
-                              ) : (
-                                <div className="space-y-1">
-                                  {packages.filter(pkg => pkg.admission_cycle_id === cycle.id).map(pkg => (
-                                    <div key={pkg.id} className="text-xs">
-                                      {pkg.package_type} - {pkg.total_cost.toLocaleString()}원
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                              <p className="text-muted-foreground">총 비용</p>
+                              <p className="font-medium">{pkg.total_cost.toLocaleString()}원</p>
                             </div>
                             <div>
-                              <h4 className="font-medium text-sm mb-2">이 사이클의 치료</h4>
-                              {treatmentHistory.filter(t => t.admission_cycle_id === cycle.id).length === 0 ? (
-                                <p className="text-xs text-muted-foreground">등록된 치료 없음</p>
-                              ) : (
-                                <div className="space-y-1">
-                                  {treatmentHistory.filter(t => t.admission_cycle_id === cycle.id).map(treatment => (
-                                    <div key={treatment.id} className="text-xs">
-                                      {treatment.treatment_name}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                              <p className="text-muted-foreground">환자 부담</p>
+                              <p className="font-medium">{pkg.patient_payment.toLocaleString()}원</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground">미납금</p>
+                              <p className="font-medium text-destructive">{pkg.outstanding_balance.toLocaleString()}원</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground">기간</p>
+                              <p className="font-medium">
+                                {format(new Date(pkg.start_date), 'MM/dd')} - {format(new Date(pkg.end_date), 'MM/dd')}
+                              </p>
                             </div>
                           </div>
+                          {pkg.admission_cycle_id && (
+                            <div className="pt-2">
+                              <Badge variant="outline" className="text-xs">
+                                {admissionCycles.find(c => c.id === pkg.admission_cycle_id)?.cycle_number}차 입원
+                              </Badge>
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -788,12 +953,14 @@ export default function PatientDetail() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="notes">
+          {/* 메모/코멘트 */}
           <Card>
             <CardHeader>
-              <CardTitle>메모 & 코멘트</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" />
+                메모/코멘트
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -839,189 +1006,8 @@ export default function PatientDetail() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        {/* 기존 탭들 유지 */}
-        <TabsContent value="basic">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>개인 정보</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">나이</p>
-                    <p className="font-medium">{patient.age || '미등록'}세</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">성별</p>
-                    <p className="font-medium">{patient.gender || '미등록'}</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">연락처</p>
-                  <p className="font-medium">{patient.phone || '미등록'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">응급연락처</p>
-                  <p className="font-medium">{patient.emergency_contact || '미등록'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">주소</p>
-                  <p className="font-medium">{patient.address || '미등록'}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>보호자 정보</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">보호자명</p>
-                  <p className="font-medium">{patient.guardian_name || '미등록'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">관계</p>
-                  <p className="font-medium">{patient.guardian_relationship || '미등록'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">연락처</p>
-                  <p className="font-medium">{patient.guardian_phone || '미등록'}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="medical">
-          <div className="space-y-4">
-            {medicalInfo.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-lg text-muted-foreground">등록된 의료 정보가 없습니다.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              medicalInfo.map((info) => (
-                <Card key={info.id}>
-                  <CardHeader>
-                    <CardTitle>의료 정보</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      등록일: {format(new Date(info.created_at), 'yyyy-MM-dd HH:mm')}
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">암 종류</p>
-                        <p className="font-medium">{info.cancer_type}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">병기</p>
-                        <p className="font-medium">{info.cancer_stage || '미등록'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">주치의</p>
-                        <p className="font-medium">{info.primary_doctor || '미등록'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">진단일</p>
-                        <p className="font-medium">
-                          {info.diagnosis_date ? 
-                            format(new Date(info.diagnosis_date), 'yyyy-MM-dd') : 
-                            '미등록'
-                          }
-                        </p>
-                      </div>
-                    </div>
-                    {info.biopsy_result && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">조직검사 결과</p>
-                        <p className="font-medium">{info.biopsy_result}</p>
-                      </div>
-                    )}
-                    {info.metastasis_sites && info.metastasis_sites.length > 0 && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">전이 부위</p>
-                        <p className="font-medium">{info.metastasis_sites.join(', ')}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="packages">
-          <div className="space-y-4">
-            {packages.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-lg text-muted-foreground">등록된 패키지가 없습니다.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              packages.map((pkg) => (
-                <Card key={pkg.id}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <span>{pkg.package_type}</span>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={pkg.outstanding_balance > 0 ? "destructive" : "secondary"}>
-                          {pkg.outstanding_balance > 0 ? "미납" : "완납"}
-                        </Badge>
-                        {pkg.admission_cycle_id && (
-                          <Badge variant="outline">
-                            {admissionCycles.find(c => c.id === pkg.admission_cycle_id)?.cycle_number}차 입원
-                          </Badge>
-                        )}
-                      </div>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">총 비용</p>
-                        <p className="font-medium">{pkg.total_cost.toLocaleString()}원</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">환자 부담금</p>
-                        <p className="font-medium">{pkg.patient_payment.toLocaleString()}원</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">미납액</p>
-                        <p className="font-medium text-destructive">{pkg.outstanding_balance.toLocaleString()}원</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">시작일</p>
-                        <p className="font-medium">{format(new Date(pkg.start_date), 'yyyy-MM-dd')}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">종료일</p>
-                        <p className="font-medium">{format(new Date(pkg.end_date), 'yyyy-MM-dd')}</p>
-                      </div>
-                    </div>
-                    {pkg.insurance_type && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">보험 종류</p>
-                        <p className="font-medium">{pkg.insurance_type}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   );
 }
