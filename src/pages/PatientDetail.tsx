@@ -346,7 +346,7 @@ export default function PatientDetail() {
         .from('patient_notes')
         .insert({
           patient_id: patient.id,
-          admission_cycle_id: newNoteData.admission_cycle_id || null,
+          admission_cycle_id: newNoteData.admission_cycle_id === "all" ? null : newNoteData.admission_cycle_id,
           note_type: newNoteData.note_type,
           title: newNoteData.title || null,
           content: newNoteData.content,
@@ -621,7 +621,7 @@ export default function PatientDetail() {
                             <SelectValue placeholder="전체 환자 메모" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">전체 환자 메모</SelectItem>
+                            <SelectItem value="all">전체 환자 메모</SelectItem>
                             {admissionCycles.map((cycle) => (
                               <SelectItem key={cycle.id} value={cycle.id}>
                                 {cycle.cycle_number}차 입원 ({format(new Date(cycle.admission_date), 'yyyy-MM-dd')})
