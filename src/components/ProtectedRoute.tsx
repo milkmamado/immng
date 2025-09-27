@@ -25,29 +25,6 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     return <Navigate to="/auth" replace />;
   }
 
-  // 승인되지 않은 사용자 차단
-  if (!userRole) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-md">
-          <h1 className="text-2xl font-bold mb-4 text-destructive">승인 대기 중</h1>
-          <p className="text-muted-foreground mb-4">
-            계정이 아직 승인되지 않았습니다. 관리자의 승인을 기다려주세요.
-          </p>
-          <p className="text-sm text-muted-foreground mb-6">
-            승인이 완료되면 로그인할 수 있습니다.
-          </p>
-          <button 
-            onClick={() => window.location.href = "/auth"}
-            className="text-primary hover:underline"
-          >
-            로그인 페이지로 돌아가기
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   if (requiredRole && userRole !== requiredRole) {
     return (
       <div className="min-h-screen flex items-center justify-center">

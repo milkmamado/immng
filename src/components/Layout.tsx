@@ -21,6 +21,38 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const { user, userRole, signOut } = useAuth();
 
+  // 승인되지 않은 사용자에게는 Layout 숨김
+  if (user && !userRole) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center max-w-md space-y-6">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-primary">승인 대기 중</h1>
+            <p className="text-muted-foreground">
+              계정이 아직 승인되지 않았습니다.
+            </p>
+          </div>
+          
+          <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+            <p className="text-sm text-muted-foreground">
+              관리자의 승인을 기다려주세요.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              승인이 완료되면 시스템을 이용하실 수 있습니다.
+            </p>
+          </div>
+
+          <button 
+            onClick={signOut}
+            className="text-primary hover:underline text-sm"
+          >
+            다른 계정으로 로그인하기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -40,11 +72,21 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   const getRoleDisplayName = () => {
-    return userRole === 'master' ? '마스터' : '매니저';
+    switch (userRole) {
+      case 'master': return '마스터';
+      case 'admin': return '관리자';
+      case 'manager': return '매니저';
+      default: return '사용자';
+    }
   };
 
   const getRoleIcon = () => {
-    return userRole === 'master' ? Crown : UserCheck;
+    switch (userRole) {
+      case 'master': return Crown;
+      case 'admin': return UserCheck;
+      case 'manager': return User;
+      default: return User;
+    }
   };
 
   return (
