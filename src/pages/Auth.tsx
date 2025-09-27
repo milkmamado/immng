@@ -183,13 +183,6 @@ export default function Auth() {
               {isLogin ? '계정이 없으신가요? 회원가입' : '이미 계정이 있으신가요? 로그인'}
             </button>
           </div>
-
-          {/* 개발용 테스트 계정 정보 */}
-          <div className="mt-4 p-3 bg-muted rounded-lg text-xs text-muted-foreground">
-            <div className="font-medium mb-1">개발용 테스트:</div>
-            <div>마스터: master@test.com / 123456</div>
-            <div>매니저: manager@test.com / 123456</div>
-          </div>
         </CardContent>
       </Card>
     </div>
