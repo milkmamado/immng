@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Edit, User, FileText, Package, History, Calendar } from 'lucide-react';
+import { ArrowLeft, Edit, User, FileText, Package, History, Calendar, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface PatientDetail {
@@ -149,6 +149,37 @@ export default function PatientDetail() {
     }
   };
 
+  const handleDeletePatient = async () => {
+    if (!patient) return;
+    
+    if (!window.confirm(`정말로 ${patient.name} 환자를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없으며, 관련된 모든 데이터가 함께 삭제됩니다.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .delete()
+        .eq('id', patient.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "삭제 완료",
+        description: `${patient.name} 환자가 성공적으로 삭제되었습니다.`,
+      });
+
+      navigate('/patients');
+    } catch (error: any) {
+      console.error('환자 삭제 실패:', error);
+      toast({
+        variant: "destructive",
+        title: "삭제 실패",
+        description: "환자 삭제 중 오류가 발생했습니다.",
+      });
+    }
+  };
+
   useEffect(() => {
     fetchPatientData();
   }, [id]);
@@ -193,7 +224,7 @@ export default function PatientDetail() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" onClick={() => navigate('/patients')}>
             <ArrowLeft className="w-4 h-4" />
@@ -214,6 +245,14 @@ export default function PatientDetail() {
         <Button variant="outline" className="flex items-center gap-2">
           <Edit className="w-4 h-4" />
           정보 수정
+        </Button>
+        <Button 
+          variant="destructive" 
+          onClick={() => handleDeletePatient()}
+          className="flex items-center gap-2"
+        >
+          <Trash2 className="w-4 h-4" />
+          환자 삭제
         </Button>
       </div>
 

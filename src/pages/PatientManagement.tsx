@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, User, Calendar, Package, History, CreditCard } from 'lucide-react';
+import { Search, Plus, User, Calendar, Package, History, CreditCard, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
@@ -115,6 +115,35 @@ export default function PatientManagement() {
   const handleQuickReadmission = async (patient: Patient) => {
     // 재입원 처리 로직 - 기존 정보를 복사해서 새로운 입원 등록
     navigate(`/patients/readmission/${patient.id}`);
+  };
+
+  const handleDeletePatient = async (patientId: string, patientName: string) => {
+    if (!window.confirm(`정말로 ${patientName} 환자를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없으며, 관련된 모든 데이터가 함께 삭제됩니다.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .delete()
+        .eq('id', patientId);
+
+      if (error) throw error;
+
+      toast({
+        title: "삭제 완료",
+        description: `${patientName} 환자가 성공적으로 삭제되었습니다.`,
+      });
+
+      fetchPatients(); // 목록 새로고침
+    } catch (error: any) {
+      console.error('환자 삭제 실패:', error);
+      toast({
+        variant: "destructive",
+        title: "삭제 실패",
+        description: "환자 삭제 중 오류가 발생했습니다.",
+      });
+    }
   };
 
   if (loading) {
@@ -311,6 +340,15 @@ export default function PatientManagement() {
                     >
                       <Plus className="w-4 h-4" />
                       재입원
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={() => handleDeletePatient(patient.id, patient.name)}
+                      className="flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      삭제
                     </Button>
                   </div>
                 </div>
