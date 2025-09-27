@@ -1,14 +1,52 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Bell, Search, User } from "lucide-react";
+import { Bell, Search, User, LogOut, Crown, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 export default function Layout({ children }: LayoutProps) {
+  const { user, userRole, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('로그아웃 오류:', error);
+    }
+  };
+
+  const getUserDisplayName = () => {
+    if (user?.user_metadata?.name) {
+      return user.user_metadata.name;
+    }
+    if (user?.email) {
+      return user.email.split('@')[0];
+    }
+    return '사용자';
+  };
+
+  const getRoleDisplayName = () => {
+    return userRole === 'master' ? '마스터' : '매니저';
+  };
+
+  const getRoleIcon = () => {
+    return userRole === 'master' ? Crown : UserCheck;
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -34,13 +72,49 @@ export default function Layout({ children }: LayoutProps) {
                 <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full text-xs"></span>
               </Button>
               
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary">
-                <User className="h-4 w-4" />
-                <div className="text-sm">
-                  <div className="font-medium">김한의</div>
-                  <div className="text-xs text-muted-foreground">원장</div>
-                </div>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2 px-3 py-2 h-auto">
+                    <User className="h-4 w-4" />
+                    <div className="text-sm text-left">
+                      <div className="font-medium">{getUserDisplayName()}</div>
+                      <div className="flex items-center gap-1">
+                        {(() => {
+                          const RoleIcon = getRoleIcon();
+                          return <RoleIcon className="h-3 w-3" />;
+                        })()}
+                        <span className="text-xs text-muted-foreground">{getRoleDisplayName()}</span>
+                      </div>
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">{getUserDisplayName()}</p>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={userRole === 'master' ? 'default' : 'secondary'} className="text-xs">
+                          {(() => {
+                            const RoleIcon = getRoleIcon();
+                            return (
+                              <>
+                                <RoleIcon className="h-3 w-3 mr-1" />
+                                {getRoleDisplayName()}
+                              </>
+                            );
+                          })()}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{user?.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    로그아웃
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
 
