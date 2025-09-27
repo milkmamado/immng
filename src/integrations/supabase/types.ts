@@ -14,16 +14,309 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      medical_info: {
+        Row: {
+          biopsy_result: string | null
+          cancer_stage: string | null
+          cancer_type: string
+          created_at: string
+          diagnosis_date: string | null
+          id: string
+          metastasis_sites: string[] | null
+          metastasis_status: boolean | null
+          patient_id: string
+          primary_doctor: string | null
+          updated_at: string
+        }
+        Insert: {
+          biopsy_result?: string | null
+          cancer_stage?: string | null
+          cancer_type: string
+          created_at?: string
+          diagnosis_date?: string | null
+          id?: string
+          metastasis_sites?: string[] | null
+          metastasis_status?: boolean | null
+          patient_id: string
+          primary_doctor?: string | null
+          updated_at?: string
+        }
+        Update: {
+          biopsy_result?: string | null
+          cancer_stage?: string | null
+          cancer_type?: string
+          created_at?: string
+          diagnosis_date?: string | null
+          id?: string
+          metastasis_sites?: string[] | null
+          metastasis_status?: boolean | null
+          patient_id?: string
+          primary_doctor?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_info_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      packages: {
+        Row: {
+          created_at: string
+          end_date: string
+          has_private_insurance: boolean | null
+          id: string
+          included_treatments: string[] | null
+          insurance_coverage: number | null
+          insurance_limit: number | null
+          insurance_type: string | null
+          insurance_used: number | null
+          outstanding_balance: number | null
+          package_amount: number
+          package_type: string
+          patient_id: string
+          patient_payment: number
+          payment_date: string | null
+          payment_method: string | null
+          start_date: string
+          total_cost: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          has_private_insurance?: boolean | null
+          id?: string
+          included_treatments?: string[] | null
+          insurance_coverage?: number | null
+          insurance_limit?: number | null
+          insurance_type?: string | null
+          insurance_used?: number | null
+          outstanding_balance?: number | null
+          package_amount: number
+          package_type: string
+          patient_id: string
+          patient_payment: number
+          payment_date?: string | null
+          payment_method?: string | null
+          start_date: string
+          total_cost: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          has_private_insurance?: boolean | null
+          id?: string
+          included_treatments?: string[] | null
+          insurance_coverage?: number | null
+          insurance_limit?: number | null
+          insurance_type?: string | null
+          insurance_used?: number | null
+          outstanding_balance?: number | null
+          package_amount?: number
+          package_type?: string
+          patient_id?: string
+          patient_payment?: number
+          payment_date?: string | null
+          payment_method?: string | null
+          start_date?: string
+          total_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "packages_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          address: string | null
+          admission_date: string | null
+          age: number | null
+          assigned_manager: string
+          created_at: string
+          discharge_date: string | null
+          emergency_contact: string | null
+          first_visit_date: string | null
+          gender: string | null
+          guardian_name: string | null
+          guardian_phone: string | null
+          guardian_relationship: string | null
+          id: string
+          name: string
+          patient_number: string
+          phone: string | null
+          referral_source: string | null
+          resident_number_masked: string | null
+          updated_at: string
+          visit_type: string | null
+        }
+        Insert: {
+          address?: string | null
+          admission_date?: string | null
+          age?: number | null
+          assigned_manager: string
+          created_at?: string
+          discharge_date?: string | null
+          emergency_contact?: string | null
+          first_visit_date?: string | null
+          gender?: string | null
+          guardian_name?: string | null
+          guardian_phone?: string | null
+          guardian_relationship?: string | null
+          id?: string
+          name: string
+          patient_number: string
+          phone?: string | null
+          referral_source?: string | null
+          resident_number_masked?: string | null
+          updated_at?: string
+          visit_type?: string | null
+        }
+        Update: {
+          address?: string | null
+          admission_date?: string | null
+          age?: number | null
+          assigned_manager?: string
+          created_at?: string
+          discharge_date?: string | null
+          emergency_contact?: string | null
+          first_visit_date?: string | null
+          gender?: string | null
+          guardian_name?: string | null
+          guardian_phone?: string | null
+          guardian_relationship?: string | null
+          id?: string
+          name?: string
+          patient_number?: string
+          phone?: string | null
+          referral_source?: string | null
+          resident_number_masked?: string | null
+          updated_at?: string
+          visit_type?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      treatment_history: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          hospital_name: string | null
+          id: string
+          notes: string | null
+          patient_id: string
+          start_date: string | null
+          treatment_name: string
+          treatment_type: string
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          hospital_name?: string | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          start_date?: string | null
+          treatment_name: string
+          treatment_type: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          hospital_name?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          start_date?: string | null
+          treatment_name?: string
+          treatment_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_history_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          assigned_by: string | null
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["user_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "master" | "manager"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +443,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["master", "manager"],
+    },
   },
 } as const
