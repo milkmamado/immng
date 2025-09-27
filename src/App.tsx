@@ -11,6 +11,8 @@ import Auth from "./pages/Auth";
 import AccountManagement from "./pages/AccountManagement";
 import PatientManagement from "./pages/PatientManagement";
 import PatientRegistration from "./pages/PatientRegistration";
+import PatientDetail from "./pages/PatientDetail";
+import PatientReadmission from "./pages/PatientReadmission";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -63,6 +65,22 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <PatientRegistration />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/patients/:id" 
+          element={
+            <ProtectedRoute>
+              <PatientDetail />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/patients/readmission/:id" 
+          element={
+            <ProtectedRoute>
+              <PatientReadmission />
             </ProtectedRoute>
           } 
         />
