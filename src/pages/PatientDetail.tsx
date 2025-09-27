@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Edit, User, FileText, Package, History, Calendar, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit, User, FileText, Package, History, Calendar, Trash2, Plus, MessageSquare, CheckCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface PatientDetail {
@@ -32,6 +38,29 @@ interface PatientDetail {
   updated_at: string;
 }
 
+interface AdmissionCycle {
+  id: string;
+  cycle_number: number;
+  admission_date: string;
+  discharge_date?: string;
+  status: string; // 'admitted' | 'discharged'에서 string으로 변경
+  admission_type: string;
+  discharge_reason?: string;
+  created_at: string;
+}
+
+interface PatientNote {
+  id: string;
+  admission_cycle_id?: string;
+  note_type: string; // 'general' | 'medical' | 'financial' | 'family'에서 string으로 변경
+  title?: string;
+  content: string;
+  is_important: boolean;
+  created_by: string;
+  created_at: string;
+  creator_name?: string;
+}
+
 interface MedicalInfo {
   id: string;
   cancer_type: string;
@@ -41,6 +70,7 @@ interface MedicalInfo {
   metastasis_status?: boolean;
   metastasis_sites?: string[];
   biopsy_result?: string;
+  admission_cycle_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -59,6 +89,7 @@ interface Package {
   end_date: string;
   payment_date?: string;
   payment_method?: string;
+  admission_cycle_id?: string;
   created_at: string;
 }
 
@@ -70,19 +101,40 @@ interface TreatmentHistory {
   end_date?: string;
   hospital_name?: string;
   notes?: string;
+  admission_cycle_id?: string;
   created_at: string;
 }
 
 export default function PatientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(true);
   const [patient, setPatient] = useState<PatientDetail | null>(null);
+  const [admissionCycles, setAdmissionCycles] = useState<AdmissionCycle[]>([]);
+  const [patientNotes, setPatientNotes] = useState<PatientNote[]>([]);
   const [medicalInfo, setMedicalInfo] = useState<MedicalInfo[]>([]);
   const [packages, setPackages] = useState<Package[]>([]);
   const [treatmentHistory, setTreatmentHistory] = useState<TreatmentHistory[]>([]);
+  
+  // 새 입원 등록 모달
+  const [showNewAdmissionModal, setShowNewAdmissionModal] = useState(false);
+  const [newAdmissionData, setNewAdmissionData] = useState({
+    admission_date: '',
+    admission_type: '입원'
+  });
+  
+  // 메모 추가 모달
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [newNoteData, setNewNoteData] = useState({
+    admission_cycle_id: '',
+    note_type: 'general',
+    title: '',
+    content: '',
+    is_important: false
+  });
 
   const fetchPatientData = async () => {
     if (!id) return;
@@ -97,6 +149,37 @@ export default function PatientDetail() {
 
       if (patientError) throw patientError;
       setPatient(patientData);
+
+      // 입퇴원 사이클
+      const { data: cycleData, error: cycleError } = await supabase
+        .from('admission_cycles')
+        .select('*')
+        .eq('patient_id', id)
+        .order('cycle_number', { ascending: false });
+
+      if (cycleError && cycleError.code !== 'PGRST116') {
+        console.error('입퇴원 사이클 조회 실패:', cycleError);
+      } else {
+        setAdmissionCycles(cycleData || []);
+      }
+
+      // 환자 메모 (간소화)
+      const { data: noteData, error: noteError } = await supabase
+        .from('patient_notes')
+        .select('*')
+        .eq('patient_id', id)
+        .order('created_at', { ascending: false });
+
+      if (noteError && noteError.code !== 'PGRST116') {
+        console.error('환자 메모 조회 실패:', noteError);
+      } else {
+        // 생성자 이름은 일단 기본값으로 설정
+        const notesWithCreatorNames = (noteData || []).map(note => ({
+          ...note,
+          creator_name: '관리자' // 임시로 설정
+        }));
+        setPatientNotes(notesWithCreatorNames);
+      }
 
       // 의료 정보
       const { data: medicalData, error: medicalError } = await supabase
@@ -180,6 +263,123 @@ export default function PatientDetail() {
     }
   };
 
+  const handleNewAdmission = async () => {
+    if (!patient || !newAdmissionData.admission_date) return;
+
+    try {
+      // 다음 사이클 번호 가져오기
+      const { data: nextCycleNumber, error: cycleError } = await supabase
+        .rpc('get_next_cycle_number', { patient_uuid: patient.id });
+
+      if (cycleError) throw cycleError;
+
+      // 새 입원 사이클 생성
+      const { error: insertError } = await supabase
+        .from('admission_cycles')
+        .insert({
+          patient_id: patient.id,
+          cycle_number: nextCycleNumber,
+          admission_date: newAdmissionData.admission_date,
+          admission_type: newAdmissionData.admission_type,
+          status: 'admitted'
+        });
+
+      if (insertError) throw insertError;
+
+      toast({
+        title: "입원 등록 완료",
+        description: `${patient.name} 환자의 ${nextCycleNumber}차 입원이 등록되었습니다.`,
+      });
+
+      setShowNewAdmissionModal(false);
+      setNewAdmissionData({ admission_date: '', admission_type: '입원' });
+      fetchPatientData(); // 데이터 새로고침
+    } catch (error: any) {
+      console.error('입원 등록 실패:', error);
+      toast({
+        variant: "destructive",
+        title: "입원 등록 실패",
+        description: "입원 등록 중 오류가 발생했습니다.",
+      });
+    }
+  };
+
+  const handleDischarge = async (cycleId: string) => {
+    const dischargeDate = window.prompt('퇴원일을 입력하세요 (YYYY-MM-DD 형식):');
+    if (!dischargeDate) return;
+
+    const dischargeReason = window.prompt('퇴원 사유를 입력하세요 (선택사항):');
+
+    try {
+      const { error } = await supabase
+        .from('admission_cycles')
+        .update({
+          discharge_date: dischargeDate,
+          discharge_reason: dischargeReason || null,
+          status: 'discharged'
+        })
+        .eq('id', cycleId);
+
+      if (error) throw error;
+
+      toast({
+        title: "퇴원 처리 완료",
+        description: "환자가 성공적으로 퇴원 처리되었습니다.",
+      });
+
+      fetchPatientData(); // 데이터 새로고침
+    } catch (error: any) {
+      console.error('퇴원 처리 실패:', error);
+      toast({
+        variant: "destructive",
+        title: "퇴원 처리 실패",
+        description: "퇴원 처리 중 오류가 발생했습니다.",
+      });
+    }
+  };
+
+  const handleAddNote = async () => {
+    if (!patient || !newNoteData.content.trim() || !user) return;
+
+    try {
+      const { error } = await supabase
+        .from('patient_notes')
+        .insert({
+          patient_id: patient.id,
+          admission_cycle_id: newNoteData.admission_cycle_id || null,
+          note_type: newNoteData.note_type,
+          title: newNoteData.title || null,
+          content: newNoteData.content,
+          is_important: newNoteData.is_important,
+          created_by: user.id
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "메모 추가 완료",
+        description: "새로운 메모가 추가되었습니다.",
+      });
+
+      setShowNoteModal(false);
+      setNewNoteData({
+        admission_cycle_id: '',
+        note_type: 'general',
+        title: '',
+        content: '',
+        is_important: false
+      });
+      fetchPatientData(); // 데이터 새로고침
+    } catch (error: any) {
+      console.error('메모 추가 실패:', error);
+      toast({
+        variant: "destructive",
+        title: "메모 추가 실패",
+        description: "메모 추가 중 오류가 발생했습니다.",
+      });
+    }
+  };
+
   useEffect(() => {
     fetchPatientData();
   }, [id]);
@@ -198,6 +398,26 @@ export default function PatientDetail() {
         {visitType}
       </Badge>
     );
+  };
+
+  const getNoteTypeColor = (noteType: string) => {
+    const colors = {
+      general: 'bg-blue-50 border-blue-200',
+      medical: 'bg-red-50 border-red-200',
+      financial: 'bg-green-50 border-green-200',
+      family: 'bg-purple-50 border-purple-200'
+    };
+    return colors[noteType as keyof typeof colors] || 'bg-gray-50 border-gray-200';
+  };
+
+  const getNoteTypeLabel = (noteType: string) => {
+    const labels = {
+      general: '일반',
+      medical: '의료',
+      financial: '재무',
+      family: '가족'
+    };
+    return labels[noteType as keyof typeof labels] || noteType;
   };
 
   if (loading) {
@@ -224,7 +444,7 @@ export default function PatientDetail() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* 헤더 */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" onClick={() => navigate('/patients')}>
             <ArrowLeft className="w-4 h-4" />
@@ -242,18 +462,78 @@ export default function PatientDetail() {
             </div>
           </div>
         </div>
-        <Button variant="outline" className="flex items-center gap-2">
-          <Edit className="w-4 h-4" />
-          정보 수정
-        </Button>
-        <Button 
-          variant="destructive" 
-          onClick={() => handleDeletePatient()}
-          className="flex items-center gap-2"
-        >
-          <Trash2 className="w-4 h-4" />
-          환자 삭제
-        </Button>
+        <div className="flex items-center gap-2">
+          <Dialog open={showNewAdmissionModal} onOpenChange={setShowNewAdmissionModal}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                새 입원 등록
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>새 입원 등록</DialogTitle>
+                <DialogDescription>
+                  {patient.name} 환자의 새로운 입원을 등록합니다.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="admission_date">입원일</Label>
+                  <Input
+                    id="admission_date"
+                    type="date"
+                    value={newAdmissionData.admission_date}
+                    onChange={(e) => setNewAdmissionData({
+                      ...newAdmissionData,
+                      admission_date: e.target.value
+                    })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="admission_type">입원 유형</Label>
+                  <Select 
+                    value={newAdmissionData.admission_type} 
+                    onValueChange={(value) => setNewAdmissionData({
+                      ...newAdmissionData,
+                      admission_type: value
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="입원">입원</SelectItem>
+                      <SelectItem value="외래">외래</SelectItem>
+                      <SelectItem value="응급">응급</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setShowNewAdmissionModal(false)}>
+                    취소
+                  </Button>
+                  <Button onClick={handleNewAdmission}>
+                    등록
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
+          <Button variant="outline" className="flex items-center gap-2">
+            <Edit className="w-4 h-4" />
+            정보 수정
+          </Button>
+          <Button 
+            variant="destructive" 
+            onClick={() => handleDeletePatient()}
+            className="flex items-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            환자 삭제
+          </Button>
+        </div>
       </div>
 
       {/* 기본 정보 요약 */}
@@ -262,13 +542,8 @@ export default function PatientDetail() {
           <CardContent className="p-4">
             <div className="text-center">
               <Calendar className="w-6 h-6 mx-auto text-blue-500 mb-2" />
-              <p className="text-sm text-muted-foreground">첫 방문일</p>
-              <p className="font-semibold">
-                {patient.first_visit_date ? 
-                  format(new Date(patient.first_visit_date), 'yyyy-MM-dd') : 
-                  '미등록'
-                }
-              </p>
+              <p className="text-sm text-muted-foreground">총 입원 횟수</p>
+              <p className="font-semibold">{admissionCycles.length}회</p>
             </div>
           </CardContent>
         </Card>
@@ -286,9 +561,9 @@ export default function PatientDetail() {
         <Card>
           <CardContent className="p-4">
             <div className="text-center">
-              <History className="w-6 h-6 mx-auto text-orange-500 mb-2" />
-              <p className="text-sm text-muted-foreground">치료 이력</p>
-              <p className="font-semibold">{treatmentHistory.length}건</p>
+              <MessageSquare className="w-6 h-6 mx-auto text-orange-500 mb-2" />
+              <p className="text-sm text-muted-foreground">메모/코멘트</p>
+              <p className="font-semibold">{patientNotes.length}개</p>
             </div>
           </CardContent>
         </Card>
@@ -307,14 +582,266 @@ export default function PatientDetail() {
       </div>
 
       {/* 상세 정보 탭 */}
-      <Tabs defaultValue="basic" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="cycles" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="cycles">입퇴원 이력</TabsTrigger>
           <TabsTrigger value="basic">기본 정보</TabsTrigger>
           <TabsTrigger value="medical">의료 정보</TabsTrigger>
           <TabsTrigger value="packages">패키지</TabsTrigger>
-          <TabsTrigger value="treatment">치료 이력</TabsTrigger>
+          <TabsTrigger value="notes">메모/코멘트</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="cycles">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>입퇴원 이력</CardTitle>
+                <Dialog open={showNoteModal} onOpenChange={setShowNoteModal}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      메모 추가
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>메모 추가</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>입원 사이클 (선택사항)</Label>
+                        <Select 
+                          value={newNoteData.admission_cycle_id} 
+                          onValueChange={(value) => setNewNoteData({
+                            ...newNoteData,
+                            admission_cycle_id: value
+                          })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="전체 환자 메모" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">전체 환자 메모</SelectItem>
+                            {admissionCycles.map((cycle) => (
+                              <SelectItem key={cycle.id} value={cycle.id}>
+                                {cycle.cycle_number}차 입원 ({format(new Date(cycle.admission_date), 'yyyy-MM-dd')})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>메모 유형</Label>
+                        <Select 
+                          value={newNoteData.note_type} 
+          onValueChange={(value) => setNewNoteData({
+            ...newNoteData,
+            note_type: value
+          })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="general">일반</SelectItem>
+                            <SelectItem value="medical">의료</SelectItem>
+                            <SelectItem value="financial">재무</SelectItem>
+                            <SelectItem value="family">가족</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>제목 (선택사항)</Label>
+                        <Input
+                          value={newNoteData.title}
+                          onChange={(e) => setNewNoteData({
+                            ...newNoteData,
+                            title: e.target.value
+                          })}
+                          placeholder="메모 제목"
+                        />
+                      </div>
+                      <div>
+                        <Label>내용</Label>
+                        <Textarea
+                          value={newNoteData.content}
+                          onChange={(e) => setNewNoteData({
+                            ...newNoteData,
+                            content: e.target.value
+                          })}
+                          placeholder="메모 내용을 입력하세요..."
+                          rows={4}
+                        />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="is_important"
+                          checked={newNoteData.is_important}
+                          onChange={(e) => setNewNoteData({
+                            ...newNoteData,
+                            is_important: e.target.checked
+                          })}
+                        />
+                        <Label htmlFor="is_important">중요 메모로 표시</Label>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setShowNoteModal(false)}>
+                          취소
+                        </Button>
+                        <Button onClick={handleAddNote}>
+                          메모 추가
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {admissionCycles.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>등록된 입원 이력이 없습니다.</p>
+                  </div>
+                ) : (
+                  admissionCycles.map((cycle) => (
+                    <Card key={cycle.id} className="border-l-4 border-l-primary">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="font-semibold">{cycle.cycle_number}차 입원</h3>
+                              <Badge variant={cycle.status === 'admitted' ? 'destructive' : 'secondary'}>
+                                {cycle.status === 'admitted' ? '입원중' : '퇴원'}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground space-y-1">
+                              <p>입원일: {format(new Date(cycle.admission_date), 'yyyy년 MM월 dd일')}</p>
+                              {cycle.discharge_date && (
+                                <p>퇴원일: {format(new Date(cycle.discharge_date), 'yyyy년 MM월 dd일')}</p>
+                              )}
+                              {cycle.discharge_reason && (
+                                <p>퇴원 사유: {cycle.discharge_reason}</p>
+                              )}
+                              <p>
+                                재원 기간: {
+                                  cycle.discharge_date 
+                                    ? Math.ceil((new Date(cycle.discharge_date).getTime() - new Date(cycle.admission_date).getTime()) / (1000 * 60 * 60 * 24))
+                                    : Math.ceil((new Date().getTime() - new Date(cycle.admission_date).getTime()) / (1000 * 60 * 60 * 24))
+                                }일
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {cycle.status === 'admitted' && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleDischarge(cycle.id)}
+                              >
+                                <CheckCircle className="w-4 h-4 mr-1" />
+                                퇴원
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* 해당 사이클의 패키지와 치료 이력 */}
+                        <div className="mt-4 pt-4 border-t">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <h4 className="font-medium text-sm mb-2">이 사이클의 패키지</h4>
+                              {packages.filter(pkg => pkg.admission_cycle_id === cycle.id).length === 0 ? (
+                                <p className="text-xs text-muted-foreground">등록된 패키지 없음</p>
+                              ) : (
+                                <div className="space-y-1">
+                                  {packages.filter(pkg => pkg.admission_cycle_id === cycle.id).map(pkg => (
+                                    <div key={pkg.id} className="text-xs">
+                                      {pkg.package_type} - {pkg.total_cost.toLocaleString()}원
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-sm mb-2">이 사이클의 치료</h4>
+                              {treatmentHistory.filter(t => t.admission_cycle_id === cycle.id).length === 0 ? (
+                                <p className="text-xs text-muted-foreground">등록된 치료 없음</p>
+                              ) : (
+                                <div className="space-y-1">
+                                  {treatmentHistory.filter(t => t.admission_cycle_id === cycle.id).map(treatment => (
+                                    <div key={treatment.id} className="text-xs">
+                                      {treatment.treatment_name}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="notes">
+          <Card>
+            <CardHeader>
+              <CardTitle>메모 & 코멘트</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {patientNotes.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>등록된 메모가 없습니다.</p>
+                  </div>
+                ) : (
+                  patientNotes.map((note) => (
+                    <Card key={note.id} className={`${getNoteTypeColor(note.note_type)} ${note.is_important ? 'ring-2 ring-yellow-400' : ''}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline" className="text-xs">
+                                {getNoteTypeLabel(note.note_type)}
+                              </Badge>
+                              {note.is_important && (
+                                <Badge variant="destructive" className="text-xs">
+                                  중요
+                                </Badge>
+                              )}
+                              {note.admission_cycle_id && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {admissionCycles.find(c => c.id === note.admission_cycle_id)?.cycle_number}차 입원
+                                </Badge>
+                              )}
+                            </div>
+                            {note.title && (
+                              <h4 className="font-medium mb-2">{note.title}</h4>
+                            )}
+                            <p className="text-sm whitespace-pre-wrap">{note.content}</p>
+                            <div className="mt-2 text-xs text-muted-foreground">
+                              {note.creator_name} · {format(new Date(note.created_at), 'yyyy-MM-dd HH:mm')}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 기존 탭들 유지 */}
         <TabsContent value="basic">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
@@ -363,36 +890,6 @@ export default function PatientDetail() {
                 <div>
                   <p className="text-sm text-muted-foreground">연락처</p>
                   <p className="font-medium">{patient.guardian_phone || '미등록'}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>입원/방문 정보</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">입원일</p>
-                  <p className="font-medium">
-                    {patient.admission_date ? 
-                      format(new Date(patient.admission_date), 'yyyy-MM-dd') : 
-                      '미등록'
-                    }
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">퇴원일</p>
-                  <p className="font-medium">
-                    {patient.discharge_date ? 
-                      format(new Date(patient.discharge_date), 'yyyy-MM-dd') : 
-                      '미퇴원'
-                    }
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">의뢰기관</p>
-                  <p className="font-medium">{patient.referral_source || '미등록'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -475,9 +972,16 @@ export default function PatientDetail() {
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <span>{pkg.package_type}</span>
-                      <Badge variant={pkg.outstanding_balance > 0 ? "destructive" : "secondary"}>
-                        {pkg.outstanding_balance > 0 ? "미납" : "완납"}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={pkg.outstanding_balance > 0 ? "destructive" : "secondary"}>
+                          {pkg.outstanding_balance > 0 ? "미납" : "완납"}
+                        </Badge>
+                        {pkg.admission_cycle_id && (
+                          <Badge variant="outline">
+                            {admissionCycles.find(c => c.id === pkg.admission_cycle_id)?.cycle_number}차 입원
+                          </Badge>
+                        )}
+                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -509,58 +1013,6 @@ export default function PatientDetail() {
                       <div>
                         <p className="text-sm text-muted-foreground">보험 종류</p>
                         <p className="font-medium">{pkg.insurance_type}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="treatment">
-          <div className="space-y-4">
-            {treatmentHistory.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <History className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-lg text-muted-foreground">등록된 치료 이력이 없습니다.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              treatmentHistory.map((treatment) => (
-                <Card key={treatment.id}>
-                  <CardHeader>
-                    <CardTitle>{treatment.treatment_name}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      {treatment.treatment_type} | {treatment.hospital_name || '본원'}
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">시작일</p>
-                        <p className="font-medium">
-                          {treatment.start_date ? 
-                            format(new Date(treatment.start_date), 'yyyy-MM-dd') : 
-                            '미등록'
-                          }
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">종료일</p>
-                        <p className="font-medium">
-                          {treatment.end_date ? 
-                            format(new Date(treatment.end_date), 'yyyy-MM-dd') : 
-                            '진행중'
-                          }
-                        </p>
-                      </div>
-                    </div>
-                    {treatment.notes && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">비고</p>
-                        <p className="font-medium">{treatment.notes}</p>
                       </div>
                     )}
                   </CardContent>

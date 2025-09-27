@@ -14,8 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      admission_cycles: {
+        Row: {
+          admission_date: string
+          admission_type: string | null
+          created_at: string
+          cycle_number: number
+          discharge_date: string | null
+          discharge_reason: string | null
+          id: string
+          patient_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admission_date: string
+          admission_type?: string | null
+          created_at?: string
+          cycle_number: number
+          discharge_date?: string | null
+          discharge_reason?: string | null
+          id?: string
+          patient_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admission_date?: string
+          admission_type?: string | null
+          created_at?: string
+          cycle_number?: number
+          discharge_date?: string | null
+          discharge_reason?: string | null
+          id?: string
+          patient_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admission_cycles_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admission_cycles_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medical_info: {
         Row: {
+          admission_cycle_id: string | null
           biopsy_result: string | null
           cancer_stage: string | null
           cancer_type: string
@@ -29,6 +84,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          admission_cycle_id?: string | null
           biopsy_result?: string | null
           cancer_stage?: string | null
           cancer_type: string
@@ -42,6 +98,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          admission_cycle_id?: string | null
           biopsy_result?: string | null
           cancer_stage?: string | null
           cancer_type?: string
@@ -55,6 +112,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "medical_info_admission_cycle_id_fkey"
+            columns: ["admission_cycle_id"]
+            isOneToOne: false
+            referencedRelation: "admission_cycles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "medical_info_patient_id_fkey"
             columns: ["patient_id"]
@@ -73,6 +137,7 @@ export type Database = {
       }
       packages: {
         Row: {
+          admission_cycle_id: string | null
           created_at: string
           end_date: string
           has_private_insurance: boolean | null
@@ -94,6 +159,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          admission_cycle_id?: string | null
           created_at?: string
           end_date: string
           has_private_insurance?: boolean | null
@@ -115,6 +181,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          admission_cycle_id?: string | null
           created_at?: string
           end_date?: string
           has_private_insurance?: boolean | null
@@ -137,6 +204,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "packages_admission_cycle_id_fkey"
+            columns: ["admission_cycle_id"]
+            isOneToOne: false
+            referencedRelation: "admission_cycles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "packages_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
@@ -145,6 +219,67 @@ export type Database = {
           },
           {
             foreignKeyName: "packages_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_notes: {
+        Row: {
+          admission_cycle_id: string | null
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          is_important: boolean | null
+          note_type: string
+          patient_id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          admission_cycle_id?: string | null
+          content: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_important?: boolean | null
+          note_type?: string
+          patient_id: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admission_cycle_id?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_important?: boolean | null
+          note_type?: string
+          patient_id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_notes_admission_cycle_id_fkey"
+            columns: ["admission_cycle_id"]
+            isOneToOne: false
+            referencedRelation: "admission_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_notes_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_notes_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
@@ -250,6 +385,7 @@ export type Database = {
       }
       treatment_history: {
         Row: {
+          admission_cycle_id: string | null
           created_at: string
           end_date: string | null
           hospital_name: string | null
@@ -261,6 +397,7 @@ export type Database = {
           treatment_type: string
         }
         Insert: {
+          admission_cycle_id?: string | null
           created_at?: string
           end_date?: string | null
           hospital_name?: string | null
@@ -272,6 +409,7 @@ export type Database = {
           treatment_type: string
         }
         Update: {
+          admission_cycle_id?: string | null
           created_at?: string
           end_date?: string | null
           hospital_name?: string | null
@@ -283,6 +421,13 @@ export type Database = {
           treatment_type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "treatment_history_admission_cycle_id_fkey"
+            columns: ["admission_cycle_id"]
+            isOneToOne: false
+            referencedRelation: "admission_cycles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "treatment_history_patient_id_fkey"
             columns: ["patient_id"]
@@ -413,6 +558,10 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_stay_days: {
+        Args: { admission_date: string; discharge_date?: string }
+        Returns: number
+      }
       can_manage_accounts: {
         Args: { _user_id: string }
         Returns: boolean
@@ -424,6 +573,10 @@ export type Database = {
       generate_patient_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_next_cycle_number: {
+        Args: { patient_uuid: string }
+        Returns: number
       }
       has_role: {
         Args: {
