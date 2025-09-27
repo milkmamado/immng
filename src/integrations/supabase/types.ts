@@ -301,6 +301,9 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          approval_status: Database["public"]["Enums"]["approval_status"]
+          approved_at: string | null
+          approved_by: string | null
           assigned_by: string | null
           created_at: string
           id: string
@@ -308,6 +311,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          approval_status?: Database["public"]["Enums"]["approval_status"]
+          approved_at?: string | null
+          approved_by?: string | null
           assigned_by?: string | null
           created_at?: string
           id?: string
@@ -315,6 +321,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          approval_status?: Database["public"]["Enums"]["approval_status"]
+          approved_at?: string | null
+          approved_by?: string | null
           assigned_by?: string | null
           created_at?: string
           id?: string
@@ -372,8 +381,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_user_approved: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
+      setup_super_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
+      approval_status: "pending" | "approved" | "rejected"
       user_role: "master" | "manager"
     }
     CompositeTypes: {
@@ -502,6 +520,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      approval_status: ["pending", "approved", "rejected"],
       user_role: ["master", "manager"],
     },
   },

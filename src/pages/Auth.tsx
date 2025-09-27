@@ -35,6 +35,25 @@ export default function Auth() {
         if (error) throw error;
 
         if (data.user) {
+          // 승인 상태 확인
+          const { data: userRoleData, error: roleError } = await supabase
+            .from('user_roles')
+            .select('approval_status, role')
+            .eq('user_id', data.user.id)
+            .eq('approval_status', 'approved')
+            .single();
+
+          if (roleError || !userRoleData) {
+            // 승인되지 않은 사용자
+            await supabase.auth.signOut(); // 로그아웃 처리
+            toast({
+              variant: "destructive",
+              title: "로그인 실패",
+              description: "계정이 승인되지 않았거나 승인 대기 중입니다. 관리자에게 문의하세요.",
+            });
+            return;
+          }
+
           toast({
             title: "로그인 성공",
             description: "환자 관리 시스템에 오신 것을 환영합니다.",
@@ -59,24 +78,32 @@ export default function Auth() {
         if (error) throw error;
 
         if (data.user) {
-          toast({
-            title: "회원가입 성공",
-            description: "이메일을 확인해 주세요. (개발 중에는 자동 로그인됩니다)",
-          });
-          
-          // 개발 중에는 바로 역할 할당 (기본 매니저)
+          // 승인 대기 상태로 역할 할당
           const { error: roleError } = await supabase
             .from('user_roles')
             .insert({
               user_id: data.user.id,
-              role: 'manager'
+              role: 'manager',
+              approval_status: 'pending'
             });
 
           if (roleError) {
             console.error('역할 할당 실패:', roleError);
+            toast({
+              variant: "destructive",
+              title: "회원가입 오류",
+              description: "계정 생성 중 오류가 발생했습니다.",
+            });
+            return;
           }
+
+          toast({
+            title: "회원가입 신청 완료",
+            description: "관리자 승인 후 로그인이 가능합니다. 승인까지 시간이 걸릴 수 있습니다.",
+          });
           
-          navigate('/');
+          // 승인 대기 중이므로 로그인 화면으로 전환
+          setIsLogin(true);
         }
       }
     } catch (error: any) {
