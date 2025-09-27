@@ -86,8 +86,8 @@ export function AppSidebar() {
                       className={getNavCls}
                       title={isCollapsed ? item.title : undefined}
                     >
-                      <item.icon className="h-4 w-4 flex-shrink-0" />
-                      {!isCollapsed && <span className="ml-2">{item.title}</span>}
+                      <item.icon className="h-4 w-4 flex-shrink-0 text-gray-600" />
+                      {!isCollapsed && <span className="ml-2 text-gray-800 font-medium">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -111,8 +111,8 @@ export function AppSidebar() {
                       className={getNavCls}
                       title={isCollapsed ? item.title : undefined}
                     >
-                      <item.icon className="h-4 w-4 flex-shrink-0" />
-                      {!isCollapsed && <span className="ml-2">{item.title}</span>}
+                      <item.icon className="h-4 w-4 flex-shrink-0 text-gray-600" />
+                      {!isCollapsed && <span className="ml-2 text-gray-800 font-medium">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
