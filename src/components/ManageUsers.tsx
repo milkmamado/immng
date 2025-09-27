@@ -37,10 +37,12 @@ export function ManageUsers({ type }: ManageUsersProps) {
   const fetchUsers = async () => {
     try {
       const tableName = type === 'pending' ? 'pending_approvals' : 'approved_users';
+      const orderColumn = type === 'pending' ? 'requested_at' : 'approved_at';
+      
       const { data, error } = await supabase
         .from(tableName)
         .select('*')
-        .order('requested_at', { ascending: false });
+        .order(orderColumn, { ascending: false });
 
       if (error) throw error;
       setUsers(data || []);
