@@ -22,10 +22,13 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          hover: "hsl(var(--primary-hover))",
+          light: "hsl(var(--primary-light))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
+          hover: "hsl(var(--secondary-hover))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -46,6 +49,17 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        "medical-accent": {
+          DEFAULT: "hsl(var(--medical-accent))",
+          foreground: "hsl(var(--medical-accent-foreground))",
+          light: "hsl(var(--medical-accent-light))",
+        },
+        status: {
+          critical: "hsl(var(--status-critical))",
+          warning: "hsl(var(--status-warning))",
+          stable: "hsl(var(--status-stable))",
+          improving: "hsl(var(--status-improving))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

@@ -2,41 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Medical Professional Design System - 암한방병원 환자 관리 시스템 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Medical-grade professional color palette */
+    --background: 210 20% 98%;
+    --foreground: 210 15% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 210 15% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 210 15% 20%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Medical blue primary - trustworthy and professional */
+    --primary: 210 85% 45%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 210 85% 38%;
+    --primary-light: 210 85% 92%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Clean secondary colors */
+    --secondary: 210 25% 96%;
+    --secondary-foreground: 210 15% 35%;
+    --secondary-hover: 210 25% 92%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Subtle muted tones */
+    --muted: 210 15% 94%;
+    --muted-foreground: 210 10% 50%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Medical accent - calming green */
+    --medical-accent: 145 65% 45%;
+    --medical-accent-foreground: 0 0% 100%;
+    --medical-accent-light: 145 65% 92%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Status colors for medical conditions */
+    --status-critical: 0 85% 60%;
+    --status-warning: 35 85% 55%;
+    --status-stable: 145 65% 45%;
+    --status-improving: 195 85% 45%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --accent: 210 25% 96%;
+    --accent-foreground: 210 15% 35%;
+
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 20% 88%;
+    --input: 210 20% 95%;
+    --ring: 210 85% 45%;
 
     --radius: 0.5rem;
+
+    /* Medical gradients */
+    --gradient-medical: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--medical-accent)));
+    --gradient-card: linear-gradient(180deg, hsl(var(--card)), hsl(210 25% 99%));
+    --gradient-status: linear-gradient(90deg, hsl(var(--status-stable) / 0.1), hsl(var(--status-improving) / 0.1));
+
+    /* Professional shadows */
+    --shadow-medical: 0 4px 20px -4px hsl(var(--primary) / 0.15);
+    --shadow-card: 0 2px 8px -2px hsl(210 15% 20% / 0.08);
+    --shadow-elevated: 0 8px 24px -6px hsl(210 15% 20% / 0.12);
 
     --sidebar-background: 0 0% 98%;
 
