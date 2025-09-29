@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Heart, Plus, Eye } from "lucide-react";
+import { Heart, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface Patient {
@@ -106,7 +106,7 @@ export default function FirstVisitManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>차트번호</TableHead>
-                  <TableHead>환자번호</TableHead>
+                  <TableHead>등록일</TableHead>
                   <TableHead>유입/실패</TableHead>
                   <TableHead>입원/외래</TableHead>
                   <TableHead>내원동기</TableHead>
@@ -118,15 +118,16 @@ export default function FirstVisitManagement() {
                   <TableHead>식이</TableHead>
                   <TableHead>한방주치의</TableHead>
                   <TableHead>양방주치의</TableHead>
-                  <TableHead>등록일</TableHead>
-                  <TableHead>액션</TableHead>
+                  <TableHead>상담내용</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {patients.map((patient) => (
                   <TableRow key={patient.id}>
                     <TableCell>{patient.chart_number || '-'}</TableCell>
-                    <TableCell className="font-mono">{patient.patient_number}</TableCell>
+                    <TableCell>
+                      {new Date(patient.created_at).toLocaleDateString('ko-KR')}
+                    </TableCell>
                     <TableCell>
                       <Badge variant={getInflowStatusColor(patient.inflow_status)}>
                         {patient.inflow_status || '-'}
@@ -146,14 +147,8 @@ export default function FirstVisitManagement() {
                     <TableCell>{patient.diet_info || '-'}</TableCell>
                     <TableCell>{patient.korean_doctor || '-'}</TableCell>
                     <TableCell>{patient.western_doctor || '-'}</TableCell>
-                    <TableCell>
-                      {new Date(patient.created_at).toLocaleDateString('ko-KR')}
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="sm">
-                        <Eye className="h-4 w-4 mr-1" />
-                        상세
-                      </Button>
+                    <TableCell className="max-w-32 truncate">
+                      {patient.counseling_content || '-'}
                     </TableCell>
                   </TableRow>
                 ))}
