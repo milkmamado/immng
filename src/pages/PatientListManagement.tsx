@@ -12,15 +12,24 @@ interface Patient {
   id: string;
   name: string;
   patient_number: string;
+  chart_number?: string;
   phone?: string;
   age?: number;
   gender?: string;
   first_visit_date?: string;
+  last_visit_date?: string;
   inflow_status?: string;
+  visit_type?: string;
   detailed_diagnosis?: string;
   manager_name?: string;
   korean_doctor?: string;
   western_doctor?: string;
+  insurance_type?: string;
+  hospital_treatment?: string;
+  examination_schedule?: string;
+  treatment_plan?: string;
+  monthly_avg_days?: number;
+  payment_amount?: number;
   created_at: string;
 }
 
@@ -50,6 +59,7 @@ export default function PatientListManagement() {
       const { data, error } = await supabase
         .from('patients')
         .select('*')
+        .eq('inflow_status', '유입')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -58,7 +68,7 @@ export default function PatientListManagement() {
       console.error('Error fetching patients:', error);
       toast({
         title: "오류",
-        description: "환자 목록을 불러오는데 실패했습니다.",
+        description: "관리 환자 목록을 불러오는데 실패했습니다.",
         variant: "destructive",
       });
     } finally {
@@ -86,20 +96,20 @@ export default function PatientListManagement() {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="max-w-none mx-auto p-6 w-full">
       <div className="flex items-center gap-3 mb-6">
         <Users className="h-8 w-8 text-primary" />
         <h1 className="text-3xl font-bold">관리 환자 리스트</h1>
       </div>
 
-      <Card>
+      <Card className="w-full overflow-x-auto">
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>전체 환자 목록 ({filteredPatients.length}명)</CardTitle>
+            <CardTitle>유입 환자 목록 ({filteredPatients.length}명)</CardTitle>
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="환자명, 환자번호, 전화번호로 검색..."
+                placeholder="환자명, 차트번호로 검색..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-80"
@@ -108,45 +118,64 @@ export default function PatientListManagement() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
+          <div className="rounded-md border overflow-x-auto">
+            <Table className="min-w-[1800px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>환자번호</TableHead>
+                  <TableHead>차트번호</TableHead>
+                  <TableHead>외래/입원구분</TableHead>
+                  <TableHead>담당실장</TableHead>
                   <TableHead>환자명</TableHead>
-                  <TableHead>나이/성별</TableHead>
-                  <TableHead>전화번호</TableHead>
-                  <TableHead>유입상태</TableHead>
                   <TableHead>진단명</TableHead>
-                  <TableHead>담당매니저</TableHead>
-                  <TableHead>한방의</TableHead>
-                  <TableHead>양방의</TableHead>
-                  <TableHead>등록일</TableHead>
+                  <TableHead>유입일</TableHead>
+                  <TableHead>실비보험유형</TableHead>
+                  <TableHead>본병원치료</TableHead>
+                  <TableHead>본병원검사일정</TableHead>
+                  <TableHead>우리병원치료계획</TableHead>
+                  <TableHead>월평균입원/외래일수</TableHead>
+                  <TableHead>마지막내원일</TableHead>
+                  <TableHead>수납급액(비급여)</TableHead>
                   <TableHead>액션</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredPatients.map((patient) => (
                   <TableRow key={patient.id}>
-                    <TableCell className="font-mono">{patient.patient_number}</TableCell>
+                    <TableCell className="font-mono">{patient.chart_number || '-'}</TableCell>
+                    <TableCell>{patient.visit_type || '-'}</TableCell>
+                    <TableCell>{patient.manager_name || '-'}</TableCell>
                     <TableCell className="font-medium">{patient.name}</TableCell>
-                    <TableCell>
-                      {patient.age && patient.gender ? `${patient.age}세/${patient.gender}` : '-'}
-                    </TableCell>
-                    <TableCell>{patient.phone || '-'}</TableCell>
-                    <TableCell>
-                      <Badge variant={getInflowStatusColor(patient.inflow_status)}>
-                        {patient.inflow_status || '미분류'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="max-w-40 truncate">
+                    <TableCell className="max-w-32 truncate">
                       {patient.detailed_diagnosis || '-'}
                     </TableCell>
-                    <TableCell>{patient.manager_name || '-'}</TableCell>
-                    <TableCell>{patient.korean_doctor || '-'}</TableCell>
-                    <TableCell>{patient.western_doctor || '-'}</TableCell>
                     <TableCell>
-                      {new Date(patient.created_at).toLocaleDateString('ko-KR')}
+                      {patient.first_visit_date ? 
+                        new Date(patient.first_visit_date).toLocaleDateString('ko-KR') : 
+                        new Date(patient.created_at).toLocaleDateString('ko-KR')
+                      }
+                    </TableCell>
+                    <TableCell>{patient.insurance_type || '-'}</TableCell>
+                    <TableCell className="max-w-32 truncate">
+                      {patient.hospital_treatment || '-'}
+                    </TableCell>
+                    <TableCell className="max-w-32 truncate">
+                      {patient.examination_schedule || '-'}
+                    </TableCell>
+                    <TableCell className="max-w-32 truncate">
+                      {patient.treatment_plan || '-'}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {patient.monthly_avg_days ? `${patient.monthly_avg_days}일` : '-'}
+                    </TableCell>
+                    <TableCell>
+                      {patient.last_visit_date ? 
+                        new Date(patient.last_visit_date).toLocaleDateString('ko-KR') : '-'
+                      }
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {patient.payment_amount ? 
+                        `${patient.payment_amount.toLocaleString()}원` : '-'
+                      }
                     </TableCell>
                     <TableCell>
                       <Button variant="outline" size="sm">
@@ -162,7 +191,7 @@ export default function PatientListManagement() {
           
           {filteredPatients.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
-              {searchTerm ? '검색 결과가 없습니다.' : '등록된 환자가 없습니다.'}
+              {searchTerm ? '검색 결과가 없습니다.' : '유입된 환자가 없습니다.'}
             </div>
           )}
         </CardContent>
