@@ -310,8 +310,24 @@ export default function PatientListManagement() {
                     <TableCell className="max-w-32 truncate">
                       {patient.examination_schedule || '-'}
                     </TableCell>
-                    <TableCell className="max-w-32 truncate">
-                      {patient.treatment_plan || '-'}
+                    <TableCell className="max-w-32">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate flex-1">
+                          {patient.treatment_plan || '-'}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedPatientDetail(patient);
+                            fetchTreatmentPlans(patient.id);
+                          }}
+                          className="px-2 py-1 h-6 text-xs"
+                        >
+                          상세보기
+                        </Button>
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
                       {patient.monthly_avg_days ? `${patient.monthly_avg_days}일` : '-'}
@@ -625,15 +641,9 @@ export default function PatientListManagement() {
                   <CardTitle className="text-base">우리병원 치료계획</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="bg-muted p-3 rounded-lg">
-                    <p className="text-sm leading-relaxed">
-                      {selectedPatientDetail?.treatment_plan || '우리병원 치료계획이 기록되지 않았습니다.'}
-                    </p>
-                  </div>
-                  
                   {/* 연동된 치료 계획 목록 표시 */}
-                  {treatmentPlans.length > 0 && (
-                    <div className="mt-4 pt-4 border-t">
+                  {treatmentPlans.length > 0 ? (
+                    <div>
                       <h4 className="text-sm font-medium mb-2">등록된 치료 내역</h4>
                       <div className="space-y-2">
                         {treatmentPlans.map((plan) => (
@@ -650,6 +660,10 @@ export default function PatientListManagement() {
                           </div>
                         ))}
                       </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      등록된 치료 계획이 없습니다.
                     </div>
                   )}
                 </CardContent>
