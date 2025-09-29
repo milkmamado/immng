@@ -343,6 +343,10 @@ export default function FirstVisitManagement() {
                     <span className="font-medium">환자 or 보호자:</span>
                     <span>{selectedPatientDetail?.counselor || '-'}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">담당자(상담실장):</span>
+                    <span>{selectedPatientDetail?.manager_name || '-'}</span>
+                  </div>
                 </CardContent>
               </Card>
 
