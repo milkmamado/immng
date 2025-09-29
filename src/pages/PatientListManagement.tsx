@@ -21,7 +21,11 @@ interface Patient {
   last_visit_date?: string;
   inflow_status?: string;
   visit_type?: string;
+  visit_motivation?: string;
   detailed_diagnosis?: string;
+  counselor?: string;
+  previous_hospital?: string;
+  diet_info?: string;
   manager_name?: string;
   korean_doctor?: string;
   western_doctor?: string;
@@ -31,6 +35,7 @@ interface Patient {
   treatment_plan?: string;
   monthly_avg_days?: number;
   payment_amount?: number;
+  counseling_content?: string;
   created_at: string;
 }
 
@@ -204,7 +209,7 @@ export default function PatientListManagement() {
             <DialogTitle>{selectedPatientDetail?.name} - 환자 상세정보</DialogTitle>
           </DialogHeader>
           <div className="mt-4 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* 기본 정보 */}
               <Card>
                 <CardHeader>
@@ -234,6 +239,23 @@ export default function PatientListManagement() {
                     <span className="font-medium">연락처:</span>
                     <span>{selectedPatientDetail?.phone || '-'}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">등록일:</span>
+                    <span>
+                      {selectedPatientDetail?.created_at ? 
+                        new Date(selectedPatientDetail.created_at).toLocaleDateString('ko-KR') : '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">유입/실패:</span>
+                    <Badge variant={getInflowStatusColor(selectedPatientDetail?.inflow_status)}>
+                      {selectedPatientDetail?.inflow_status || '-'}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">입원/외래:</span>
+                    <span>{selectedPatientDetail?.visit_type || '-'}</span>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -244,22 +266,12 @@ export default function PatientListManagement() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="font-medium">외래/입원구분:</span>
-                    <span>{selectedPatientDetail?.visit_type || '-'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">유입상태:</span>
-                    <Badge variant={getInflowStatusColor(selectedPatientDetail?.inflow_status)}>
-                      {selectedPatientDetail?.inflow_status || '-'}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between">
                     <span className="font-medium">진단명:</span>
                     <span>{selectedPatientDetail?.detailed_diagnosis || '-'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="font-medium">담당실장:</span>
-                    <span>{selectedPatientDetail?.manager_name || '-'}</span>
+                    <span className="font-medium">세부진단명:</span>
+                    <span>{selectedPatientDetail?.detailed_diagnosis || '-'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">한방주치의:</span>
@@ -268,6 +280,31 @@ export default function PatientListManagement() {
                   <div className="flex justify-between">
                     <span className="font-medium">양방주치의:</span>
                     <span>{selectedPatientDetail?.western_doctor || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">내담자:</span>
+                    <span>{selectedPatientDetail?.counselor || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">담당실장:</span>
+                    <span>{selectedPatientDetail?.manager_name || '-'}</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* 추가 정보 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">추가 정보</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="font-medium">이전병원:</span>
+                    <span>{selectedPatientDetail?.previous_hospital || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">식이:</span>
+                    <span>{selectedPatientDetail?.diet_info || '-'}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -328,18 +365,34 @@ export default function PatientListManagement() {
                 </CardContent>
               </Card>
 
-              {/* 본병원 치료 정보 */}
-              <Card className="md:col-span-2">
+              {/* 내원동기 */}
+              <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">본병원 치료</CardTitle>
+                  <CardTitle className="text-lg">내원동기</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm leading-relaxed">
-                    {selectedPatientDetail?.hospital_treatment || '본병원 치료 정보가 기록되지 않았습니다.'}
+                    {selectedPatientDetail?.visit_motivation || '내원동기가 기록되지 않았습니다.'}
                   </p>
                 </CardContent>
               </Card>
             </div>
+
+            {/* 본병원 치료 정보 */}
+            {selectedPatientDetail?.hospital_treatment && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">본병원 치료</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-muted p-4 rounded-lg">
+                    <pre className="whitespace-pre-wrap text-sm leading-relaxed">
+                      {selectedPatientDetail.hospital_treatment}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* 검사 일정 */}
             {selectedPatientDetail?.examination_schedule && (
@@ -367,6 +420,22 @@ export default function PatientListManagement() {
                   <div className="bg-muted p-4 rounded-lg">
                     <pre className="whitespace-pre-wrap text-sm leading-relaxed">
                       {selectedPatientDetail.treatment_plan}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 상담내용 */}
+            {selectedPatientDetail?.counseling_content && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">상담내용</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-muted p-4 rounded-lg">
+                    <pre className="whitespace-pre-wrap text-sm leading-relaxed">
+                      {selectedPatientDetail.counseling_content}
                     </pre>
                   </div>
                 </CardContent>
