@@ -546,6 +546,42 @@ export type Database = {
           },
         ]
       }
+      treatment_plans: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          is_paid: boolean
+          patient_id: string
+          payment_date: string | null
+          treatment_amount: number
+          treatment_detail: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          is_paid?: boolean
+          patient_id: string
+          payment_date?: string | null
+          treatment_amount?: number
+          treatment_detail: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_paid?: boolean
+          patient_id?: string
+          payment_date?: string | null
+          treatment_amount?: number
+          treatment_detail?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           approval_status: Database["public"]["Enums"]["approval_status"]

@@ -4,10 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Users, Search } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Users, Search, Plus, Edit3, Check, X } from "lucide-react";
 
 interface Patient {
   id: string;
@@ -39,6 +42,18 @@ interface Patient {
   created_at: string;
 }
 
+interface TreatmentPlan {
+  id: string;
+  patient_id: string;
+  treatment_detail: string;
+  treatment_amount: number;
+  is_paid: boolean;
+  payment_date?: string;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+}
+
 export default function PatientListManagement() {
   // Force rebuild - no Eye icon references
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -46,6 +61,11 @@ export default function PatientListManagement() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
+  const [treatmentPlans, setTreatmentPlans] = useState<TreatmentPlan[]>([]);
+  const [newTreatmentDetail, setNewTreatmentDetail] = useState('');
+  const [newTreatmentAmount, setNewTreatmentAmount] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [loadingTreatments, setLoadingTreatments] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -82,6 +102,121 @@ export default function PatientListManagement() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchTreatmentPlans = async (patientId: string) => {
+    setLoadingTreatments(true);
+    try {
+      const { data, error } = await supabase
+        .from('treatment_plans')
+        .select('*')
+        .eq('patient_id', patientId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTreatmentPlans(data || []);
+    } catch (error) {
+      console.error('Error fetching treatment plans:', error);
+      toast({
+        title: "오류",
+        description: "치료 계획을 불러오는데 실패했습니다.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingTreatments(false);
+    }
+  };
+
+  const addTreatmentPlan = async () => {
+    if (!selectedPatientDetail || !newTreatmentDetail.trim() || !newTreatmentAmount.trim()) {
+      toast({
+        title: "입력 오류",
+        description: "치료상세와 치료금액을 모두 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('로그인이 필요합니다.');
+
+      const { error } = await supabase
+        .from('treatment_plans')
+        .insert({
+          patient_id: selectedPatientDetail.id,
+          treatment_detail: newTreatmentDetail.trim(),
+          treatment_amount: parseFloat(newTreatmentAmount),
+          created_by: user.user.id
+        });
+
+      if (error) throw error;
+
+      setNewTreatmentDetail('');
+      setNewTreatmentAmount('');
+      setShowAddForm(false);
+      fetchTreatmentPlans(selectedPatientDetail.id);
+      
+      toast({
+        title: "성공",
+        description: "치료 계획이 추가되었습니다.",
+      });
+    } catch (error) {
+      console.error('Error adding treatment plan:', error);
+      toast({
+        title: "오류",
+        description: "치료 계획 추가에 실패했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const togglePaymentStatus = async (treatmentPlan: TreatmentPlan) => {
+    try {
+      const { error } = await supabase
+        .from('treatment_plans')
+        .update({
+          is_paid: !treatmentPlan.is_paid,
+          payment_date: !treatmentPlan.is_paid ? new Date().toISOString().split('T')[0] : null
+        })
+        .eq('id', treatmentPlan.id);
+
+      if (error) throw error;
+
+      // Update total payment amount in patients table
+      const paidAmount = treatmentPlans
+        .filter(tp => tp.id !== treatmentPlan.id && tp.is_paid)
+        .reduce((sum, tp) => sum + tp.treatment_amount, 0) + 
+        (!treatmentPlan.is_paid ? treatmentPlan.treatment_amount : 0);
+
+      await supabase
+        .from('patients')
+        .update({ payment_amount: paidAmount })
+        .eq('id', selectedPatientDetail!.id);
+
+      fetchTreatmentPlans(selectedPatientDetail!.id);
+      fetchPatients(); // Refresh patient list to show updated payment amount
+      
+      toast({
+        title: "성공",
+        description: `수납 상태가 ${!treatmentPlan.is_paid ? '완료' : '미완료'}로 변경되었습니다.`,
+      });
+    } catch (error) {
+      console.error('Error toggling payment status:', error);
+      toast({
+        title: "오류",
+        description: "수납 상태 변경에 실패했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getTotalPaymentStats = () => {
+    const totalAmount = treatmentPlans.reduce((sum, tp) => sum + tp.treatment_amount, 0);
+    const paidAmount = treatmentPlans.filter(tp => tp.is_paid).reduce((sum, tp) => sum + tp.treatment_amount, 0);
+    const unpaidAmount = totalAmount - paidAmount;
+    
+    return { totalAmount, paidAmount, unpaidAmount };
   };
 
   const getInflowStatusColor = (status?: string) => {
@@ -203,7 +338,13 @@ export default function PatientListManagement() {
       </Card>
 
       {/* 환자 상세정보 모달 다이얼로그 */}
-      <Dialog open={!!selectedPatientDetail} onOpenChange={() => setSelectedPatientDetail(null)}>
+      <Dialog open={!!selectedPatientDetail} onOpenChange={() => {
+        setSelectedPatientDetail(null);
+        setTreatmentPlans([]);
+        setShowAddForm(false);
+        setNewTreatmentDetail('');
+        setNewTreatmentAmount('');
+      }}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedPatientDetail?.name} - 환자 상세정보</DialogTitle>
@@ -488,6 +629,161 @@ export default function PatientListManagement() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* 치료 계획 관리 섹션 */}
+              <div className="mt-6 border-t pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">치료 계획 관리</h3>
+                  <Button 
+                    onClick={() => {
+                      setShowAddForm(!showAddForm);
+                      if (selectedPatientDetail && treatmentPlans.length === 0) {
+                        fetchTreatmentPlans(selectedPatientDetail.id);
+                      }
+                    }}
+                    size="sm"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    새 치료 계획 추가
+                  </Button>
+                </div>
+
+                {/* 수납 현황 요약 */}
+                {treatmentPlans.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-center">
+                          <p className="text-sm text-muted-foreground">총 치료비</p>
+                          <p className="text-lg font-semibold">
+                            {getTotalPaymentStats().totalAmount.toLocaleString()}원
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-center">
+                          <p className="text-sm text-muted-foreground">수납완료</p>
+                          <p className="text-lg font-semibold text-green-600">
+                            {getTotalPaymentStats().paidAmount.toLocaleString()}원
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-center">
+                          <p className="text-sm text-muted-foreground">미수납</p>
+                          <p className="text-lg font-semibold text-red-600">
+                            {getTotalPaymentStats().unpaidAmount.toLocaleString()}원
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
+                {/* 새 치료 계획 추가 폼 */}
+                {showAddForm && (
+                  <Card className="mb-4">
+                    <CardHeader>
+                      <CardTitle className="text-base">새 치료 계획 추가</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label htmlFor="treatment-detail">치료상세</Label>
+                        <Textarea
+                          id="treatment-detail"
+                          placeholder="치료상세 내용을 입력하세요"
+                          value={newTreatmentDetail}
+                          onChange={(e) => setNewTreatmentDetail(e.target.value)}
+                          rows={3}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="treatment-amount">치료금액</Label>
+                        <Input
+                          id="treatment-amount"
+                          type="number"
+                          placeholder="치료금액을 입력하세요"
+                          value={newTreatmentAmount}
+                          onChange={(e) => setNewTreatmentAmount(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button onClick={addTreatmentPlan} size="sm">
+                          <Check className="h-4 w-4 mr-2" />
+                          추가
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setShowAddForm(false);
+                            setNewTreatmentDetail('');
+                            setNewTreatmentAmount('');
+                          }}
+                          size="sm"
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          취소
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* 치료 계획 리스트 */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">치료 계획 목록</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {loadingTreatments ? (
+                      <div className="text-center py-4 text-muted-foreground">
+                        치료 계획을 불러오는 중...
+                      </div>
+                    ) : treatmentPlans.length === 0 ? (
+                      <div className="text-center py-4 text-muted-foreground">
+                        등록된 치료 계획이 없습니다.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {treatmentPlans.map((plan) => (
+                          <div key={plan.id} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex-1">
+                              <p className="font-medium">{plan.treatment_detail}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {plan.treatment_amount.toLocaleString()}원 • {new Date(plan.created_at).toLocaleDateString('ko-KR')}
+                              </p>
+                              {plan.is_paid && plan.payment_date && (
+                                <p className="text-xs text-green-600">
+                                  수납완료: {new Date(plan.payment_date).toLocaleDateString('ko-KR')}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center space-x-2">
+                                <Switch
+                                  id={`payment-${plan.id}`}
+                                  checked={plan.is_paid}
+                                  onCheckedChange={() => togglePaymentStatus(plan)}
+                                />
+                                <Label htmlFor={`payment-${plan.id}`} className="text-sm">
+                                  수납완료
+                                </Label>
+                              </div>
+                              <Badge variant={plan.is_paid ? "default" : "outline"}>
+                                {plan.is_paid ? "수납완료" : "미수납"}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         </DialogContent>
