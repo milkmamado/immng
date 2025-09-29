@@ -156,7 +156,7 @@ export default function FirstVisitManagement() {
                   <TableHead>이름</TableHead>
                   <TableHead>진단명</TableHead>
                   <TableHead>세부진단명</TableHead>
-                  <TableHead>내담자</TableHead>
+                  <TableHead>환자 or 보호자</TableHead>
                   <TableHead>이전병원</TableHead>
                   <TableHead>식이</TableHead>
                   <TableHead>한방주치의</TableHead>
@@ -337,7 +337,7 @@ export default function FirstVisitManagement() {
                     <span>{selectedPatientDetail?.western_doctor || '-'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="font-medium">내담자:</span>
+                    <span className="font-medium">환자 or 보호자:</span>
                     <span>{selectedPatientDetail?.counselor || '-'}</span>
                   </div>
                 </CardContent>

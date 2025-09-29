@@ -21,7 +21,7 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
     name: '',                   // 이름
     diagnosis: '',              // 진단명
     detailed_diagnosis: '',     // 세부진단명
-    counselor: '',              // 내담자
+    counselor: '',              // 환자 or 보호자
     previous_hospital: '',      // 이전병원(본원)
     diet_info: '',              // 식이
     korean_doctor: '',          // 한방주치의
@@ -249,15 +249,15 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
           />
         </div>
 
-        {/* 내담자 */}
+        {/* 환자 or 보호자 */}
         <div>
-          <Label htmlFor="counselor">내담자</Label>
+          <Label htmlFor="counselor">환자 or 보호자</Label>
           <Input
             id="counselor"
             name="counselor"
             value={formData.counselor}
             onChange={handleInputChange}
-            placeholder="내담자"
+            placeholder="환자 or 보호자"
           />
         </div>
 

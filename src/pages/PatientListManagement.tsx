@@ -282,7 +282,7 @@ export default function PatientListManagement() {
                     <span>{selectedPatientDetail?.western_doctor || '-'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="font-medium">내담자:</span>
+                    <span className="font-medium">환자 or 보호자:</span>
                     <span>{selectedPatientDetail?.counselor || '-'}</span>
                   </div>
                   <div className="flex justify-between">
