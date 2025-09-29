@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Heart, Plus, Eye } from "lucide-react";
+import { Heart, Plus, Eye, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface Patient {
@@ -33,6 +33,7 @@ export default function FirstVisitManagement() {
   const [showForm, setShowForm] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
+  const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -68,6 +69,34 @@ export default function FirstVisitManagement() {
       title: "등록 완료",
       description: "환자가 성공적으로 등록되었습니다.",
     });
+  };
+
+  const handleDeletePatient = async () => {
+    if (!patientToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .delete()
+        .eq('id', patientToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "삭제 완료",
+        description: "환자가 성공적으로 삭제되었습니다.",
+      });
+
+      setPatientToDelete(null);
+      fetchPatients();
+    } catch (error) {
+      console.error('Error deleting patient:', error);
+      toast({
+        title: "오류",
+        description: "환자 삭제에 실패했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getInflowStatusColor = (status?: string) => {
@@ -120,7 +149,7 @@ export default function FirstVisitManagement() {
                   <TableHead>식이</TableHead>
                   <TableHead>한방주치의</TableHead>
                   <TableHead>양방주치의</TableHead>
-                  <TableHead>상담내용</TableHead>
+                  <TableHead>액션</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -153,19 +182,28 @@ export default function FirstVisitManagement() {
                     <TableCell>{patient.diet_info || '-'}</TableCell>
                     <TableCell>{patient.korean_doctor || '-'}</TableCell>
                     <TableCell>{patient.western_doctor || '-'}</TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      {patient.counseling_content ? (
+                    <TableCell onClick={(e) => e.stopPropagation()} className="space-x-2">
+                      <div className="flex gap-2">
+                        {patient.counseling_content && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setSelectedPatient(patient)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            상담내용
+                          </Button>
+                        )}
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => setSelectedPatient(patient)}
+                          onClick={() => setPatientToDelete(patient)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
-                          <Eye className="h-4 w-4 mr-1" />
-                          상세보기
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          삭제
                         </Button>
-                      ) : (
-                        '-'
-                      )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -318,6 +356,37 @@ export default function FirstVisitManagement() {
                 </CardContent>
               </Card>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 환자 삭제 확인 모달 */}
+      <Dialog open={!!patientToDelete} onOpenChange={() => setPatientToDelete(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>환자 삭제 확인</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 space-y-4">
+            <p className="text-sm text-muted-foreground">
+              <strong>{patientToDelete?.name}</strong> 환자의 모든 정보가 영구적으로 삭제됩니다.
+            </p>
+            <p className="text-sm text-red-600 font-medium">
+              이 작업은 되돌릴 수 없습니다.
+            </p>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setPatientToDelete(null)}
+              >
+                취소
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={handleDeletePatient}
+              >
+                삭제
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
