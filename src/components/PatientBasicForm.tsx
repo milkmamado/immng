@@ -185,9 +185,9 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
           </Select>
         </div>
 
-        {/* 입원/외래(통원) */}
+        {/* 입원/외래 */}
         <div>
-          <Label htmlFor="visit_type">입원/외래(통원)</Label>
+          <Label htmlFor="visit_type">입원/외래</Label>
           <Select name="visit_type" value={formData.visit_type} onValueChange={(value) => handleSelectChange('visit_type', value)}>
             <SelectTrigger>
               <SelectValue placeholder="선택" />
@@ -195,7 +195,6 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
             <SelectContent>
               <SelectItem value="입원">입원</SelectItem>
               <SelectItem value="외래">외래</SelectItem>
-              <SelectItem value="통원">통원</SelectItem>
             </SelectContent>
           </Select>
         </div>
