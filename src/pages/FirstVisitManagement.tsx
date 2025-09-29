@@ -127,7 +127,7 @@ export default function FirstVisitManagement() {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="max-w-none mx-auto p-6 w-full">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Heart className="h-8 w-8 text-primary" />
@@ -139,13 +139,13 @@ export default function FirstVisitManagement() {
         </Button>
       </div>
 
-      <Card>
+      <Card className="w-full overflow-x-auto">
         <CardHeader>
           <CardTitle>등록된 환자 목록 ({patients.length}명)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
+          <div className="rounded-md border overflow-x-auto">
+            <Table className="min-w-[1400px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>차트번호</TableHead>
