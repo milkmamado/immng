@@ -35,6 +35,7 @@ interface Patient {
 }
 
 export default function PatientListManagement() {
+  // Force rebuild - no Eye icon references
   const [patients, setPatients] = useState<Patient[]>([]);
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
