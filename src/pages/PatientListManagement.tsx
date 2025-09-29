@@ -441,6 +441,140 @@ export default function PatientListManagement() {
                 </CardContent>
               </Card>
             )}
+
+            {/* 관리 환자 전용 정보 섹션 */}
+            <div className="border-t pt-6">
+              <h2 className="text-xl font-semibold mb-4 text-primary">관리 환자 정보</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* 관리 정보 1 */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">관리 현황</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">차트번호:</span>
+                      <span className="font-medium">{selectedPatientDetail?.chart_number || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">외래/입원구분:</span>
+                      <span className="font-medium">{selectedPatientDetail?.visit_type || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">담당실장:</span>
+                      <span className="font-medium">{selectedPatientDetail?.manager_name || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">환자명:</span>
+                      <span className="font-medium">{selectedPatientDetail?.name || '-'}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* 관리 정보 2 */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">진료 및 진단</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">진단명:</span>
+                      <span className="font-medium">{selectedPatientDetail?.detailed_diagnosis || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">유입일:</span>
+                      <span className="font-medium">
+                        {selectedPatientDetail?.first_visit_date ? 
+                          new Date(selectedPatientDetail.first_visit_date).toLocaleDateString('ko-KR') :
+                          (selectedPatientDetail?.created_at ? 
+                            new Date(selectedPatientDetail.created_at).toLocaleDateString('ko-KR') : '-')
+                        }
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">마지막내원일:</span>
+                      <span className="font-medium">
+                        {selectedPatientDetail?.last_visit_date ? 
+                          new Date(selectedPatientDetail.last_visit_date).toLocaleDateString('ko-KR') : '-'
+                        }
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">월평균입원/외래일수:</span>
+                      <span className="font-medium">
+                        {selectedPatientDetail?.monthly_avg_days ? 
+                          `${selectedPatientDetail.monthly_avg_days}일` : '-'
+                        }
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* 관리 정보 3 */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">보험 및 수납</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">실비보험유형:</span>
+                      <span className="font-medium">{selectedPatientDetail?.insurance_type || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">수납급액(비급여):</span>
+                      <span className="font-semibold text-primary">
+                        {selectedPatientDetail?.payment_amount ? 
+                          `${selectedPatientDetail.payment_amount.toLocaleString()}원` : '-'
+                        }
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* 본병원 치료 정보 (관리 환자용) */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">본병원 치료</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="bg-muted p-3 rounded-lg">
+                      <p className="text-sm leading-relaxed">
+                        {selectedPatientDetail?.hospital_treatment || '본병원 치료 정보가 기록되지 않았습니다.'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">본병원 검사일정</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="bg-muted p-3 rounded-lg">
+                      <p className="text-sm leading-relaxed">
+                        {selectedPatientDetail?.examination_schedule || '본병원 검사일정이 기록되지 않았습니다.'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* 우리병원 치료계획 (관리 환자용) */}
+              <Card className="mt-4">
+                <CardHeader>
+                  <CardTitle className="text-base">우리병원 치료계획</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-muted p-3 rounded-lg">
+                    <p className="text-sm leading-relaxed">
+                      {selectedPatientDetail?.treatment_plan || '우리병원 치료계획이 기록되지 않았습니다.'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
