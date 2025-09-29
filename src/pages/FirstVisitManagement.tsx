@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Heart, Plus, Eye, Trash2 } from "lucide-react";
+import { Heart, Plus, Eye, Trash2, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface Patient {
@@ -35,6 +35,7 @@ export default function FirstVisitManagement() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
+  const [selectedPatientForEdit, setSelectedPatientForEdit] = useState<Patient | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -69,6 +70,15 @@ export default function FirstVisitManagement() {
     toast({
       title: "등록 완료",
       description: "환자가 성공적으로 등록되었습니다.",
+    });
+  };
+
+  const handleEditClose = () => {
+    setSelectedPatientForEdit(null);
+    fetchPatients(); // 환자 수정 후 리스트 새로고침
+    toast({
+      title: "수정 완료",
+      description: "환자 정보가 성공적으로 수정되었습니다.",
     });
   };
 
@@ -205,14 +215,24 @@ export default function FirstVisitManagement() {
                       </div>
                     </TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => setPatientToDelete(patient)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        삭제
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedPatientForEdit(patient)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          수정
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setPatientToDelete(patient)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          삭제
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -391,6 +411,16 @@ export default function FirstVisitManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* 환자 수정 다이얼로그 */}
+      <Dialog open={!!selectedPatientForEdit} onOpenChange={() => setSelectedPatientForEdit(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedPatientForEdit?.name} - 환자 정보 수정</DialogTitle>
+          </DialogHeader>
+          <PatientBasicForm patient={selectedPatientForEdit} onClose={handleEditClose} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
