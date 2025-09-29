@@ -282,10 +282,13 @@ export default function PatientListManagement() {
               </TableHeader>
               <TableBody>
                 {filteredPatients.map((patient) => (
-                  <TableRow 
+                   <TableRow 
                     key={patient.id}
                     className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => setSelectedPatientDetail(patient)}
+                    onClick={() => {
+                      setSelectedPatientDetail(patient);
+                      fetchTreatmentPlans(patient.id);
+                    }}
                   >
                     <TableCell className="font-mono">{patient.chart_number || '-'}</TableCell>
                     <TableCell>{patient.visit_type || '-'}</TableCell>
@@ -627,6 +630,28 @@ export default function PatientListManagement() {
                       {selectedPatientDetail?.treatment_plan || '우리병원 치료계획이 기록되지 않았습니다.'}
                     </p>
                   </div>
+                  
+                  {/* 연동된 치료 계획 목록 표시 */}
+                  {treatmentPlans.length > 0 && (
+                    <div className="mt-4 pt-4 border-t">
+                      <h4 className="text-sm font-medium mb-2">등록된 치료 내역</h4>
+                      <div className="space-y-2">
+                        {treatmentPlans.map((plan) => (
+                          <div key={plan.id} className="flex justify-between items-center p-2 bg-background rounded border">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{plan.treatment_detail}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {plan.treatment_amount.toLocaleString()}원
+                              </p>
+                            </div>
+                            <Badge variant={plan.is_paid ? "default" : "secondary"} className="ml-2">
+                              {plan.is_paid ? "수납완료" : "미수납"}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -635,12 +660,7 @@ export default function PatientListManagement() {
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold">치료 계획 관리</h3>
                   <Button 
-                    onClick={() => {
-                      setShowAddForm(!showAddForm);
-                      if (selectedPatientDetail && treatmentPlans.length === 0) {
-                        fetchTreatmentPlans(selectedPatientDetail.id);
-                      }
-                    }}
+                    onClick={() => setShowAddForm(!showAddForm)}
                     size="sm"
                   >
                     <Plus className="h-4 w-4 mr-2" />
