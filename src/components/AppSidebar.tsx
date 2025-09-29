@@ -23,8 +23,9 @@ import {
 
 const navigationItems = [
   { title: "대시보드", url: "/", icon: Home },
-  { title: "환자 기본 관리", url: "/patients", icon: Users },
-  { title: "일별 상태 추적", url: "/daily-tracking", icon: ClipboardCheck },
+  { title: "초진관리", url: "/first-visit", icon: Heart },
+  { title: "관리 환자 리스트", url: "/patient-list", icon: Users },
+  { title: "일별 환자 관리 현황", url: "/daily-tracking", icon: ClipboardCheck },
 ];
 
 const managementItems: never[] = [];

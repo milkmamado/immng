@@ -9,7 +9,8 @@ import Layout from "./components/Layout";
 import { Dashboard } from "./components/Dashboard";
 import Auth from "./pages/Auth";
 import AccountManagement from "./pages/AccountManagement";
-import PatientBasicManagement from "./pages/PatientBasicManagement";
+import FirstVisitManagement from "./pages/FirstVisitManagement";
+import PatientListManagement from "./pages/PatientListManagement";
 import DailyStatusTracking from "./pages/DailyStatusTracking";
 import NotFound from "./pages/NotFound";
 
@@ -51,10 +52,18 @@ function AppRoutes() {
           } 
         />
         <Route 
-          path="/patients" 
+          path="/first-visit" 
           element={
             <ProtectedRoute>
-              <PatientBasicManagement />
+              <FirstVisitManagement />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/patient-list" 
+          element={
+            <ProtectedRoute>
+              <PatientListManagement />
             </ProtectedRoute>
           } 
         />
