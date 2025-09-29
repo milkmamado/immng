@@ -32,6 +32,7 @@ export default function FirstVisitManagement() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -124,7 +125,11 @@ export default function FirstVisitManagement() {
               </TableHeader>
               <TableBody>
                 {patients.map((patient) => (
-                  <TableRow key={patient.id}>
+                  <TableRow 
+                    key={patient.id} 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => setSelectedPatientDetail(patient)}
+                  >
                     <TableCell>{patient.chart_number || '-'}</TableCell>
                     <TableCell>
                       {new Date(patient.created_at).toLocaleDateString('ko-KR')}
@@ -148,7 +153,7 @@ export default function FirstVisitManagement() {
                     <TableCell>{patient.diet_info || '-'}</TableCell>
                     <TableCell>{patient.korean_doctor || '-'}</TableCell>
                     <TableCell>{patient.western_doctor || '-'}</TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       {patient.counseling_content ? (
                         <Button 
                           variant="outline" 
@@ -198,6 +203,121 @@ export default function FirstVisitManagement() {
                 {selectedPatient?.counseling_content || "상담내용이 없습니다."}
               </pre>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 환자 상세정보 모달 다이얼로그 */}
+      <Dialog open={!!selectedPatientDetail} onOpenChange={() => setSelectedPatientDetail(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedPatientDetail?.name} - 환자 상세정보</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">기본 정보</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="font-medium">이름:</span>
+                    <span>{selectedPatientDetail?.name || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">차트번호:</span>
+                    <span>{selectedPatientDetail?.chart_number || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">등록일:</span>
+                    <span>
+                      {selectedPatientDetail?.created_at ? 
+                        new Date(selectedPatientDetail.created_at).toLocaleDateString('ko-KR') : '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">유입/실패:</span>
+                    <Badge variant={getInflowStatusColor(selectedPatientDetail?.inflow_status)}>
+                      {selectedPatientDetail?.inflow_status || '-'}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">입원/외래:</span>
+                    <span>{selectedPatientDetail?.visit_type || '-'}</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">진료 정보</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="font-medium">진단명:</span>
+                    <span>{selectedPatientDetail?.detailed_diagnosis || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">세부진단명:</span>
+                    <span>{selectedPatientDetail?.detailed_diagnosis || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">한방주치의:</span>
+                    <span>{selectedPatientDetail?.korean_doctor || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">양방주치의:</span>
+                    <span>{selectedPatientDetail?.western_doctor || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">내담자:</span>
+                    <span>{selectedPatientDetail?.counselor || '-'}</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">추가 정보</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="font-medium">이전병원:</span>
+                    <span>{selectedPatientDetail?.previous_hospital || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">식이:</span>
+                    <span>{selectedPatientDetail?.diet_info || '-'}</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">내원동기</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm leading-relaxed">
+                    {selectedPatientDetail?.visit_motivation || '내원동기가 기록되지 않았습니다.'}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {selectedPatientDetail?.counseling_content && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">상담내용</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-muted p-4 rounded-lg">
+                    <pre className="whitespace-pre-wrap text-sm leading-relaxed">
+                      {selectedPatientDetail.counseling_content}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </DialogContent>
       </Dialog>
