@@ -9,10 +9,8 @@ import Layout from "./components/Layout";
 import { Dashboard } from "./components/Dashboard";
 import Auth from "./pages/Auth";
 import AccountManagement from "./pages/AccountManagement";
-import PatientManagement from "./pages/PatientManagement";
-import PatientRegistration from "./pages/PatientRegistration";
-import PatientDetail from "./pages/PatientDetail";
-import PatientReadmission from "./pages/PatientReadmission";
+import PatientBasicManagement from "./pages/PatientBasicManagement";
+import DailyStatusTracking from "./pages/DailyStatusTracking";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,87 +54,15 @@ function AppRoutes() {
           path="/patients" 
           element={
             <ProtectedRoute>
-              <PatientManagement />
+              <PatientBasicManagement />
             </ProtectedRoute>
           } 
         />
         <Route 
-          path="/patients/new" 
+          path="/daily-tracking" 
           element={
             <ProtectedRoute>
-              <PatientRegistration />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/patients/:id" 
-          element={
-            <ProtectedRoute>
-              <PatientDetail />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/patients/readmission/:id" 
-          element={
-            <ProtectedRoute>
-              <PatientReadmission />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/records" 
-          element={
-            <ProtectedRoute>
-              <div className="p-6">진료 기록 (개발 예정)</div>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/treatment" 
-          element={
-            <ProtectedRoute>
-              <div className="p-6">치료 현황 (개발 예정)</div>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/schedule" 
-          element={
-            <ProtectedRoute>
-              <div className="p-6">일정 관리 (개발 예정)</div>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/payments" 
-          element={
-            <ProtectedRoute>
-              <div className="p-6">결제 관리 (개발 예정)</div>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/health-status" 
-          element={
-            <ProtectedRoute>
-              <div className="p-6">건강 상태 (개발 예정)</div>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/reports" 
-          element={
-            <ProtectedRoute>
-              <div className="p-6">보고서 (개발 예정)</div>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/settings" 
-          element={
-            <ProtectedRoute>
-              <div className="p-6">설정 (개발 예정)</div>
+              <DailyStatusTracking />
             </ProtectedRoute>
           } 
         />

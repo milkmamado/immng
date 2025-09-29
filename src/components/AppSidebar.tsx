@@ -1,15 +1,10 @@
 import { 
   Users, 
   Calendar, 
-  FileText, 
-  Activity, 
-  DollarSign, 
-  Settings, 
   Home,
-  UserPlus,
-  ClipboardList,
   Heart,
-  Shield
+  Shield,
+  ClipboardCheck
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,19 +23,11 @@ import {
 
 const navigationItems = [
   { title: "대시보드", url: "/", icon: Home },
-  { title: "환자 관리", url: "/patients", icon: Users },
-  { title: "신규 환자", url: "/patients/new", icon: UserPlus },
-  { title: "진료 기록", url: "/records", icon: FileText },
-  { title: "치료 현황", url: "/treatment", icon: Activity },
-  { title: "일정 관리", url: "/schedule", icon: Calendar },
+  { title: "환자 기본 관리", url: "/patients", icon: Users },
+  { title: "일별 상태 추적", url: "/daily-tracking", icon: ClipboardCheck },
 ];
 
-const managementItems = [
-  { title: "결제 관리", url: "/payments", icon: DollarSign },
-  { title: "건강 상태", url: "/health-status", icon: Heart },
-  { title: "보고서", url: "/reports", icon: ClipboardList },
-  { title: "설정", url: "/settings", icon: Settings },
-];
+const managementItems: never[] = [];
 
 const adminItems = [
   { title: "계정 관리", url: "/account-management", icon: Shield, requiredRole: 'master' as const },
@@ -103,30 +90,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="mt-4">
-          <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground px-3">
-            {!isCollapsed && "관리"}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {managementItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink 
-                      to={item.url} 
-                      end 
-                      className={getNavCls}
-                      title={isCollapsed ? item.title : undefined}
-                    >
-                      <item.icon className="h-4 w-4 flex-shrink-0 text-gray-600" />
-                      {!isCollapsed && <span className="ml-2 text-gray-800 font-medium">{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
 
         {/* 마스터 전용 메뉴 */}
         {userRole === 'master' && (

@@ -68,6 +68,54 @@ export type Database = {
           },
         ]
       }
+      daily_patient_status: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          patient_id: string
+          status_date: string
+          status_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          status_date: string
+          status_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          status_date?: string
+          status_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_patient_status_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_patient_status_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medical_info: {
         Row: {
           admission_cycle_id: string | null
@@ -293,66 +341,120 @@ export type Database = {
           admission_date: string | null
           age: number | null
           assigned_manager: string
+          chart_number: string | null
+          counseling_content: string | null
+          counselor: string | null
           created_at: string
+          detailed_diagnosis: string | null
+          diet_info: string | null
           discharge_date: string | null
           emergency_contact: string | null
+          examination_schedule: string | null
           first_visit_date: string | null
           gender: string | null
           guardian_name: string | null
           guardian_phone: string | null
           guardian_relationship: string | null
+          hospital_treatment: string | null
           id: string
+          inflow_status: string | null
+          insurance_type: string | null
+          korean_doctor: string | null
+          last_visit_date: string | null
+          manager_name: string | null
+          monthly_avg_days: number | null
           name: string
           patient_number: string
+          payment_amount: number | null
           phone: string | null
+          previous_hospital: string | null
           referral_source: string | null
           resident_number_masked: string | null
+          treatment_plan: string | null
           updated_at: string
+          visit_motivation: string | null
           visit_type: string | null
+          western_doctor: string | null
         }
         Insert: {
           address?: string | null
           admission_date?: string | null
           age?: number | null
           assigned_manager: string
+          chart_number?: string | null
+          counseling_content?: string | null
+          counselor?: string | null
           created_at?: string
+          detailed_diagnosis?: string | null
+          diet_info?: string | null
           discharge_date?: string | null
           emergency_contact?: string | null
+          examination_schedule?: string | null
           first_visit_date?: string | null
           gender?: string | null
           guardian_name?: string | null
           guardian_phone?: string | null
           guardian_relationship?: string | null
+          hospital_treatment?: string | null
           id?: string
+          inflow_status?: string | null
+          insurance_type?: string | null
+          korean_doctor?: string | null
+          last_visit_date?: string | null
+          manager_name?: string | null
+          monthly_avg_days?: number | null
           name: string
           patient_number: string
+          payment_amount?: number | null
           phone?: string | null
+          previous_hospital?: string | null
           referral_source?: string | null
           resident_number_masked?: string | null
+          treatment_plan?: string | null
           updated_at?: string
+          visit_motivation?: string | null
           visit_type?: string | null
+          western_doctor?: string | null
         }
         Update: {
           address?: string | null
           admission_date?: string | null
           age?: number | null
           assigned_manager?: string
+          chart_number?: string | null
+          counseling_content?: string | null
+          counselor?: string | null
           created_at?: string
+          detailed_diagnosis?: string | null
+          diet_info?: string | null
           discharge_date?: string | null
           emergency_contact?: string | null
+          examination_schedule?: string | null
           first_visit_date?: string | null
           gender?: string | null
           guardian_name?: string | null
           guardian_phone?: string | null
           guardian_relationship?: string | null
+          hospital_treatment?: string | null
           id?: string
+          inflow_status?: string | null
+          insurance_type?: string | null
+          korean_doctor?: string | null
+          last_visit_date?: string | null
+          manager_name?: string | null
+          monthly_avg_days?: number | null
           name?: string
           patient_number?: string
+          payment_amount?: number | null
           phone?: string | null
+          previous_hospital?: string | null
           referral_source?: string | null
           resident_number_masked?: string | null
+          treatment_plan?: string | null
           updated_at?: string
+          visit_motivation?: string | null
           visit_type?: string | null
+          western_doctor?: string | null
         }
         Relationships: []
       }
@@ -525,21 +627,53 @@ export type Database = {
         Row: {
           age: number | null
           assigned_manager: string | null
-          cancer_stage: string | null
-          cancer_type: string | null
           created_at: string | null
-          first_visit_date: string | null
+          detailed_diagnosis: string | null
           gender: string | null
           id: string | null
+          inflow_status: string | null
+          last_visit_date: string | null
           manager_name: string | null
           name: string | null
-          outstanding_balance: number | null
-          package_type: string | null
           patient_number: string | null
+          payment_amount: number | null
           phone: string | null
-          total_cost: number | null
           updated_at: string | null
           visit_type: string | null
+        }
+        Insert: {
+          age?: number | null
+          assigned_manager?: string | null
+          created_at?: string | null
+          detailed_diagnosis?: string | null
+          gender?: string | null
+          id?: string | null
+          inflow_status?: string | null
+          last_visit_date?: string | null
+          manager_name?: string | null
+          name?: string | null
+          patient_number?: string | null
+          payment_amount?: number | null
+          phone?: string | null
+          updated_at?: string | null
+          visit_type?: string | null
+        }
+        Update: {
+          age?: number | null
+          assigned_manager?: string | null
+          created_at?: string | null
+          detailed_diagnosis?: string | null
+          gender?: string | null
+          id?: string | null
+          inflow_status?: string | null
+          last_visit_date?: string | null
+          manager_name?: string | null
+          name?: string | null
+          patient_number?: string | null
+          payment_amount?: number | null
+          phone?: string | null
+          updated_at?: string | null
+          visit_type?: string | null
         }
         Relationships: []
       }
