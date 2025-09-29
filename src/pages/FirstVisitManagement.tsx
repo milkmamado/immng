@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Heart, Plus } from "lucide-react";
+import { Heart, Plus, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface Patient {
@@ -31,6 +31,7 @@ export default function FirstVisitManagement() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -147,8 +148,19 @@ export default function FirstVisitManagement() {
                     <TableCell>{patient.diet_info || '-'}</TableCell>
                     <TableCell>{patient.korean_doctor || '-'}</TableCell>
                     <TableCell>{patient.western_doctor || '-'}</TableCell>
-                    <TableCell className="max-w-32 truncate">
-                      {patient.counseling_content || '-'}
+                    <TableCell>
+                      {patient.counseling_content ? (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setSelectedPatient(patient)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          상세보기
+                        </Button>
+                      ) : (
+                        '-'
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -171,6 +183,22 @@ export default function FirstVisitManagement() {
             <DialogTitle>새 환자 등록</DialogTitle>
           </DialogHeader>
           <PatientBasicForm onClose={handleClose} />
+        </DialogContent>
+      </Dialog>
+
+      {/* 상담내용 모달 다이얼로그 */}
+      <Dialog open={!!selectedPatient} onOpenChange={() => setSelectedPatient(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{selectedPatient?.name} - 상담내용</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <div className="bg-muted p-4 rounded-lg">
+              <pre className="whitespace-pre-wrap text-sm">
+                {selectedPatient?.counseling_content || "상담내용이 없습니다."}
+              </pre>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
