@@ -25,6 +25,7 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
     previous_hospital: '',      // 이전병원(본원)
     diet_info: '',              // 식이
     korean_doctor: '',          // 한방주치의
+    manager_name: '',           // 담당자(상담실장)
     western_doctor: '',         // 양방주치의
     counseling_content: '',     // 상담내용
   });
@@ -46,6 +47,7 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
         previous_hospital: patient.previous_hospital || '',
         diet_info: patient.diet_info || '',
         korean_doctor: patient.korean_doctor || '',
+        manager_name: patient.manager_name || '',
         western_doctor: patient.western_doctor || '',
         counseling_content: patient.counseling_content || ''
       });
@@ -86,6 +88,7 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
         previous_hospital: formData.previous_hospital || null,
         diet_info: formData.diet_info || null,
         korean_doctor: formData.korean_doctor || null,
+        manager_name: formData.manager_name || null,
         western_doctor: formData.western_doctor || null,
         counseling_content: formData.counseling_content || null,
         assigned_manager: user.id
@@ -139,6 +142,7 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
         previous_hospital: '',
         diet_info: '',
         korean_doctor: '',
+        manager_name: '',
         western_doctor: '',
         counseling_content: ''
       });
@@ -294,6 +298,18 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
             value={formData.korean_doctor}
             onChange={handleInputChange}
             placeholder="한방주치의"
+          />
+        </div>
+
+        {/* 담당자(상담실장) */}
+        <div>
+          <Label htmlFor="manager_name">담당자(상담실장)</Label>
+          <Input
+            id="manager_name"
+            name="manager_name"
+            value={formData.manager_name}
+            onChange={handleInputChange}
+            placeholder="담당자(상담실장)"
           />
         </div>
 

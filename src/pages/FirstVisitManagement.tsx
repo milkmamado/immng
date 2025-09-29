@@ -23,6 +23,7 @@ interface Patient {
   previous_hospital?: string;
   diet_info?: string;
   korean_doctor?: string;
+  manager_name?: string;
   western_doctor?: string;
   counseling_content?: string;
   created_at: string;
@@ -160,6 +161,7 @@ export default function FirstVisitManagement() {
                   <TableHead>이전병원</TableHead>
                   <TableHead>식이</TableHead>
                   <TableHead>한방주치의</TableHead>
+                  <TableHead>담당자(상담실장)</TableHead>
                   <TableHead>양방주치의</TableHead>
                   <TableHead>상담내용</TableHead>
                   <TableHead>작업</TableHead>
@@ -194,6 +196,7 @@ export default function FirstVisitManagement() {
                     <TableCell>{patient.previous_hospital || '-'}</TableCell>
                     <TableCell>{patient.diet_info || '-'}</TableCell>
                     <TableCell>{patient.korean_doctor || '-'}</TableCell>
+                    <TableCell>{patient.manager_name || '-'}</TableCell>
                     <TableCell>{patient.western_doctor || '-'}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
