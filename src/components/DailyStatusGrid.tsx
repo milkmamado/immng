@@ -48,6 +48,12 @@ export function DailyStatusGrid({
   } | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+  const [memoCell, setMemoCell] = useState<{
+    patientId: string;
+    memoType: 'memo1' | 'memo2';
+    currentValue: string;
+  } | null>(null);
+  const [memoValue, setMemoValue] = useState<string>('');
 
   const statusTypes = ['입원', '퇴원', '재원', '낮병동', '외래', '기타', '전화F/U'];
   
@@ -83,6 +89,28 @@ export function DailyStatusGrid({
     setSelectedCell(null);
     setSelectedStatus('');
     setNotes('');
+  };
+
+  const handleDelete = async () => {
+    if (!selectedCell) return;
+
+    // 빈 상태로 업데이트하여 삭제 효과
+    await onStatusUpdate(selectedCell.patientId, selectedCell.date, '', '');
+    setSelectedCell(null);
+    setSelectedStatus('');
+    setNotes('');
+  };
+
+  const handleMemoDoubleClick = (patientId: string, memoType: 'memo1' | 'memo2', currentValue: string) => {
+    setMemoCell({ patientId, memoType, currentValue });
+    setMemoValue(currentValue);
+  };
+
+  const handleMemoSave = () => {
+    // TODO: 메모 저장 로직 구현 (별도 테이블 필요)
+    console.log('Memo saved:', memoCell, memoValue);
+    setMemoCell(null);
+    setMemoValue('');
   };
 
   const getDayOfWeek = (day: number) => {
@@ -164,17 +192,11 @@ export function DailyStatusGrid({
               <th className="min-w-[100px] p-2 text-left font-medium border sticky left-0 bg-muted z-10">
                 환자명
               </th>
-              <th className="min-w-[80px] p-2 text-left font-medium border">
-                담당실장
-              </th>
               <th className="min-w-[120px] p-2 text-left font-medium border">
                 메모1
               </th>
               <th className="min-w-[120px] p-2 text-left font-medium border">
                 메모2
-              </th>
-              <th className="min-w-[120px] p-2 text-left font-medium border">
-                진단명
               </th>
               <th className="min-w-[100px] p-2 text-left font-medium border">
                 주치의
@@ -189,20 +211,28 @@ export function DailyStatusGrid({
             {patients.map((patient) => {
               return (
                 <tr key={patient.id} className="hover:bg-muted/50">
-                  <td className="p-2 border font-medium sticky left-0 bg-background">
-                    {patient.name}
+                  <td className="p-2 border sticky left-0 bg-background">
+                    <div className="space-y-0.5">
+                      <div className="font-medium">{patient.name}</div>
+                      <div className="text-[10px] text-muted-foreground">
+                        담당: {patient.manager_name || '-'}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">
+                        진단: {patient.diagnosis || '-'}
+                      </div>
+                    </div>
                   </td>
-                  <td className="p-2 border text-xs">
-                    {patient.manager_name || '-'}
-                  </td>
-                  <td className="p-2 border text-xs">
+                  <td 
+                    className="p-2 border text-xs cursor-pointer hover:bg-muted/50"
+                    onDoubleClick={() => handleMemoDoubleClick(patient.id, 'memo1', '-')}
+                  >
                     -
                   </td>
-                  <td className="p-2 border text-xs">
+                  <td 
+                    className="p-2 border text-xs cursor-pointer hover:bg-muted/50"
+                    onDoubleClick={() => handleMemoDoubleClick(patient.id, 'memo2', '-')}
+                  >
                     -
-                  </td>
-                  <td className="p-2 border text-xs">
-                    {patient.diagnosis || '-'}
                   </td>
                   <td className="p-2 border text-xs">
                     {[patient.korean_doctor, patient.western_doctor].filter(Boolean).join(', ') || '-'}
@@ -230,11 +260,20 @@ export function DailyStatusGrid({
           <div className="space-y-4">
             <div>
               <Label htmlFor="status">상태 선택</Label>
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <Select 
+                value={selectedStatus} 
+                onValueChange={(value) => {
+                  setSelectedStatus(value);
+                  // 상태 변경 시 메모 초기화 (기타/전화F/U가 아닌 경우)
+                  if (value !== '기타' && value !== '전화F/U') {
+                    setNotes('');
+                  }
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="상태를 선택하세요" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-50 bg-background">
                   {statusTypes.map(type => (
                     <SelectItem key={type} value={type}>
                       {type}
@@ -257,11 +296,49 @@ export function DailyStatusGrid({
               </div>
             )}
             
+            <div className="flex justify-between">
+              <Button variant="destructive" onClick={handleDelete}>
+                삭제
+              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setSelectedCell(null)}>
+                  취소
+                </Button>
+                <Button onClick={handleSave} disabled={!selectedStatus}>
+                  저장
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 메모 편집 다이얼로그 */}
+      <Dialog open={!!memoCell} onOpenChange={() => setMemoCell(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {memoCell?.memoType === 'memo1' ? '메모1' : '메모2'} 편집
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="memo">메모 내용</Label>
+              <Textarea
+                id="memo"
+                value={memoValue}
+                onChange={(e) => setMemoValue(e.target.value)}
+                placeholder="메모를 입력하세요..."
+                rows={4}
+              />
+            </div>
+            
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setSelectedCell(null)}>
+              <Button variant="outline" onClick={() => setMemoCell(null)}>
                 취소
               </Button>
-              <Button onClick={handleSave} disabled={!selectedStatus}>
+              <Button onClick={handleMemoSave}>
                 저장
               </Button>
             </div>
