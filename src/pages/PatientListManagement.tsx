@@ -38,7 +38,8 @@ interface Patient {
   hospital_treatment?: string;
   examination_schedule?: string;
   treatment_plan?: string;
-  monthly_avg_days?: number;
+  monthly_avg_inpatient_days?: number;
+  monthly_avg_outpatient_days?: number;
   payment_amount?: number;
   counseling_content?: string;
   created_at: string;
@@ -123,27 +124,41 @@ export default function PatientListManagement() {
             : null;
 
           // 월평균 입원/외래 일수 계산
-          let monthly_avg_days = 0;
+          let monthly_avg_inpatient_days = 0;
+          let monthly_avg_outpatient_days = 0;
+          
           if (statusData && statusData.length > 0) {
-            // 입원, 재원, 낮병동, 외래만 카운트
-            const relevantStatuses = ['입원', '재원', '낮병동', '외래'];
-            const visitDays = statusData.filter(s => relevantStatuses.includes(s.status_type));
+            // 입원 관련: 입원, 재원
+            const inpatientStatuses = ['입원', '재원'];
+            const inpatientDays = statusData.filter(s => inpatientStatuses.includes(s.status_type));
+            
+            // 외래 관련: 낮병동, 외래
+            const outpatientStatuses = ['낮병동', '외래'];
+            const outpatientDays = statusData.filter(s => outpatientStatuses.includes(s.status_type));
             
             // 전체 기간 계산 (첫 기록부터 마지막 기록까지)
-            if (visitDays.length > 0) {
-              const firstDate = new Date(visitDays[visitDays.length - 1].status_date);
-              const lastDate = new Date(visitDays[0].status_date);
+            const allRelevantDays = [...inpatientDays, ...outpatientDays];
+            if (allRelevantDays.length > 0) {
+              const dates = allRelevantDays.map(s => new Date(s.status_date));
+              const firstDate = new Date(Math.min(...dates.map(d => d.getTime())));
+              const lastDate = new Date(Math.max(...dates.map(d => d.getTime())));
               const monthsDiff = (lastDate.getFullYear() - firstDate.getFullYear()) * 12 
                 + (lastDate.getMonth() - firstDate.getMonth()) + 1;
               
-              monthly_avg_days = Math.round(visitDays.length / monthsDiff);
+              monthly_avg_inpatient_days = inpatientDays.length > 0 
+                ? Math.round(inpatientDays.length / monthsDiff) 
+                : 0;
+              monthly_avg_outpatient_days = outpatientDays.length > 0 
+                ? Math.round(outpatientDays.length / monthsDiff) 
+                : 0;
             }
           }
 
           return {
             ...patient,
             last_visit_date,
-            monthly_avg_days
+            monthly_avg_inpatient_days,
+            monthly_avg_outpatient_days
           };
         })
       );
@@ -548,7 +563,8 @@ export default function PatientListManagement() {
                   <TableHead>본병원치료</TableHead>
                   <TableHead>본병원검사일정</TableHead>
                   <TableHead>우리병원치료계획</TableHead>
-                  <TableHead>월평균입원/외래일수</TableHead>
+                  <TableHead>월평균입원일수</TableHead>
+                  <TableHead>월평균외래일수</TableHead>
                   <TableHead>마지막내원일</TableHead>
                   <TableHead>수납급액(비급여)</TableHead>
                 </TableRow>
@@ -605,7 +621,10 @@ export default function PatientListManagement() {
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      {patient.monthly_avg_days ? `${patient.monthly_avg_days}일` : '-'}
+                      {patient.monthly_avg_inpatient_days ? `${patient.monthly_avg_inpatient_days}일` : '-'}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {patient.monthly_avg_outpatient_days ? `${patient.monthly_avg_outpatient_days}일` : '-'}
                     </TableCell>
                     <TableCell>
                       {patient.last_visit_date ? 
@@ -816,15 +835,32 @@ export default function PatientListManagement() {
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="monthly-avg-days">월평균입원/외래일수</Label>
-                      <Input
-                        id="monthly-avg-days"
-                        type="number"
-                        placeholder="월평균일수를 입력하세요"
-                        value={selectedPatientDetail?.monthly_avg_days || ''}
-                        onChange={(e) => updateEditingField('monthly_avg_days', parseInt(e.target.value) || 0)}
-                        onBlur={(e) => savePatientField('monthly_avg_days', parseInt(e.target.value) || 0)}
-                      />
+                      <Label>월평균 입원일수</Label>
+                      <div className="p-2 bg-muted rounded-md">
+                        <span className="text-sm">
+                          {selectedPatientDetail?.monthly_avg_inpatient_days 
+                            ? `${selectedPatientDetail.monthly_avg_inpatient_days}일` 
+                            : '-'
+                          }
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        일별 환자 관리 현황에서 자동 계산됩니다
+                      </p>
+                    </div>
+                    <div>
+                      <Label>월평균 외래일수</Label>
+                      <div className="p-2 bg-muted rounded-md">
+                        <span className="text-sm">
+                          {selectedPatientDetail?.monthly_avg_outpatient_days 
+                            ? `${selectedPatientDetail.monthly_avg_outpatient_days}일` 
+                            : '-'
+                          }
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        일별 환자 관리 현황에서 자동 계산됩니다
+                      </p>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">수납급액:</span>
