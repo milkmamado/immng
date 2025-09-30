@@ -634,7 +634,7 @@ export default function PatientListManagement() {
                   <CardContent className="space-y-3">
                     <div className="flex justify-between">
                       <span className="font-medium">진단명:</span>
-                      <span>{selectedPatientDetail?.detailed_diagnosis || '-'}</span>
+                      <span>{selectedPatientDetail?.diagnosis || '-'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">세부진단명:</span>
