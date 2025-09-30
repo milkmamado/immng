@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Users, Search, Plus, Check, X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Users, Search, Plus, Check, X, Settings } from "lucide-react";
 
 interface Patient {
   id: string;
@@ -55,6 +56,11 @@ interface TreatmentPlan {
   created_by: string;
 }
 
+interface Option {
+  id: string;
+  name: string;
+}
+
 export default function PatientListManagement() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
@@ -68,10 +74,25 @@ export default function PatientListManagement() {
   const [loadingTreatments, setLoadingTreatments] = useState(false);
   const [viewMode, setViewMode] = useState<'full' | 'treatment-only'>('full');
   const [editingFields, setEditingFields] = useState<Record<string, any>>({});
+  const [isMaster, setIsMaster] = useState(false);
+  
+  // 옵션 데이터 state
+  const [diagnosisOptions, setDiagnosisOptions] = useState<Option[]>([]);
+  const [hospitalOptions, setHospitalOptions] = useState<Option[]>([]);
+  const [insuranceTypeOptions, setInsuranceTypeOptions] = useState<Option[]>([]);
+  const [treatmentDetailOptions, setTreatmentDetailOptions] = useState<Option[]>([]);
+  
+  // 옵션 관리 dialog state
+  const [showOptionsDialog, setShowOptionsDialog] = useState(false);
+  const [selectedOptionType, setSelectedOptionType] = useState<'diagnosis' | 'hospital' | 'insurance' | 'treatment'>('diagnosis');
+  const [newOptionName, setNewOptionName] = useState('');
+  
   const { toast } = useToast();
 
   useEffect(() => {
     fetchPatients();
+    fetchOptions();
+    checkMasterStatus();
   }, []);
 
   useEffect(() => {
@@ -103,6 +124,118 @@ export default function PatientListManagement() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkMasterStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'master')
+        .eq('approval_status', 'approved')
+        .single();
+
+      setIsMaster(!!data);
+    } catch (error) {
+      console.error('Error checking master status:', error);
+    }
+  };
+
+  const fetchOptions = async () => {
+    try {
+      const [diagnosis, hospital, insurance, treatment] = await Promise.all([
+        supabase.from('diagnosis_options').select('*').order('name'),
+        supabase.from('hospital_options').select('*').order('name'),
+        supabase.from('insurance_type_options').select('*').order('name'),
+        supabase.from('treatment_detail_options').select('*').order('name')
+      ]);
+
+      if (diagnosis.data) setDiagnosisOptions(diagnosis.data);
+      if (hospital.data) setHospitalOptions(hospital.data);
+      if (insurance.data) setInsuranceTypeOptions(insurance.data);
+      if (treatment.data) setTreatmentDetailOptions(treatment.data);
+    } catch (error) {
+      console.error('Error fetching options:', error);
+    }
+  };
+
+  const addOption = async () => {
+    if (!newOptionName.trim()) {
+      toast({
+        title: "입력 오류",
+        description: "옵션명을 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const tableMap = {
+        diagnosis: 'diagnosis_options',
+        hospital: 'hospital_options',
+        insurance: 'insurance_type_options',
+        treatment: 'treatment_detail_options'
+      } as const;
+
+      const tableName = tableMap[selectedOptionType];
+      const { error } = await (supabase as any)
+        .from(tableName)
+        .insert({ name: newOptionName.trim() });
+
+      if (error) throw error;
+
+      toast({
+        title: "성공",
+        description: "옵션이 추가되었습니다.",
+      });
+
+      setNewOptionName('');
+      fetchOptions();
+    } catch (error) {
+      console.error('Error adding option:', error);
+      toast({
+        title: "오류",
+        description: "옵션 추가에 실패했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteOption = async (optionId: string) => {
+    try {
+      const tableMap = {
+        diagnosis: 'diagnosis_options',
+        hospital: 'hospital_options',
+        insurance: 'insurance_type_options',
+        treatment: 'treatment_detail_options'
+      } as const;
+
+      const tableName = tableMap[selectedOptionType];
+      const { error } = await (supabase as any)
+        .from(tableName)
+        .delete()
+        .eq('id', optionId);
+
+      if (error) throw error;
+
+      toast({
+        title: "성공",
+        description: "옵션이 삭제되었습니다.",
+      });
+
+      fetchOptions();
+    } catch (error) {
+      console.error('Error deleting option:', error);
+      toast({
+        title: "오류",
+        description: "옵션 삭제에 실패했습니다.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -335,14 +468,34 @@ export default function PatientListManagement() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="treatment-detail">치료상세</Label>
-              <Textarea
-                id="treatment-detail"
-                placeholder="치료상세 내용을 입력하세요"
-                value={newTreatmentDetail}
-                onChange={(e) => setNewTreatmentDetail(e.target.value)}
-                rows={3}
-              />
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="treatment-detail">치료상세</Label>
+                {isMaster && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => {
+                      setSelectedOptionType('treatment');
+                      setShowOptionsDialog(true);
+                    }}
+                  >
+                    <Settings className="h-4 w-4 mr-1" />
+                    옵션 관리
+                  </Button>
+                )}
+              </div>
+              <Select value={newTreatmentDetail} onValueChange={setNewTreatmentDetail}>
+                <SelectTrigger>
+                  <SelectValue placeholder="치료상세를 선택하세요" />
+                </SelectTrigger>
+                <SelectContent className="z-[100] bg-background">
+                  {treatmentDetailOptions.map(option => (
+                    <SelectItem key={option.id} value={option.name}>
+                      {option.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="treatment-amount">치료금액</Label>
@@ -632,9 +785,40 @@ export default function PatientListManagement() {
                     <CardTitle className="text-lg">진료 정보</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="font-medium">진단명:</span>
-                      <span>{selectedPatientDetail?.diagnosis || '-'}</span>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">진단명:</span>
+                        {isMaster && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedOptionType('diagnosis');
+                              setShowOptionsDialog(true);
+                            }}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                      <Select 
+                        value={selectedPatientDetail?.diagnosis || ''} 
+                        onValueChange={(value) => {
+                          updateEditingField('diagnosis', value);
+                          savePatientField('diagnosis', value);
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="진단명을 선택하세요" />
+                        </SelectTrigger>
+                        <SelectContent className="z-[100] bg-background">
+                          {diagnosisOptions.map(option => (
+                            <SelectItem key={option.id} value={option.name}>
+                              {option.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">세부진단명:</span>
@@ -665,9 +849,40 @@ export default function PatientListManagement() {
                     <CardTitle className="text-lg">추가 정보</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="font-medium">이전병원:</span>
-                      <span>{selectedPatientDetail?.previous_hospital || '-'}</span>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">이전병원:</span>
+                        {isMaster && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedOptionType('hospital');
+                              setShowOptionsDialog(true);
+                            }}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                      <Select 
+                        value={selectedPatientDetail?.previous_hospital || ''} 
+                        onValueChange={(value) => {
+                          updateEditingField('previous_hospital', value);
+                          savePatientField('previous_hospital', value);
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="이전병원을 선택하세요" />
+                        </SelectTrigger>
+                        <SelectContent className="z-[100] bg-background">
+                          {hospitalOptions.map(option => (
+                            <SelectItem key={option.id} value={option.name}>
+                              {option.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">식이:</span>
@@ -683,14 +898,39 @@ export default function PatientListManagement() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label htmlFor="insurance-type">실비보험유형</Label>
-                      <Input
-                        id="insurance-type"
-                        placeholder="실비보험유형을 입력하세요"
-                        value={selectedPatientDetail?.insurance_type || ''}
-                        onChange={(e) => updateEditingField('insurance_type', e.target.value)}
-                        onBlur={(e) => savePatientField('insurance_type', e.target.value)}
-                      />
+                      <div className="flex items-center justify-between mb-2">
+                        <Label htmlFor="insurance-type">실비보험유형</Label>
+                        {isMaster && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedOptionType('insurance');
+                              setShowOptionsDialog(true);
+                            }}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                      <Select 
+                        value={selectedPatientDetail?.insurance_type || ''} 
+                        onValueChange={(value) => {
+                          updateEditingField('insurance_type', value);
+                          savePatientField('insurance_type', value);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="실비보험유형을 선택하세요" />
+                        </SelectTrigger>
+                        <SelectContent className="z-[100] bg-background">
+                          {insuranceTypeOptions.map(option => (
+                            <SelectItem key={option.id} value={option.name}>
+                              {option.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <Label htmlFor="monthly-avg-days">월평균입원/외래일수</Label>
@@ -819,6 +1059,94 @@ export default function PatientListManagement() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* 옵션 관리 다이얼로그 (마스터 전용) */}
+      {isMaster && (
+        <Dialog open={showOptionsDialog} onOpenChange={setShowOptionsDialog}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedOptionType === 'diagnosis' && '진단명'} 
+                {selectedOptionType === 'hospital' && '이전병원'} 
+                {selectedOptionType === 'insurance' && '실비보험유형'} 
+                {selectedOptionType === 'treatment' && '치료상세'} 옵션 관리
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4 mt-4">
+              {/* 새 옵션 추가 */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="새 옵션명을 입력하세요"
+                  value={newOptionName}
+                  onChange={(e) => setNewOptionName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      addOption();
+                    }
+                  }}
+                />
+                <Button onClick={addOption}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  추가
+                </Button>
+              </div>
+
+              {/* 옵션 목록 */}
+              <div className="border rounded-lg divide-y max-h-[400px] overflow-y-auto">
+                {selectedOptionType === 'diagnosis' && diagnosisOptions.map(option => (
+                  <div key={option.id} className="flex items-center justify-between p-3 hover:bg-muted/50">
+                    <span>{option.name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteOption(option.id)}
+                    >
+                      <X className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+                {selectedOptionType === 'hospital' && hospitalOptions.map(option => (
+                  <div key={option.id} className="flex items-center justify-between p-3 hover:bg-muted/50">
+                    <span>{option.name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteOption(option.id)}
+                    >
+                      <X className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+                {selectedOptionType === 'insurance' && insuranceTypeOptions.map(option => (
+                  <div key={option.id} className="flex items-center justify-between p-3 hover:bg-muted/50">
+                    <span>{option.name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteOption(option.id)}
+                    >
+                      <X className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+                {selectedOptionType === 'treatment' && treatmentDetailOptions.map(option => (
+                  <div key={option.id} className="flex items-center justify-between p-3 hover:bg-muted/50">
+                    <span>{option.name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteOption(option.id)}
+                    >
+                      <X className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

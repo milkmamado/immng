@@ -12,6 +12,11 @@ interface PatientBasicFormProps {
   onClose: () => void;
 }
 
+interface Option {
+  id: string;
+  name: string;
+}
+
 export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
   const [formData, setFormData] = useState({
     chart_number: '',           // 차트 번호
@@ -31,7 +36,13 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
   });
 
   const [loading, setLoading] = useState(false);
+  const [diagnosisOptions, setDiagnosisOptions] = useState<Option[]>([]);
+  const [hospitalOptions, setHospitalOptions] = useState<Option[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    fetchOptions();
+  }, []);
 
   useEffect(() => {
     if (patient) {
@@ -53,6 +64,20 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
       });
     }
   }, [patient]);
+
+  const fetchOptions = async () => {
+    try {
+      const [diagnosis, hospital] = await Promise.all([
+        (supabase as any).from('diagnosis_options').select('*').order('name'),
+        (supabase as any).from('hospital_options').select('*').order('name')
+      ]);
+
+      if (diagnosis.data) setDiagnosisOptions(diagnosis.data);
+      if (hospital.data) setHospitalOptions(hospital.data);
+    } catch (error) {
+      console.error('Error fetching options:', error);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -233,13 +258,21 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
         {/* 진단명 */}
         <div>
           <Label htmlFor="diagnosis">진단명</Label>
-          <Input
-            id="diagnosis"
-            name="diagnosis"
-            value={formData.diagnosis}
-            onChange={handleInputChange}
-            placeholder="진단명"
-          />
+          <Select 
+            value={formData.diagnosis} 
+            onValueChange={(value) => handleSelectChange('diagnosis', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="진단명을 선택하세요" />
+            </SelectTrigger>
+            <SelectContent className="z-[100] bg-background">
+              {diagnosisOptions.map(option => (
+                <SelectItem key={option.id} value={option.name}>
+                  {option.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* 세부진단명 */}
@@ -269,13 +302,21 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
         {/* 이전병원(본원) */}
         <div>
           <Label htmlFor="previous_hospital">이전병원(본원)</Label>
-          <Input
-            id="previous_hospital"
-            name="previous_hospital"
-            value={formData.previous_hospital}
-            onChange={handleInputChange}
-            placeholder="이전병원"
-          />
+          <Select 
+            value={formData.previous_hospital} 
+            onValueChange={(value) => handleSelectChange('previous_hospital', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="이전병원을 선택하세요" />
+            </SelectTrigger>
+            <SelectContent className="z-[100] bg-background">
+              {hospitalOptions.map(option => (
+                <SelectItem key={option.id} value={option.name}>
+                  {option.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* 식이 */}
