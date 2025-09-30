@@ -107,7 +107,48 @@ export default function PatientListManagement() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPatients(data || []);
+      
+      // 각 환자의 일별 상태 데이터를 가져와서 통계 계산
+      const patientsWithStats = await Promise.all(
+        (data || []).map(async (patient) => {
+          const { data: statusData } = await supabase
+            .from('daily_patient_status')
+            .select('status_date, status_type')
+            .eq('patient_id', patient.id)
+            .order('status_date', { ascending: false });
+
+          // 마지막 내원일 (가장 최근 상태 날짜)
+          const last_visit_date = statusData && statusData.length > 0 
+            ? statusData[0].status_date 
+            : null;
+
+          // 월평균 입원/외래 일수 계산
+          let monthly_avg_days = 0;
+          if (statusData && statusData.length > 0) {
+            // 입원, 재원, 낮병동, 외래만 카운트
+            const relevantStatuses = ['입원', '재원', '낮병동', '외래'];
+            const visitDays = statusData.filter(s => relevantStatuses.includes(s.status_type));
+            
+            // 전체 기간 계산 (첫 기록부터 마지막 기록까지)
+            if (visitDays.length > 0) {
+              const firstDate = new Date(visitDays[visitDays.length - 1].status_date);
+              const lastDate = new Date(visitDays[0].status_date);
+              const monthsDiff = (lastDate.getFullYear() - firstDate.getFullYear()) * 12 
+                + (lastDate.getMonth() - firstDate.getMonth()) + 1;
+              
+              monthly_avg_days = Math.round(visitDays.length / monthsDiff);
+            }
+          }
+
+          return {
+            ...patient,
+            last_visit_date,
+            monthly_avg_days
+          };
+        })
+      );
+
+      setPatients(patientsWithStats);
     } catch (error) {
       console.error('Error fetching patients:', error);
       toast({
