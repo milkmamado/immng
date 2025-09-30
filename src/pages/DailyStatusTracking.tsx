@@ -18,6 +18,8 @@ interface Patient {
   western_doctor?: string;
   manager_name?: string;
   previous_hospital?: string;
+  memo1?: string;
+  memo2?: string;
 }
 
 interface DailyStatus {
@@ -54,7 +56,7 @@ export default function DailyStatusTracking() {
       // 환자 목록 가져오기
       const { data: patientsData, error: patientsError } = await supabase
         .from('patients')
-        .select('id, name, patient_number, diagnosis, detailed_diagnosis, korean_doctor, western_doctor, manager_name, previous_hospital')
+        .select('id, name, patient_number, diagnosis, detailed_diagnosis, korean_doctor, western_doctor, manager_name, previous_hospital, memo1, memo2')
         .order('name');
 
       if (patientsError) throw patientsError;
@@ -97,6 +99,31 @@ export default function DailyStatusTracking() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMemoUpdate = async (patientId: string, memoType: 'memo1' | 'memo2', value: string) => {
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .update({ [memoType]: value })
+        .eq('id', patientId);
+
+      if (error) throw error;
+
+      toast({
+        title: "성공",
+        description: "메모가 저장되었습니다.",
+      });
+
+      fetchData(); // 데이터 새로고침
+    } catch (error) {
+      console.error('Error updating memo:', error);
+      toast({
+        title: "오류",
+        description: "메모 저장에 실패했습니다.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -250,6 +277,7 @@ export default function DailyStatusTracking() {
             yearMonth={selectedMonth}
             daysInMonth={getDaysInMonth(selectedMonth)}
             onStatusUpdate={handleStatusUpdate}
+            onMemoUpdate={handleMemoUpdate}
           />
         </CardContent>
       </Card>

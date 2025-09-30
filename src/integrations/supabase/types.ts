@@ -363,6 +363,8 @@ export type Database = {
           korean_doctor: string | null
           last_visit_date: string | null
           manager_name: string | null
+          memo1: string | null
+          memo2: string | null
           monthly_avg_days: number | null
           name: string
           patient_number: string
@@ -404,6 +406,8 @@ export type Database = {
           korean_doctor?: string | null
           last_visit_date?: string | null
           manager_name?: string | null
+          memo1?: string | null
+          memo2?: string | null
           monthly_avg_days?: number | null
           name: string
           patient_number: string
@@ -445,6 +449,8 @@ export type Database = {
           korean_doctor?: string | null
           last_visit_date?: string | null
           manager_name?: string | null
+          memo1?: string | null
+          memo2?: string | null
           monthly_avg_days?: number | null
           name?: string
           patient_number?: string

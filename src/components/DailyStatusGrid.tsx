@@ -16,6 +16,8 @@ interface Patient {
   western_doctor?: string;
   manager_name?: string;
   previous_hospital?: string;
+  memo1?: string;
+  memo2?: string;
 }
 
 interface DailyStatus {
@@ -32,6 +34,7 @@ interface DailyStatusGridProps {
   yearMonth: string;
   daysInMonth: number;
   onStatusUpdate: (patientId: string, date: string, statusType: string, notes?: string) => Promise<void>;
+  onMemoUpdate: (patientId: string, memoType: 'memo1' | 'memo2', value: string) => Promise<void>;
 }
 
 export function DailyStatusGrid({
@@ -40,6 +43,7 @@ export function DailyStatusGrid({
   yearMonth,
   daysInMonth,
   onStatusUpdate,
+  onMemoUpdate,
 }: DailyStatusGridProps) {
   const [selectedCell, setSelectedCell] = useState<{
     patientId: string;
@@ -106,9 +110,10 @@ export function DailyStatusGrid({
     setMemoValue(currentValue);
   };
 
-  const handleMemoSave = () => {
-    // TODO: 메모 저장 로직 구현 (별도 테이블 필요)
-    console.log('Memo saved:', memoCell, memoValue);
+  const handleMemoSave = async () => {
+    if (!memoCell) return;
+    
+    await onMemoUpdate(memoCell.patientId, memoCell.memoType, memoValue);
     setMemoCell(null);
     setMemoValue('');
   };
@@ -224,15 +229,15 @@ export function DailyStatusGrid({
                   </td>
                   <td 
                     className="p-2 border text-xs cursor-pointer hover:bg-muted/50"
-                    onDoubleClick={() => handleMemoDoubleClick(patient.id, 'memo1', '-')}
+                    onDoubleClick={() => handleMemoDoubleClick(patient.id, 'memo1', patient.memo1 || '')}
                   >
-                    -
+                    {patient.memo1 || '-'}
                   </td>
                   <td 
                     className="p-2 border text-xs cursor-pointer hover:bg-muted/50"
-                    onDoubleClick={() => handleMemoDoubleClick(patient.id, 'memo2', '-')}
+                    onDoubleClick={() => handleMemoDoubleClick(patient.id, 'memo2', patient.memo2 || '')}
                   >
-                    -
+                    {patient.memo2 || '-'}
                   </td>
                   <td className="p-2 border text-xs">
                     {[patient.korean_doctor, patient.western_doctor].filter(Boolean).join(', ') || '-'}
