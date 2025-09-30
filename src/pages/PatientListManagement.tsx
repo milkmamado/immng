@@ -25,6 +25,7 @@ interface Patient {
   inflow_status?: string;
   visit_type?: string;
   visit_motivation?: string;
+  diagnosis?: string;
   detailed_diagnosis?: string;
   counselor?: string;
   previous_hospital?: string;
@@ -490,7 +491,7 @@ export default function PatientListManagement() {
                     <TableCell>{patient.manager_name || '-'}</TableCell>
                     <TableCell className="font-medium">{patient.name}</TableCell>
                     <TableCell className="max-w-32 truncate">
-                      {patient.detailed_diagnosis || '-'}
+                      {patient.diagnosis || '-'}
                     </TableCell>
                     <TableCell>
                       {patient.first_visit_date ? 
