@@ -793,26 +793,6 @@ export default function PatientListManagement() {
                 </CardContent>
               </Card>
 
-              {/* 편집 가능한 우리병원 치료계획 */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">우리병원 치료계획 (편집 가능)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div>
-                    <Label htmlFor="treatment-plan">우리병원 치료계획</Label>
-                    <Textarea
-                      id="treatment-plan"
-                      placeholder="우리병원 치료계획을 입력하세요"
-                      value={selectedPatientDetail?.treatment_plan || ''}
-                      onChange={(e) => updateEditingField('treatment_plan', e.target.value)}
-                      onBlur={(e) => savePatientField('treatment_plan', e.target.value)}
-                      rows={4}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
               {/* 상담내용 */}
               {selectedPatientDetail?.counseling_content && (
                 <Card>
