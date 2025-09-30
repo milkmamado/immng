@@ -12,10 +12,12 @@ interface Patient {
   id: string;
   name: string;
   patient_number: string;
+  diagnosis?: string;
   detailed_diagnosis?: string;
   korean_doctor?: string;
   western_doctor?: string;
   manager_name?: string;
+  previous_hospital?: string;
 }
 
 interface DailyStatus {
@@ -52,7 +54,7 @@ export default function DailyStatusTracking() {
       // 환자 목록 가져오기
       const { data: patientsData, error: patientsError } = await supabase
         .from('patients')
-        .select('id, name, patient_number, detailed_diagnosis, korean_doctor, western_doctor, manager_name')
+        .select('id, name, patient_number, diagnosis, detailed_diagnosis, korean_doctor, western_doctor, manager_name, previous_hospital')
         .order('name');
 
       if (patientsError) throw patientsError;
@@ -61,7 +63,8 @@ export default function DailyStatusTracking() {
       // 선택된 월의 일별 상태 가져오기
       const [year, month] = selectedMonth.split('-');
       const startDate = `${year}-${month}-01`;
-      const endDate = `${year}-${month}-31`;
+      const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+      const endDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
 
       const { data: statusData, error: statusError } = await supabase
         .from('daily_patient_status')

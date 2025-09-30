@@ -10,10 +10,12 @@ interface Patient {
   id: string;
   name: string;
   patient_number: string;
+  diagnosis?: string;
   detailed_diagnosis?: string;
   korean_doctor?: string;
   western_doctor?: string;
   manager_name?: string;
+  previous_hospital?: string;
 }
 
 interface DailyStatus {
@@ -83,12 +85,19 @@ export function DailyStatusGrid({
     setNotes('');
   };
 
+  const getDayOfWeek = (day: number) => {
+    const [year, month] = yearMonth.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    return dayNames[date.getDay()];
+  };
+
   const renderDayHeaders = () => {
     const days = [];
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(
-        <th key={day} className="min-w-[80px] p-2 text-center text-xs font-medium border">
-          {day}일
+        <th key={day} className="min-w-[60px] p-2 text-center text-xs font-medium border bg-muted">
+          {day}({getDayOfWeek(day)})
         </th>
       );
     }
@@ -103,20 +112,27 @@ export function DailyStatusGrid({
       const status = getStatusForDate(patient.id, date);
       
       cells.push(
-        <td key={day} className="p-1 border">
+        <td key={day} className="p-0.5 border">
           <Button
             variant="ghost"
             size="sm"
-            className="h-12 w-full p-1"
+            className="h-10 w-full p-0.5 text-xs"
             onClick={() => handleCellClick(patient.id, day, patient)}
           >
             {status && (
-              <Badge
-                variant={statusColors[status.status_type as keyof typeof statusColors] || 'default'}
-                className="text-xs"
-              >
-                {status.status_type}
-              </Badge>
+              <div className="flex flex-col items-center gap-0.5">
+                <Badge
+                  variant={statusColors[status.status_type as keyof typeof statusColors] || 'default'}
+                  className="text-[10px] px-1 py-0"
+                >
+                  {status.status_type}
+                </Badge>
+                {status.notes && (
+                  <span className="text-[9px] text-muted-foreground truncate max-w-full">
+                    {status.notes.substring(0, 10)}...
+                  </span>
+                )}
+              </div>
             )}
           </Button>
         </td>
@@ -142,56 +158,59 @@ export function DailyStatusGrid({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full border-collapse border">
+        <table className="min-w-full border-collapse border text-sm">
           <thead>
-            <tr>
-              <th className="min-w-[200px] p-3 text-left font-medium border bg-muted">
-                환자 정보
+            <tr className="bg-muted">
+              <th className="min-w-[100px] p-2 text-left font-medium border sticky left-0 bg-muted z-10">
+                환자명
+              </th>
+              <th className="min-w-[80px] p-2 text-left font-medium border">
+                담당실장
+              </th>
+              <th className="min-w-[120px] p-2 text-left font-medium border">
+                메모1
+              </th>
+              <th className="min-w-[120px] p-2 text-left font-medium border">
+                메모2
+              </th>
+              <th className="min-w-[120px] p-2 text-left font-medium border">
+                진단명
+              </th>
+              <th className="min-w-[100px] p-2 text-left font-medium border">
+                주치의
+              </th>
+              <th className="min-w-[100px] p-2 text-left font-medium border">
+                이전병원
               </th>
               {renderDayHeaders()}
-              <th className="min-w-[100px] p-3 text-center font-medium border bg-muted">
-                통계
-              </th>
             </tr>
           </thead>
           <tbody>
             {patients.map((patient) => {
-              const patientStatuses = dailyStatuses.filter(s => s.patient_id === patient.id);
-              const statusCounts = patientStatuses.reduce((acc, status) => {
-                acc[status.status_type] = (acc[status.status_type] || 0) + 1;
-                return acc;
-              }, {} as Record<string, number>);
-
               return (
                 <tr key={patient.id} className="hover:bg-muted/50">
-                  <td className="p-3 border">
-                    <div className="space-y-1">
-                      <div className="font-medium">{patient.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {patient.patient_number}
-                      </div>
-                      {patient.detailed_diagnosis && (
-                        <div className="text-xs text-muted-foreground">
-                          {patient.detailed_diagnosis}
-                        </div>
-                      )}
-                      {patient.manager_name && (
-                        <div className="text-xs text-blue-600">
-                          담당: {patient.manager_name}
-                        </div>
-                      )}
-                    </div>
+                  <td className="p-2 border font-medium sticky left-0 bg-background">
+                    {patient.name}
+                  </td>
+                  <td className="p-2 border text-xs">
+                    {patient.manager_name || '-'}
+                  </td>
+                  <td className="p-2 border text-xs">
+                    -
+                  </td>
+                  <td className="p-2 border text-xs">
+                    -
+                  </td>
+                  <td className="p-2 border text-xs">
+                    {patient.diagnosis || '-'}
+                  </td>
+                  <td className="p-2 border text-xs">
+                    {[patient.korean_doctor, patient.western_doctor].filter(Boolean).join(', ') || '-'}
+                  </td>
+                  <td className="p-2 border text-xs">
+                    {patient.previous_hospital || '-'}
                   </td>
                   {renderPatientRow(patient)}
-                  <td className="p-2 border text-center">
-                    <div className="space-y-1">
-                      {Object.entries(statusCounts).map(([status, count]) => (
-                        <div key={status} className="text-xs">
-                          {status}: {count}
-                        </div>
-                      ))}
-                    </div>
-                  </td>
                 </tr>
               );
             })}
@@ -225,16 +244,18 @@ export function DailyStatusGrid({
               </Select>
             </div>
             
-            <div>
-              <Label htmlFor="notes">메모</Label>
-              <Textarea
-                id="notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="추가 메모사항..."
-                rows={3}
-              />
-            </div>
+            {(selectedStatus === '기타' || selectedStatus === '전화F/U') && (
+              <div>
+                <Label htmlFor="notes">메모 {selectedStatus === '기타' ? '(기타)' : '(전화F/U)'}</Label>
+                <Textarea
+                  id="notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="메모를 입력하세요..."
+                  rows={3}
+                />
+              </div>
+            )}
             
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setSelectedCell(null)}>
