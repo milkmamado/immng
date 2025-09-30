@@ -105,24 +105,41 @@ export default function DailyStatusTracking() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('로그인이 필요합니다.');
 
-      const { error } = await supabase
-        .from('daily_patient_status')
-        .upsert({
-          patient_id: patientId,
-          status_date: date,
-          status_type: statusType,
-          notes: notes || null,
-          created_by: user.id
-        }, {
-          onConflict: 'patient_id,status_date,status_type'
+      // 상태가 빈 문자열이면 삭제
+      if (!statusType) {
+        const { error } = await supabase
+          .from('daily_patient_status')
+          .delete()
+          .eq('patient_id', patientId)
+          .eq('status_date', date);
+
+        if (error) throw error;
+
+        toast({
+          title: "성공",
+          description: "상태가 삭제되었습니다.",
         });
+      } else {
+        // 상태가 있으면 업데이트/삽입
+        const { error } = await supabase
+          .from('daily_patient_status')
+          .upsert({
+            patient_id: patientId,
+            status_date: date,
+            status_type: statusType,
+            notes: notes || null,
+            created_by: user.id
+          }, {
+            onConflict: 'patient_id,status_date'
+          });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "성공",
-        description: "상태가 업데이트되었습니다.",
-      });
+        toast({
+          title: "성공",
+          description: "상태가 업데이트되었습니다.",
+        });
+      }
 
       fetchData(); // 데이터 새로고침
     } catch (error) {
