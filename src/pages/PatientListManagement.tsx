@@ -171,6 +171,39 @@ export default function PatientListManagement() {
     }
   };
 
+  const updatePatientField = async (field: string, value: any) => {
+    if (!selectedPatientDetail) return;
+
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .update({ [field]: value })
+        .eq('id', selectedPatientDetail.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setSelectedPatientDetail(prev => prev ? { ...prev, [field]: value } : null);
+      
+      // Update patients list
+      setPatients(prev => prev.map(p => 
+        p.id === selectedPatientDetail.id ? { ...p, [field]: value } : p
+      ));
+
+      toast({
+        title: "성공",
+        description: "정보가 업데이트되었습니다.",
+      });
+    } catch (error) {
+      console.error('Error updating patient field:', error);
+      toast({
+        title: "오류",
+        description: "정보 업데이트에 실패했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const togglePaymentStatus = async (treatmentPlan: TreatmentPlan) => {
     try {
       const { error } = await supabase
@@ -632,29 +665,36 @@ export default function PatientListManagement() {
                   </CardContent>
                 </Card>
 
-                {/* 보험 및 치료 정보 */}
+                {/* 편집 가능한 추가 정보 */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">보험 및 치료</CardTitle>
+                    <CardTitle className="text-lg">추가 정보 (편집 가능)</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="font-medium">실비보험유형:</span>
-                      <span>{selectedPatientDetail?.insurance_type || '-'}</span>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="insurance-type">실비보험유형</Label>
+                      <Input
+                        id="insurance-type"
+                        placeholder="실비보험유형을 입력하세요"
+                        value={selectedPatientDetail?.insurance_type || ''}
+                        onChange={(e) => updatePatientField('insurance_type', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="monthly-avg-days">월평균입원/외래일수</Label>
+                      <Input
+                        id="monthly-avg-days"
+                        type="number"
+                        placeholder="월평균일수를 입력하세요"
+                        value={selectedPatientDetail?.monthly_avg_days || ''}
+                        onChange={(e) => updatePatientField('monthly_avg_days', parseInt(e.target.value) || 0)}
+                      />
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">수납급액:</span>
                       <span className="font-semibold text-primary">
                         {selectedPatientDetail?.payment_amount ? 
                           `${selectedPatientDetail.payment_amount.toLocaleString()}원` : '-'
-                        }
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium">월평균입원/외래일수:</span>
-                      <span>
-                        {selectedPatientDetail?.monthly_avg_days ? 
-                          `${selectedPatientDetail.monthly_avg_days}일` : '-'
                         }
                       </span>
                     </div>
@@ -701,53 +741,62 @@ export default function PatientListManagement() {
                 </Card>
               </div>
 
-              {/* 본병원 치료 정보 */}
-              {selectedPatientDetail?.hospital_treatment && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">본병원 치료</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-muted p-4 rounded-lg">
-                      <pre className="whitespace-pre-wrap text-sm leading-relaxed">
-                        {selectedPatientDetail.hospital_treatment}
-                      </pre>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              {/* 편집 가능한 본병원 치료 정보 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">본병원 치료 (편집 가능)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div>
+                    <Label htmlFor="hospital-treatment">본병원 치료</Label>
+                    <Textarea
+                      id="hospital-treatment"
+                      placeholder="본병원 치료 내용을 입력하세요"
+                      value={selectedPatientDetail?.hospital_treatment || ''}
+                      onChange={(e) => updatePatientField('hospital_treatment', e.target.value)}
+                      rows={4}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
-              {/* 검사 일정 */}
-              {selectedPatientDetail?.examination_schedule && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">본병원 검사일정</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-muted p-4 rounded-lg">
-                      <pre className="whitespace-pre-wrap text-sm leading-relaxed">
-                        {selectedPatientDetail.examination_schedule}
-                      </pre>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              {/* 편집 가능한 검사 일정 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">본병원 검사일정 (편집 가능)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div>
+                    <Label htmlFor="examination-schedule">본병원 검사일정</Label>
+                    <Textarea
+                      id="examination-schedule"
+                      placeholder="본병원 검사일정을 입력하세요"
+                      value={selectedPatientDetail?.examination_schedule || ''}
+                      onChange={(e) => updatePatientField('examination_schedule', e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
-              {/* 우리병원 치료계획 */}
-              {selectedPatientDetail?.treatment_plan && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">우리병원 치료계획</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-muted p-4 rounded-lg">
-                      <pre className="whitespace-pre-wrap text-sm leading-relaxed">
-                        {selectedPatientDetail.treatment_plan}
-                      </pre>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              {/* 편집 가능한 우리병원 치료계획 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">우리병원 치료계획 (편집 가능)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div>
+                    <Label htmlFor="treatment-plan">우리병원 치료계획</Label>
+                    <Textarea
+                      id="treatment-plan"
+                      placeholder="우리병원 치료계획을 입력하세요"
+                      value={selectedPatientDetail?.treatment_plan || ''}
+                      onChange={(e) => updatePatientField('treatment_plan', e.target.value)}
+                      rows={4}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* 상담내용 */}
               {selectedPatientDetail?.counseling_content && (
