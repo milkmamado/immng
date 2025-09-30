@@ -57,7 +57,7 @@ export default function DailyStatusTracking() {
       const { data: patientsData, error: patientsError } = await supabase
         .from('patients')
         .select('id, name, patient_number, diagnosis, detailed_diagnosis, korean_doctor, western_doctor, manager_name, previous_hospital, memo1, memo2')
-        .order('name');
+        .order('created_at', { ascending: true });
 
       if (patientsError) throw patientsError;
       setPatients(patientsData || []);
