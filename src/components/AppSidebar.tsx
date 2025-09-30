@@ -4,7 +4,8 @@ import {
   Home,
   Heart,
   Shield,
-  ClipboardCheck
+  ClipboardCheck,
+  Settings
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,6 +33,7 @@ const managementItems: never[] = [];
 
 const adminItems = [
   { title: "계정 관리", url: "/account-management", icon: Shield, requiredRole: 'master' as const },
+  { title: "옵션 관리", url: "/options-management", icon: Settings, requiredRole: 'master' as const },
 ];
 
 export function AppSidebar() {

@@ -9,6 +9,7 @@ import Layout from "./components/Layout";
 import { Dashboard } from "./components/Dashboard";
 import Auth from "./pages/Auth";
 import AccountManagement from "./pages/AccountManagement";
+import OptionsManagement from "./pages/OptionsManagement";
 import FirstVisitManagement from "./pages/FirstVisitManagement";
 import PatientListManagement from "./pages/PatientListManagement";
 import DailyStatusTracking from "./pages/DailyStatusTracking";
@@ -80,6 +81,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute requiredRole="master">
               <AccountManagement />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/options-management" 
+          element={
+            <ProtectedRoute requiredRole="master">
+              <OptionsManagement />
             </ProtectedRoute>
           } 
         />
