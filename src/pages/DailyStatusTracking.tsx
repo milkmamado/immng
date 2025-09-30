@@ -77,8 +77,17 @@ export default function DailyStatusTracking() {
       if (statusError) throw statusError;
       setDailyStatuses(statusData || []);
 
-      // 통계 계산
-      const statusCounts = (statusData || []).reduce((acc, status) => {
+      // 통계 계산: 각 환자의 해당 월 최신 상태만 카운트
+      const latestStatusByPatient = new Map<string, DailyStatus>();
+      (statusData || []).forEach(status => {
+        const existing = latestStatusByPatient.get(status.patient_id);
+        if (!existing || status.status_date > existing.status_date) {
+          latestStatusByPatient.set(status.patient_id, status);
+        }
+      });
+
+      // 최신 상태만으로 통계 계산
+      const statusCounts = Array.from(latestStatusByPatient.values()).reduce((acc, status) => {
         acc[status.status_type] = (acc[status.status_type] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
