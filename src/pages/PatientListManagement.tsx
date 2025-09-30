@@ -66,6 +66,7 @@ export default function PatientListManagement() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [loadingTreatments, setLoadingTreatments] = useState(false);
   const [viewMode, setViewMode] = useState<'full' | 'treatment-only'>('full');
+  const [editingFields, setEditingFields] = useState<Record<string, any>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -171,7 +172,12 @@ export default function PatientListManagement() {
     }
   };
 
-  const updatePatientField = async (field: string, value: any) => {
+  const updateEditingField = (field: string, value: any) => {
+    setEditingFields(prev => ({ ...prev, [field]: value }));
+    setSelectedPatientDetail(prev => prev ? { ...prev, [field]: value } : null);
+  };
+
+  const savePatientField = async (field: string, value: any) => {
     if (!selectedPatientDetail) return;
 
     try {
@@ -182,23 +188,27 @@ export default function PatientListManagement() {
 
       if (error) throw error;
 
-      // Update local state
-      setSelectedPatientDetail(prev => prev ? { ...prev, [field]: value } : null);
-      
       // Update patients list
       setPatients(prev => prev.map(p => 
         p.id === selectedPatientDetail.id ? { ...p, [field]: value } : p
       ));
 
+      // Remove from editing fields
+      setEditingFields(prev => {
+        const newFields = { ...prev };
+        delete newFields[field];
+        return newFields;
+      });
+
       toast({
         title: "성공",
-        description: "정보가 업데이트되었습니다.",
+        description: "정보가 저장되었습니다.",
       });
     } catch (error) {
       console.error('Error updating patient field:', error);
       toast({
         title: "오류",
-        description: "정보 업데이트에 실패했습니다.",
+        description: "정보 저장에 실패했습니다.",
         variant: "destructive",
       });
     }
@@ -677,7 +687,8 @@ export default function PatientListManagement() {
                         id="insurance-type"
                         placeholder="실비보험유형을 입력하세요"
                         value={selectedPatientDetail?.insurance_type || ''}
-                        onChange={(e) => updatePatientField('insurance_type', e.target.value)}
+                        onChange={(e) => updateEditingField('insurance_type', e.target.value)}
+                        onBlur={(e) => savePatientField('insurance_type', e.target.value)}
                       />
                     </div>
                     <div>
@@ -687,7 +698,8 @@ export default function PatientListManagement() {
                         type="number"
                         placeholder="월평균일수를 입력하세요"
                         value={selectedPatientDetail?.monthly_avg_days || ''}
-                        onChange={(e) => updatePatientField('monthly_avg_days', parseInt(e.target.value) || 0)}
+                        onChange={(e) => updateEditingField('monthly_avg_days', parseInt(e.target.value) || 0)}
+                        onBlur={(e) => savePatientField('monthly_avg_days', parseInt(e.target.value) || 0)}
                       />
                     </div>
                     <div className="flex justify-between">
@@ -753,7 +765,8 @@ export default function PatientListManagement() {
                       id="hospital-treatment"
                       placeholder="본병원 치료 내용을 입력하세요"
                       value={selectedPatientDetail?.hospital_treatment || ''}
-                      onChange={(e) => updatePatientField('hospital_treatment', e.target.value)}
+                      onChange={(e) => updateEditingField('hospital_treatment', e.target.value)}
+                      onBlur={(e) => savePatientField('hospital_treatment', e.target.value)}
                       rows={4}
                     />
                   </div>
@@ -772,7 +785,8 @@ export default function PatientListManagement() {
                       id="examination-schedule"
                       placeholder="본병원 검사일정을 입력하세요"
                       value={selectedPatientDetail?.examination_schedule || ''}
-                      onChange={(e) => updatePatientField('examination_schedule', e.target.value)}
+                      onChange={(e) => updateEditingField('examination_schedule', e.target.value)}
+                      onBlur={(e) => savePatientField('examination_schedule', e.target.value)}
                       rows={3}
                     />
                   </div>
@@ -791,7 +805,8 @@ export default function PatientListManagement() {
                       id="treatment-plan"
                       placeholder="우리병원 치료계획을 입력하세요"
                       value={selectedPatientDetail?.treatment_plan || ''}
-                      onChange={(e) => updatePatientField('treatment_plan', e.target.value)}
+                      onChange={(e) => updateEditingField('treatment_plan', e.target.value)}
+                      onBlur={(e) => savePatientField('treatment_plan', e.target.value)}
                       rows={4}
                     />
                   </div>
