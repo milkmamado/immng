@@ -346,6 +346,7 @@ export type Database = {
           counselor: string | null
           created_at: string
           detailed_diagnosis: string | null
+          diagnosis: string | null
           diet_info: string | null
           discharge_date: string | null
           emergency_contact: string | null
@@ -386,6 +387,7 @@ export type Database = {
           counselor?: string | null
           created_at?: string
           detailed_diagnosis?: string | null
+          diagnosis?: string | null
           diet_info?: string | null
           discharge_date?: string | null
           emergency_contact?: string | null
@@ -426,6 +428,7 @@ export type Database = {
           counselor?: string | null
           created_at?: string
           detailed_diagnosis?: string | null
+          diagnosis?: string | null
           diet_info?: string | null
           discharge_date?: string | null
           emergency_contact?: string | null

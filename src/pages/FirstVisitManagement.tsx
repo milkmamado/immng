@@ -18,6 +18,7 @@ interface Patient {
   inflow_status?: string;
   visit_type?: string;
   visit_motivation?: string;
+  diagnosis?: string;
   detailed_diagnosis?: string;
   counselor?: string;
   previous_hospital?: string;
@@ -188,7 +189,7 @@ export default function FirstVisitManagement() {
                       {patient.visit_motivation || '-'}
                     </TableCell>
                     <TableCell className="font-medium">{patient.name}</TableCell>
-                    <TableCell>{patient.detailed_diagnosis || '-'}</TableCell>
+                    <TableCell>{patient.diagnosis || '-'}</TableCell>
                     <TableCell className="max-w-32 truncate">
                       {patient.detailed_diagnosis || '-'}
                     </TableCell>
@@ -325,7 +326,7 @@ export default function FirstVisitManagement() {
                 <CardContent className="space-y-3">
                   <div className="flex justify-between">
                     <span className="font-medium">진단명:</span>
-                    <span>{selectedPatientDetail?.detailed_diagnosis || '-'}</span>
+                    <span>{selectedPatientDetail?.diagnosis || '-'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">세부진단명:</span>

@@ -83,6 +83,7 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
         visit_type: formData.visit_type || null,
         visit_motivation: formData.visit_motivation || null,
         name: formData.name,
+        diagnosis: formData.diagnosis || null,
         detailed_diagnosis: formData.detailed_diagnosis || null,
         counselor: formData.counselor || null,
         previous_hospital: formData.previous_hospital || null,
