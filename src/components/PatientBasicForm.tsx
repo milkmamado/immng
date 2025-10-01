@@ -85,6 +85,29 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    
+    // 전화번호 포맷팅
+    if (name === 'phone') {
+      const numbers = value.replace(/[^0-9]/g, '');
+      let formattedPhone = numbers;
+      
+      if (numbers.length <= 3) {
+        formattedPhone = numbers;
+      } else if (numbers.length <= 7) {
+        formattedPhone = `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+      } else if (numbers.length <= 11) {
+        formattedPhone = `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`;
+      } else {
+        formattedPhone = `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        phone: formattedPhone
+      }));
+      return;
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -285,6 +308,7 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
             value={formData.phone}
             onChange={handleInputChange}
             placeholder="010-0000-0000"
+            maxLength={13}
           />
         </div>
 
