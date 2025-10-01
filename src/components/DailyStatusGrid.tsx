@@ -86,24 +86,55 @@ export function DailyStatusGrid({
     );
   };
 
-  // 해당 날짜가 입원 기간 내인지 확인
+  // 해당 날짜가 입원 기간 내인지 daily_patient_status 데이터로 추론
   const getAdmissionStatusForDate = (patient: Patient, date: string) => {
-    if (!patient.admission_cycles || patient.admission_cycles.length === 0) {
-      return null;
+    // 해당 환자의 모든 상태를 날짜순 정렬
+    const patientStatuses = dailyStatuses
+      .filter(s => s.patient_id === patient.id)
+      .sort((a, b) => a.status_date.localeCompare(b.status_date));
+
+    if (patientStatuses.length === 0) return null;
+
+    // 해당 날짜 이전의 가장 최근 입원/재원/퇴원 상태 찾기
+    let lastAdmissionDate: string | null = null;
+    let lastDischargeDate: string | null = null;
+    let admissionType = '입원';
+
+    for (const status of patientStatuses) {
+      if (status.status_date > date) break;
+
+      if (status.status_type === '입원' || status.status_type === '재원') {
+        if (!lastAdmissionDate || status.status_date > lastAdmissionDate) {
+          lastAdmissionDate = status.status_date;
+          admissionType = status.status_type;
+        }
+        // 입원/재원이 나오면 이전 퇴원 기록 무효화
+        if (lastDischargeDate && status.status_date > lastDischargeDate) {
+          lastDischargeDate = null;
+        }
+      } else if (status.status_type === '퇴원') {
+        lastDischargeDate = status.status_date;
+      } else if (status.status_type === '낮병동') {
+        if (!lastAdmissionDate || status.status_date > lastAdmissionDate) {
+          lastAdmissionDate = status.status_date;
+          admissionType = '낮병동';
+        }
+        if (lastDischargeDate && status.status_date > lastDischargeDate) {
+          lastDischargeDate = null;
+        }
+      }
     }
 
-    for (const cycle of patient.admission_cycles) {
-      const admissionDate = cycle.admission_date;
-      const dischargeDate = cycle.discharge_date || '9999-12-31'; // 퇴원일이 없으면 현재 입원 중
-      
-      if (date >= admissionDate && date <= dischargeDate) {
+    // 입원 기록이 있고, 퇴원하지 않았거나 입원이 퇴원보다 최근이면 입원 중
+    if (lastAdmissionDate) {
+      if (!lastDischargeDate || lastAdmissionDate > lastDischargeDate) {
         return {
-          type: cycle.admission_type || '입원',
-          isOngoing: !cycle.discharge_date
+          type: admissionType,
+          isOngoing: true
         };
       }
     }
-    
+
     return null;
   };
 
