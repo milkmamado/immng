@@ -253,6 +253,7 @@ export default function PatientListManagement() {
       setNewTreatmentAmount('');
       setShowAddForm(false);
       fetchTreatmentPlans(selectedPatientDetail.id);
+      fetchPatients(); // 환자 리스트를 새로고침하여 수납금액 반영
       
       toast({
         title: "성공",
