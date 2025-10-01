@@ -322,7 +322,7 @@ export default function DailyStatusTracking() {
       </div>
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
         <Card>
           <CardContent className="flex items-center justify-between p-6">
             <div>
@@ -330,40 +330,6 @@ export default function DailyStatusTracking() {
               <p className="text-2xl font-bold">{stats.총환자}</p>
             </div>
             <Users className="h-8 w-8 text-blue-600" />
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="flex items-center justify-between p-6">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">입원</p>
-              <p className="text-2xl font-bold text-red-600">{stats.입원}</p>
-            </div>
-            <Badge variant="destructive" className="h-8 w-8 rounded-full flex items-center justify-center">
-              입
-            </Badge>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center justify-between p-6">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">외래</p>
-              <p className="text-2xl font-bold text-green-600">{stats.외래}</p>
-            </div>
-            <Badge variant="default" className="h-8 w-8 rounded-full flex items-center justify-center">
-              외
-            </Badge>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center justify-between p-6">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">전화F/U</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.전화FU}</p>
-            </div>
-            <Activity className="h-8 w-8 text-blue-600" />
           </CardContent>
         </Card>
       </div>
