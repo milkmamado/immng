@@ -31,6 +31,15 @@ export default function StatisticsManagement() {
     totalRevenue: 0,
     avgRevenuePerPatient: 0
   });
+  // 새로운 통계 state 추가
+  const [additionalStats, setAdditionalStats] = useState({
+    outPatients: 0,
+    newPatientsThisMonth: 0,
+    retentionRate: 0,
+    patients1MonthPlus: 0,
+    patients3MonthPlus: 0,
+    patients6MonthPlus: 0
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -131,6 +140,79 @@ export default function StatisticsManagement() {
       setManagerStats(statsArray);
       setTotalStats(totals);
 
+      // 새로운 통계 계산 로직 추가
+      // 1. 아웃 환자 수
+      const { data: allPatientsWithStatus } = await supabase
+        .from('patients')
+        .select('id, management_status, created_at, first_visit_date')
+        .eq('inflow_status', '유입');
+
+      const outPatientsCount = allPatientsWithStatus?.filter(
+        p => p.management_status === '아웃'
+      ).length || 0;
+
+      // 2. 유입률 (해당 월 초진 환자)
+      const newPatientsCount = allPatientsWithStatus?.filter(p => {
+        const inflowDate = new Date(p.first_visit_date || p.created_at);
+        const inflowYearMonth = `${inflowDate.getFullYear()}-${String(inflowDate.getMonth() + 1).padStart(2, '0')}`;
+        return inflowYearMonth === selectedMonth;
+      }).length || 0;
+
+      // 3. 재진관리비율 계산
+      const [prevYear, prevMonth] = selectedMonth.split('-').map(Number);
+      const prevMonthDate = new Date(prevYear, prevMonth - 2, 1);
+      const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
+      
+      // 이전 달 초진 환자
+      const prevMonthPatients = allPatientsWithStatus?.filter(p => {
+        const inflowDate = new Date(p.first_visit_date || p.created_at);
+        const inflowYearMonth = `${inflowDate.getFullYear()}-${String(inflowDate.getMonth() + 1).padStart(2, '0')}`;
+        return inflowYearMonth === prevMonthStr;
+      }) || [];
+
+      // 현재 달에 활동한 환자 ID 목록
+      const activePatientIds = new Set(dailyStatuses?.map(s => s.patient_id) || []);
+      
+      // 이전 달 초진 중 현재 달에 활동한 환자
+      const retainedPatients = prevMonthPatients.filter(p => activePatientIds.has(p.id)).length;
+      const retentionRate = prevMonthPatients.length > 0 
+        ? Math.round((retainedPatients / prevMonthPatients.length) * 100) 
+        : 0;
+
+      // 4. 관리 기간별 환자 수
+      const now = new Date();
+      const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+      const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+      const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+
+      const activePatients = allPatientsWithStatus?.filter(
+        p => p.management_status !== '아웃' && p.management_status !== '사망' && p.management_status !== '치료종료'
+      ) || [];
+
+      const patients1MonthPlus = activePatients.filter(p => {
+        const inflowDate = new Date(p.first_visit_date || p.created_at);
+        return inflowDate <= oneMonthAgo;
+      }).length;
+
+      const patients3MonthPlus = activePatients.filter(p => {
+        const inflowDate = new Date(p.first_visit_date || p.created_at);
+        return inflowDate <= threeMonthsAgo;
+      }).length;
+
+      const patients6MonthPlus = activePatients.filter(p => {
+        const inflowDate = new Date(p.first_visit_date || p.created_at);
+        return inflowDate <= sixMonthsAgo;
+      }).length;
+
+      setAdditionalStats({
+        outPatients: outPatientsCount,
+        newPatientsThisMonth: newPatientsCount,
+        retentionRate,
+        patients1MonthPlus,
+        patients3MonthPlus,
+        patients6MonthPlus
+      });
+
     } catch (error) {
       console.error('Error fetching statistics:', error);
       toast({
@@ -226,6 +308,68 @@ export default function StatisticsManagement() {
           </CardContent>
         </Card>
       </div>
+
+      {/* 새로운 통계 카드 섹션 */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">아웃 환자</CardTitle>
+            <Users className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{additionalStats.outPatients}명</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">유입률 (초진상담)</CardTitle>
+            <TrendingUp className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{additionalStats.newPatientsThisMonth}명</div>
+            <p className="text-xs text-muted-foreground mt-1">선택한 월 신규 유입</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">재진관리비율</CardTitle>
+            <Activity className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{additionalStats.retentionRate}%</div>
+            <p className="text-xs text-muted-foreground mt-1">전월 초진 → 당월 활동</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 관리 기간별 통계 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>관리 기간별 환자 현황</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700">1개월 이상 관리</span>
+                <span className="text-2xl font-bold text-blue-600">{additionalStats.patients1MonthPlus}명</span>
+              </div>
+            </div>
+            <div className="p-4 bg-purple-50 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700">3개월 이상 관리</span>
+                <span className="text-2xl font-bold text-purple-600">{additionalStats.patients3MonthPlus}명</span>
+              </div>
+            </div>
+            <div className="p-4 bg-pink-50 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700">6개월 이상 관리</span>
+                <span className="text-2xl font-bold text-pink-600">{additionalStats.patients6MonthPlus}명</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* 실장별 통계 */}
       <div className="space-y-4">
