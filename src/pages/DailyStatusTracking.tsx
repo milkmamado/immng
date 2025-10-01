@@ -8,6 +8,7 @@ import { Calendar as CalendarIcon, Users, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { ko } from "date-fns/locale";
 
 interface Patient {
   id: string;
@@ -224,6 +225,7 @@ export default function DailyStatusTracking() {
                     setIsCalendarOpen(false);
                   }
                 }}
+                locale={ko}
                 captionLayout="dropdown-buttons"
                 fromYear={2020}
                 toYear={2035}
