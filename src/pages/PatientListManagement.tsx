@@ -114,7 +114,23 @@ export default function PatientListManagement() {
 
       if (error) throw error;
       
-      // 각 환자의 일별 상태 데이터를 가져와서 통계 계산
+      // 모든 환자의 일별 상태 데이터 가져오기
+      const { data: allStatusData } = await supabase
+        .from('daily_patient_status')
+        .select('patient_id, status_date, status_type')
+        .order('status_date', { ascending: false });
+
+      // 각 환자의 마지막 체크 날짜 맵 생성
+      const lastCheckMap = new Map<string, string>();
+      allStatusData?.forEach(status => {
+        if (!lastCheckMap.has(status.patient_id)) {
+          lastCheckMap.set(status.patient_id, status.status_date);
+        }
+      });
+
+      const today = new Date();
+      
+      // 각 환자의 일별 상태 데이터를 가져와서 통계 계산 및 management_status 자동 업데이트
       const patientsWithStats = await Promise.all(
         (data || []).map(async (patient) => {
           const { data: statusData } = await supabase
@@ -127,6 +143,37 @@ export default function PatientListManagement() {
           const last_visit_date = statusData && statusData.length > 0 
             ? statusData[0].status_date 
             : null;
+
+          // management_status 자동 업데이트 로직
+          const lastCheckDate = lastCheckMap.get(patient.id);
+          let daysSinceCheck = 0;
+
+          if (!lastCheckDate) {
+            const createdDate = new Date(patient.created_at);
+            daysSinceCheck = Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+          } else {
+            const lastDate = new Date(lastCheckDate);
+            daysSinceCheck = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+          }
+
+          let newManagementStatus = patient.management_status || "관리 중";
+          
+          // 자동 상태 업데이트 로직
+          if (daysSinceCheck >= 21) {
+            newManagementStatus = "아웃";
+          } else if (daysSinceCheck >= 14) {
+            newManagementStatus = "아웃위기";
+          } else {
+            newManagementStatus = "관리 중";
+          }
+
+          // management_status가 변경되었으면 업데이트
+          if (patient.management_status !== newManagementStatus) {
+            await supabase
+              .from("patients")
+              .update({ management_status: newManagementStatus })
+              .eq("id", patient.id);
+          }
 
           // 월평균 입원/외래 일수 계산
           let monthly_avg_inpatient_days = 0;
@@ -161,6 +208,7 @@ export default function PatientListManagement() {
 
           return {
             ...patient,
+            management_status: newManagementStatus,
             last_visit_date,
             monthly_avg_inpatient_days,
             monthly_avg_outpatient_days

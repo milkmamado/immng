@@ -114,35 +114,48 @@ export default function RiskManagement() {
       const today = new Date();
       const riskyPatients: Patient[] = [];
 
-      patientsData?.forEach(patient => {
+      // 각 환자의 management_status를 자동으로 업데이트
+      for (const patient of patientsData || []) {
         const lastCheckDate = lastCheckMap.get(patient.id);
-        
+        let daysSinceCheck = 0;
+        let newManagementStatus = patient.management_status || "관리 중";
+
         if (!lastCheckDate) {
           const createdDate = new Date(patient.created_at);
-          const daysSinceCreated = Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-          
-          if (daysSinceCreated >= 14) {
-            riskyPatients.push({
-              ...patient,
-              last_status_date: undefined,
-              days_since_last_check: daysSinceCreated,
-              risk_level: daysSinceCreated >= 21 ? "아웃" : "아웃위기"
-            });
-          }
+          daysSinceCheck = Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
         } else {
           const lastDate = new Date(lastCheckDate);
-          const daysSinceCheck = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-
-          if (daysSinceCheck >= 14) {
-            riskyPatients.push({
-              ...patient,
-              last_status_date: lastCheckDate,
-              days_since_last_check: daysSinceCheck,
-              risk_level: daysSinceCheck >= 21 ? "아웃" : "아웃위기"
-            });
-          }
+          daysSinceCheck = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
         }
-      });
+
+        // 자동 상태 업데이트 로직
+        if (daysSinceCheck >= 21) {
+          newManagementStatus = "아웃";
+        } else if (daysSinceCheck >= 14) {
+          newManagementStatus = "아웃위기";
+        } else {
+          newManagementStatus = "관리 중";
+        }
+
+        // management_status가 변경되었으면 업데이트
+        if (patient.management_status !== newManagementStatus) {
+          await supabase
+            .from("patients")
+            .update({ management_status: newManagementStatus })
+            .eq("id", patient.id);
+        }
+
+        // 14일 이상인 환자만 리스크 환자로 추가
+        if (daysSinceCheck >= 14) {
+          riskyPatients.push({
+            ...patient,
+            management_status: newManagementStatus,
+            last_status_date: lastCheckDate,
+            days_since_last_check: daysSinceCheck,
+            risk_level: daysSinceCheck >= 21 ? "아웃" : "아웃위기"
+          });
+        }
+      }
 
       riskyPatients.sort((a, b) => {
         if (a.risk_level === b.risk_level) {

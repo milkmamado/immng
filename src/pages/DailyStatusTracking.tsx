@@ -106,30 +106,74 @@ export default function DailyStatusTracking() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // 먼저 관리 중인 환자 상태 옵션 가져오기
-      const { data: statusOptions } = await supabase
-        .from('patient_status_options')
-        .select('name')
-        .eq('exclude_from_daily_tracking', false);
-
-      const includedStatuses = statusOptions?.map(opt => opt.name) || ['관리 중'];
-
-      // 환자 목록 가져오기 (유입 상태 + 관리 중인 상태만)
+      // 환자 목록 가져오기 (유입 상태이고 "아웃"이 아닌 환자만)
       const { data: patientsData, error: patientsError } = await supabase
         .from('patients')
         .select(`
           id, name, patient_number, diagnosis, detailed_diagnosis, 
           korean_doctor, western_doctor, manager_name, previous_hospital, 
-          memo1, memo2,
+          memo1, memo2, management_status, created_at,
           admission_cycles (
             id, admission_date, discharge_date, admission_type, status
           )
         `)
         .eq('inflow_status', '유입')
-        .in('management_status', includedStatuses)
+        .neq('management_status', '아웃')
         .order('created_at', { ascending: false });
 
       if (patientsError) throw patientsError;
+
+      // 각 환자의 마지막 체크 날짜를 확인하여 management_status 자동 업데이트
+      const { data: allStatusData } = await supabase
+        .from('daily_patient_status')
+        .select('patient_id, status_date')
+        .order('status_date', { ascending: false });
+
+      const lastCheckMap = new Map<string, string>();
+      allStatusData?.forEach(status => {
+        if (!lastCheckMap.has(status.patient_id)) {
+          lastCheckMap.set(status.patient_id, status.status_date);
+        }
+      });
+
+      const today = new Date();
+      
+      // 각 환자의 상태를 자동으로 업데이트
+      for (const patient of patientsData || []) {
+        const lastCheckDate = lastCheckMap.get(patient.id);
+        let daysSinceCheck = 0;
+
+        if (!lastCheckDate) {
+          const createdDate = new Date(patient.created_at);
+          daysSinceCheck = Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+        } else {
+          const lastDate = new Date(lastCheckDate);
+          daysSinceCheck = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+        }
+
+        let newManagementStatus = patient.management_status || "관리 중";
+        
+        // 자동 상태 업데이트 로직
+        if (daysSinceCheck >= 21) {
+          newManagementStatus = "아웃";
+        } else if (daysSinceCheck >= 14) {
+          newManagementStatus = "아웃위기";
+        } else {
+          newManagementStatus = "관리 중";
+        }
+
+        // management_status가 변경되었으면 업데이트
+        if (patient.management_status !== newManagementStatus) {
+          await supabase
+            .from("patients")
+            .update({ management_status: newManagementStatus })
+            .eq("id", patient.id);
+          
+          patient.management_status = newManagementStatus;
+        }
+      }
+
+      // "아웃" 상태 환자는 제외 (neq로 이미 필터링됨)
 
       // 선택된 월의 시작일
       const [year, month] = selectedMonth.split('-');
