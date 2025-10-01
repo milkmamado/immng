@@ -62,6 +62,10 @@ interface Option {
   name: string;
 }
 
+interface PatientStatusOption extends Option {
+  exclude_from_daily_tracking: boolean;
+}
+
 export default function PatientListManagement() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
@@ -81,7 +85,7 @@ export default function PatientListManagement() {
   const [hospitalOptions, setHospitalOptions] = useState<Option[]>([]);
   const [insuranceTypeOptions, setInsuranceTypeOptions] = useState<Option[]>([]);
   const [treatmentDetailOptions, setTreatmentDetailOptions] = useState<Option[]>([]);
-  const [patientStatusOptions, setPatientStatusOptions] = useState<Option[]>([]);
+  const [patientStatusOptions, setPatientStatusOptions] = useState<PatientStatusOption[]>([]);
   
   const { toast } = useToast();
 
@@ -354,6 +358,13 @@ export default function PatientListManagement() {
     return { totalAmount, paidAmount, unpaidAmount };
   };
 
+  // 관리 상태가 일별 관리에서 제외되는지 확인하는 함수
+  const isExcludedFromTracking = (managementStatus?: string) => {
+    if (!managementStatus) return false;
+    const statusOption = patientStatusOptions.find(opt => opt.name === managementStatus);
+    return statusOption?.exclude_from_daily_tracking || false;
+  };
+
   const getInflowStatusColor = (status?: string) => {
     switch (status) {
       case '유입':
@@ -573,16 +584,18 @@ export default function PatientListManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPatients.map((patient) => (
-                  <TableRow 
-                    key={patient.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => {
-                      setSelectedPatientDetail(patient);
-                      setViewMode('full');
-                      fetchTreatmentPlans(patient.id);
-                    }}
-                  >
+                {filteredPatients.map((patient) => {
+                  const isExcluded = isExcludedFromTracking((patient as any).management_status);
+                  return (
+                    <TableRow 
+                      key={patient.id}
+                      className={`cursor-pointer hover:bg-muted/50 ${isExcluded ? 'bg-pink-50' : ''}`}
+                      onClick={() => {
+                        setSelectedPatientDetail(patient);
+                        setViewMode('full');
+                        fetchTreatmentPlans(patient.id);
+                      }}
+                    >
                     <TableCell className="font-mono">{patient.chart_number || '-'}</TableCell>
                     <TableCell>{patient.visit_type || '-'}</TableCell>
                     <TableCell>{patient.manager_name || '-'}</TableCell>
@@ -640,7 +653,8 @@ export default function PatientListManagement() {
                       }
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
