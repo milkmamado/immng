@@ -3,10 +3,11 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DailyStatusGrid } from "@/components/DailyStatusGrid";
-import { Calendar, Users, Activity } from "lucide-react";
+import { Calendar as CalendarIcon, Users, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 interface Patient {
   id: string;
@@ -37,6 +38,8 @@ export default function DailyStatusTracking() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
+  const [calendarDate, setCalendarDate] = useState<Date>(new Date());
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     총환자: 0,
@@ -202,25 +205,32 @@ export default function DailyStatusTracking() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">일별 환자 상태 추적</h1>
         <div className="flex items-center gap-4">
-          <Calendar className="h-5 w-5" />
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: 36 }, (_, i) => {
-                const date = new Date();
-                date.setMonth(date.getMonth() - 24 + i); // 과거 2년부터 미래 1년까지
-                const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                const label = `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
-                return (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+          <CalendarIcon className="h-5 w-5" />
+          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-48">
+                {selectedMonth.split('-')[0]}년 {selectedMonth.split('-')[1]}월
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={calendarDate}
+                onSelect={(date) => {
+                  if (date) {
+                    setCalendarDate(date);
+                    const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    setSelectedMonth(yearMonth);
+                    setIsCalendarOpen(false);
+                  }
+                }}
+                captionLayout="dropdown-buttons"
+                fromYear={2020}
+                toYear={2035}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
