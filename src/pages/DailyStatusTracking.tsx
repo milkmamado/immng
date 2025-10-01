@@ -247,6 +247,9 @@ export default function DailyStatusTracking() {
         return;
       }
 
+      // 현재 스크롤 위치 저장
+      const scrollPosition = window.scrollY;
+
       // 상태가 빈 문자열이면 삭제
       if (!statusType) {
         const { error } = await supabase
@@ -286,7 +289,12 @@ export default function DailyStatusTracking() {
         });
       }
 
-      fetchData(); // 데이터 새로고침
+      await fetchData(); // 데이터 새로고침
+      
+      // 스크롤 위치 복원
+      setTimeout(() => {
+        window.scrollTo(0, scrollPosition);
+      }, 0);
     } catch (error: any) {
       console.error('Error updating status:', error);
       
