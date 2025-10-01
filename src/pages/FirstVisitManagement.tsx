@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Heart, Plus, Eye, Trash2, Edit } from "lucide-react";
+import { Heart, Plus, Eye, Trash2, Edit, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 
 interface Patient {
   id: string;
@@ -38,6 +39,7 @@ export default function FirstVisitManagement() {
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
   const [selectedPatientForEdit, setSelectedPatientForEdit] = useState<Patient | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -124,6 +126,16 @@ export default function FirstVisitManagement() {
     }
   };
 
+  // 검색 필터링
+  const filteredPatients = patients.filter((patient) => {
+    if (!searchTerm.trim()) return true;
+    const search = searchTerm.toLowerCase();
+    return (
+      patient.name.toLowerCase().includes(search) ||
+      patient.patient_number.toLowerCase().includes(search)
+    );
+  });
+
   if (loading) {
     return <div className="flex justify-center items-center h-64">로딩 중...</div>;
   }
@@ -143,7 +155,18 @@ export default function FirstVisitManagement() {
 
       <Card className="w-full overflow-x-auto">
         <CardHeader>
-          <CardTitle>등록된 환자 목록 ({patients.length}명)</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>등록된 환자 목록 ({filteredPatients.length}명)</CardTitle>
+            <div className="relative w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="환자명, 등록번호로 검색..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border overflow-x-auto">
@@ -169,7 +192,7 @@ export default function FirstVisitManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {patients.map((patient) => (
+                {filteredPatients.map((patient) => (
                   <TableRow 
                     key={patient.id} 
                     className="cursor-pointer hover:bg-muted/50"
@@ -243,6 +266,12 @@ export default function FirstVisitManagement() {
               </TableBody>
             </Table>
           </div>
+          
+          {filteredPatients.length === 0 && patients.length > 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              검색 결과가 없습니다.
+            </div>
+          )}
           
           {patients.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
