@@ -114,15 +114,8 @@ export function DailyStatusGrid({
         }
       } else if (status.status_type === '퇴원') {
         lastDischargeDate = status.status_date;
-      } else if (status.status_type === '낮병동') {
-        if (!lastAdmissionDate || status.status_date > lastAdmissionDate) {
-          lastAdmissionDate = status.status_date;
-          admissionType = '낮병동';
-        }
-        if (lastDischargeDate && status.status_date > lastDischargeDate) {
-          lastDischargeDate = null;
-        }
       }
+      // 낮병동은 연속 상태가 아니므로 제외
     }
 
     // 입원 기록이 있고, 퇴원하지 않았거나 입원이 퇴원보다 최근이면 입원 중
@@ -223,8 +216,8 @@ export function DailyStatusGrid({
       const status = getStatusForDate(patient.id, date);
       const admissionStatus = getAdmissionStatusForDate(patient, date);
       
-      // 해당 날짜에 입원/재원/낮병동 상태가 직접 입력된 경우 배경색 사용 안함
-      const hasDirectAdmissionStatus = status && ['입원', '재원', '낮병동'].includes(status.status_type);
+      // 해당 날짜에 입원/재원 상태가 직접 입력된 경우 배경색 사용 안함 (낮병동 제외)
+      const hasDirectAdmissionStatus = status && ['입원', '재원'].includes(status.status_type);
       const bgColor = (!hasDirectAdmissionStatus && admissionStatus) ? getBackgroundColor(admissionStatus) : '';
       
       // 입원 기간 내 재원/입원 상태는 배경색으로만 표시 (중복 방지)
