@@ -398,6 +398,30 @@ export type Database = {
           },
         ]
       }
+      patient_status_options: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          exclude_from_daily_tracking: boolean
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          exclude_from_daily_tracking?: boolean
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          exclude_from_daily_tracking?: boolean
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       patients: {
         Row: {
           address: string | null
@@ -425,6 +449,7 @@ export type Database = {
           insurance_type: string | null
           korean_doctor: string | null
           last_visit_date: string | null
+          management_status: string | null
           manager_name: string | null
           memo1: string | null
           memo2: string | null
@@ -468,6 +493,7 @@ export type Database = {
           insurance_type?: string | null
           korean_doctor?: string | null
           last_visit_date?: string | null
+          management_status?: string | null
           manager_name?: string | null
           memo1?: string | null
           memo2?: string | null
@@ -511,6 +537,7 @@ export type Database = {
           insurance_type?: string | null
           korean_doctor?: string | null
           last_visit_date?: string | null
+          management_status?: string | null
           manager_name?: string | null
           memo1?: string | null
           memo2?: string | null

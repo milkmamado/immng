@@ -81,6 +81,7 @@ export default function PatientListManagement() {
   const [hospitalOptions, setHospitalOptions] = useState<Option[]>([]);
   const [insuranceTypeOptions, setInsuranceTypeOptions] = useState<Option[]>([]);
   const [treatmentDetailOptions, setTreatmentDetailOptions] = useState<Option[]>([]);
+  const [patientStatusOptions, setPatientStatusOptions] = useState<Option[]>([]);
   
   const { toast } = useToast();
 
@@ -769,6 +770,27 @@ export default function PatientListManagement() {
                     <div className="flex justify-between">
                       <span className="font-medium">담당실장:</span>
                       <span>{selectedPatientDetail?.manager_name || '-'}</span>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>관리 상태</Label>
+                      <Select 
+                        value={(selectedPatientDetail as any)?.management_status || '관리 중'} 
+                        onValueChange={(value) => {
+                          updateEditingField('management_status', value);
+                          savePatientField('management_status', value);
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="관리 상태를 선택하세요" />
+                        </SelectTrigger>
+                        <SelectContent className="z-[100] bg-background">
+                          {patientStatusOptions.map(option => (
+                            <SelectItem key={option.id} value={option.name}>
+                              {option.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </CardContent>
                 </Card>
