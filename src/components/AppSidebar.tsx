@@ -61,7 +61,7 @@ export function AppSidebar() {
           </div>
           {!isCollapsed && (
             <div>
-              <h1 className="text-white font-bold text-sm">암한방병원</h1>
+              <h1 className="text-white font-bold text-sm">면력한방병원</h1>
               <p className="text-primary-light text-xs">환자 관리 시스템</p>
             </div>
           )}
