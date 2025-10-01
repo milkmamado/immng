@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertCircle, AlertTriangle, Phone } from "lucide-react";
 import { format } from "date-fns";
 
@@ -18,12 +19,23 @@ interface Patient {
   age?: number;
   gender?: string;
   detailed_diagnosis?: string;
+  diagnosis?: string;
   manager_name?: string;
   inflow_status?: string;
   created_at: string;
   last_status_date?: string;
   days_since_last_check: number;
   risk_level: "아웃" | "아웃위기";
+  chart_number?: string;
+  visit_type?: string;
+  counselor?: string;
+  korean_doctor?: string;
+  western_doctor?: string;
+  previous_hospital?: string;
+  diet_info?: string;
+  visit_motivation?: string;
+  counseling_content?: string;
+  management_status?: string;
 }
 
 interface ReconnectTracking {
@@ -38,6 +50,7 @@ export default function RiskManagement() {
   const [riskPatients, setRiskPatients] = useState<Patient[]>([]);
   const [reconnectData, setReconnectData] = useState<Map<string, ReconnectTracking>>(new Map());
   const [loading, setLoading] = useState(true);
+  const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const { user, userRole } = useAuth();
   const { toast } = useToast();
 
@@ -366,7 +379,12 @@ export default function RiskManagement() {
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <CardTitle className="text-xl">{patient.name}</CardTitle>
+                        <CardTitle 
+                          className="text-xl cursor-pointer hover:text-primary transition-colors"
+                          onClick={() => setSelectedPatientDetail(patient)}
+                        >
+                          {patient.name}
+                        </CardTitle>
                         {getRiskBadge(patient.risk_level)}
                         <span className="text-sm text-muted-foreground">
                           ({patient.days_since_last_check}일 경과)
@@ -462,6 +480,174 @@ export default function RiskManagement() {
           })}
         </div>
       )}
+
+      {/* 환자 상세정보 모달 */}
+      <Dialog open={!!selectedPatientDetail} onOpenChange={() => setSelectedPatientDetail(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">환자 상세 정보</DialogTitle>
+          </DialogHeader>
+
+          {selectedPatientDetail && (
+            <div className="grid gap-4 py-4">
+              {/* 기본 정보 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">기본 정보</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex justify-between">
+                      <span className="font-medium">이름:</span>
+                      <span>{selectedPatientDetail.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">환자번호:</span>
+                      <span>{selectedPatientDetail.patient_number}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">차트번호:</span>
+                      <span>{selectedPatientDetail.chart_number || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">나이/성별:</span>
+                      <span>
+                        {selectedPatientDetail.age && selectedPatientDetail.gender 
+                          ? `${selectedPatientDetail.age}세/${selectedPatientDetail.gender}` 
+                          : '-'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">연락처:</span>
+                      <span>{selectedPatientDetail.phone || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">등록일:</span>
+                      <span>
+                        {format(new Date(selectedPatientDetail.created_at), "yyyy-MM-dd")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">유입상태:</span>
+                      <Badge variant={selectedPatientDetail.inflow_status === '유입' ? 'default' : 'secondary'}>
+                        {selectedPatientDetail.inflow_status || '-'}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">입원/외래:</span>
+                      <span>{selectedPatientDetail.visit_type || '-'}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* 진료 정보 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">진료 정보</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex justify-between">
+                      <span className="font-medium">진단명:</span>
+                      <span>{selectedPatientDetail.diagnosis || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">세부진단명:</span>
+                      <span>{selectedPatientDetail.detailed_diagnosis || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">한방주치의:</span>
+                      <span>{selectedPatientDetail.korean_doctor || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">양방주치의:</span>
+                      <span>{selectedPatientDetail.western_doctor || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">환자/보호자:</span>
+                      <span>{selectedPatientDetail.counselor || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">담당실장:</span>
+                      <span>{selectedPatientDetail.manager_name || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">관리 상태:</span>
+                      <Badge>{selectedPatientDetail.management_status || '관리 중'}</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* 추가 정보 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">추가 정보</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex justify-between">
+                      <span className="font-medium">이전병원:</span>
+                      <span>{selectedPatientDetail.previous_hospital || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">식이:</span>
+                      <span>{selectedPatientDetail.diet_info || '-'}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <span className="font-medium">내원동기:</span>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedPatientDetail.visit_motivation || '-'}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <span className="font-medium">상담내용:</span>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {selectedPatientDetail.counseling_content || '-'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* 이탈 리스크 정보 */}
+              <Card className="border-orange-200 bg-orange-50">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-orange-500" />
+                    이탈 리스크 정보
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex justify-between">
+                      <span className="font-medium">리스크 레벨:</span>
+                      {getRiskBadge(selectedPatientDetail.risk_level)}
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">경과 일수:</span>
+                      <span className="font-semibold text-orange-600">
+                        {selectedPatientDetail.days_since_last_check}일
+                      </span>
+                    </div>
+                    <div className="flex justify-between col-span-2">
+                      <span className="font-medium">마지막 체크:</span>
+                      <span>
+                        {selectedPatientDetail.last_status_date
+                          ? format(new Date(selectedPatientDetail.last_status_date), "yyyy-MM-dd")
+                          : "기록 없음"}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+
