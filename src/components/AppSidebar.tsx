@@ -6,7 +6,8 @@ import {
   Shield,
   ClipboardCheck,
   Settings,
-  BarChart3
+  BarChart3,
+  TrendingUp
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,6 +36,7 @@ const navigationItems = [
 const managementItems: never[] = [];
 
 const adminItems = [
+  { title: "마케팅 통계", url: "/marketing-statistics", icon: TrendingUp, requiredRole: 'master' as const },
   { title: "계정 관리", url: "/account-management", icon: Shield, requiredRole: 'master' as const },
   { title: "옵션 관리", url: "/options-management", icon: Settings, requiredRole: 'master' as const },
 ];

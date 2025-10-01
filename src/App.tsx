@@ -15,6 +15,7 @@ import PatientListManagement from "./pages/PatientListManagement";
 import DailyStatusTracking from "./pages/DailyStatusTracking";
 import RiskManagement from "./pages/RiskManagement";
 import StatisticsManagement from "./pages/StatisticsManagement";
+import MarketingStatistics from "./pages/MarketingStatistics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -91,6 +92,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <StatisticsManagement />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/marketing-statistics" 
+          element={
+            <ProtectedRoute requiredRole="master">
+              <MarketingStatistics />
             </ProtectedRoute>
           } 
         />
