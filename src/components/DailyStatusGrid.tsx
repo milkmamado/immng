@@ -6,6 +6,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
+interface AdmissionCycle {
+  id: string;
+  admission_date: string;
+  discharge_date: string | null;
+  admission_type: string;
+  status: string;
+}
+
 interface Patient {
   id: string;
   name: string;
@@ -18,6 +26,7 @@ interface Patient {
   previous_hospital?: string;
   memo1?: string;
   memo2?: string;
+  admission_cycles?: AdmissionCycle[];
 }
 
 interface DailyStatus {
@@ -75,6 +84,44 @@ export function DailyStatusGrid({
     return dailyStatuses.find(
       status => status.patient_id === patientId && status.status_date === date
     );
+  };
+
+  // 해당 날짜가 입원 기간 내인지 확인
+  const getAdmissionStatusForDate = (patient: Patient, date: string) => {
+    if (!patient.admission_cycles || patient.admission_cycles.length === 0) {
+      return null;
+    }
+
+    for (const cycle of patient.admission_cycles) {
+      const admissionDate = cycle.admission_date;
+      const dischargeDate = cycle.discharge_date || '9999-12-31'; // 퇴원일이 없으면 현재 입원 중
+      
+      if (date >= admissionDate && date <= dischargeDate) {
+        return {
+          type: cycle.admission_type || '입원',
+          isOngoing: !cycle.discharge_date
+        };
+      }
+    }
+    
+    return null;
+  };
+
+  // 배경색 결정
+  const getBackgroundColor = (admissionStatus: { type: string; isOngoing: boolean } | null) => {
+    if (!admissionStatus) return '';
+    
+    switch (admissionStatus.type) {
+      case '입원':
+      case '재원':
+        return 'bg-red-100 dark:bg-red-950/30';
+      case '낮병동':
+        return 'bg-yellow-100 dark:bg-yellow-950/30';
+      case '외래':
+        return 'bg-green-100 dark:bg-green-950/30';
+      default:
+        return 'bg-blue-100 dark:bg-blue-950/30';
+    }
   };
 
   const handleCellClick = (patientId: string, day: number, patient: Patient) => {
@@ -143,13 +190,15 @@ export function DailyStatusGrid({
     for (let day = 1; day <= daysInMonth; day++) {
       const date = `${yearMonth}-${String(day).padStart(2, '0')}`;
       const status = getStatusForDate(patient.id, date);
+      const admissionStatus = getAdmissionStatusForDate(patient, date);
+      const bgColor = getBackgroundColor(admissionStatus);
       
       cells.push(
-        <td key={day} className="p-0.5 border">
+        <td key={day} className={`p-0.5 border ${bgColor}`}>
           <Button
             variant="ghost"
             size="sm"
-            className="h-10 w-full p-0.5 text-xs"
+            className="h-10 w-full p-0.5 text-xs hover:bg-transparent"
             onClick={() => handleCellClick(patient.id, day, patient)}
           >
             {status && (
@@ -165,6 +214,11 @@ export function DailyStatusGrid({
                     {status.notes.substring(0, 10)}...
                   </span>
                 )}
+              </div>
+            )}
+            {!status && admissionStatus && (
+              <div className="text-[10px] text-muted-foreground">
+                {admissionStatus.type}
               </div>
             )}
           </Button>

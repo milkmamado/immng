@@ -11,6 +11,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { ko } from "date-fns/locale";
 
+interface AdmissionCycle {
+  id: string;
+  admission_date: string;
+  discharge_date: string | null;
+  admission_type: string;
+  status: string;
+}
+
 interface Patient {
   id: string;
   name: string;
@@ -23,6 +31,7 @@ interface Patient {
   previous_hospital?: string;
   memo1?: string;
   memo2?: string;
+  admission_cycles?: AdmissionCycle[];
 }
 
 interface DailyStatus {
@@ -108,7 +117,14 @@ export default function DailyStatusTracking() {
       // 환자 목록 가져오기 (유입 상태 + 관리 중인 상태만)
       const { data: patientsData, error: patientsError } = await supabase
         .from('patients')
-        .select('id, name, patient_number, diagnosis, detailed_diagnosis, korean_doctor, western_doctor, manager_name, previous_hospital, memo1, memo2')
+        .select(`
+          id, name, patient_number, diagnosis, detailed_diagnosis, 
+          korean_doctor, western_doctor, manager_name, previous_hospital, 
+          memo1, memo2,
+          admission_cycles (
+            id, admission_date, discharge_date, admission_type, status
+          )
+        `)
         .eq('inflow_status', '유입')
         .in('management_status', includedStatuses)
         .order('created_at', { ascending: false });
