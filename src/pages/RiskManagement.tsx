@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +20,7 @@ interface Patient {
   detailed_diagnosis?: string;
   manager_name?: string;
   inflow_status?: string;
+  created_at: string;
   last_status_date?: string;
   days_since_last_check: number;
   risk_level: "아웃" | "아웃위기";
@@ -33,7 +34,7 @@ interface ReconnectTracking {
   reconnected_at?: string;
 }
 
-export default function RiskManagement() {
+function RiskManagement() {
   const [riskPatients, setRiskPatients] = useState<Patient[]>([]);
   const [reconnectData, setReconnectData] = useState<Map<string, ReconnectTracking>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -41,9 +42,10 @@ export default function RiskManagement() {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchRiskPatients();
+    if (user) {
+      fetchRiskPatients();
+    }
     
-    // Realtime 구독
     const channel = supabase
       .channel('risk-management-changes')
       .on(
@@ -54,7 +56,9 @@ export default function RiskManagement() {
           table: 'daily_patient_status'
         },
         () => {
-          fetchRiskPatients();
+          if (user) {
+            fetchRiskPatients();
+          }
         }
       )
       .subscribe();
@@ -68,7 +72,6 @@ export default function RiskManagement() {
     try {
       setLoading(true);
 
-      // 1. 환자 목록 조회
       let patientsQuery = supabase
         .from("patients")
         .select("*")
@@ -79,10 +82,8 @@ export default function RiskManagement() {
       }
 
       const { data: patientsData, error: patientsError } = await patientsQuery;
-
       if (patientsError) throw patientsError;
 
-      // 2. 모든 환자의 마지막 일별 체크 날짜 조회
       const { data: statusData, error: statusError } = await supabase
         .from("daily_patient_status")
         .select("patient_id, status_date")
@@ -90,7 +91,6 @@ export default function RiskManagement() {
 
       if (statusError) throw statusError;
 
-      // 3. 각 환자의 마지막 체크 날짜 찾기
       const lastCheckMap = new Map<string, string>();
       statusData?.forEach(status => {
         if (!lastCheckMap.has(status.patient_id)) {
@@ -98,7 +98,6 @@ export default function RiskManagement() {
         }
       });
 
-      // 4. 리스크 환자 필터링
       const today = new Date();
       const riskyPatients: Patient[] = [];
 
@@ -106,7 +105,6 @@ export default function RiskManagement() {
         const lastCheckDate = lastCheckMap.get(patient.id);
         
         if (!lastCheckDate) {
-          // 한 번도 체크 안된 경우 - 생성일로부터 계산
           const createdDate = new Date(patient.created_at);
           const daysSinceCreated = Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
           
@@ -133,7 +131,6 @@ export default function RiskManagement() {
         }
       });
 
-      // 리스크 레벨과 일수로 정렬 (아웃 > 아웃위기, 일수 많은 순)
       riskyPatients.sort((a, b) => {
         if (a.risk_level === b.risk_level) {
           return b.days_since_last_check - a.days_since_last_check;
@@ -143,7 +140,6 @@ export default function RiskManagement() {
 
       setRiskPatients(riskyPatients);
 
-      // 5. 재연락 데이터 조회
       if (riskyPatients.length > 0) {
         const patientIds = riskyPatients.map(p => p.id);
         const { data: reconnectData, error: reconnectError } = await supabase
@@ -177,7 +173,6 @@ export default function RiskManagement() {
       const existingData = reconnectData.get(patientId);
 
       if (existingData?.id) {
-        // 업데이트
         const { error } = await supabase
           .from("patient_reconnect_tracking")
           .update({
@@ -189,7 +184,6 @@ export default function RiskManagement() {
 
         if (error) throw error;
       } else {
-        // 새로 생성
         const { data, error } = await supabase
           .from("patient_reconnect_tracking")
           .insert({
@@ -203,7 +197,6 @@ export default function RiskManagement() {
 
         if (error) throw error;
 
-        // 새로 생성된 데이터를 Map에 추가
         if (data) {
           const newMap = new Map(reconnectData);
           newMap.set(patientId, data);
@@ -211,7 +204,6 @@ export default function RiskManagement() {
         }
       }
 
-      // 로컬 상태 업데이트
       const newMap = new Map(reconnectData);
       newMap.set(patientId, {
         ...existingData,
@@ -240,7 +232,6 @@ export default function RiskManagement() {
       const existingData = reconnectData.get(patientId);
 
       if (existingData?.id) {
-        // 업데이트
         const { error } = await supabase
           .from("patient_reconnect_tracking")
           .update({
@@ -251,7 +242,6 @@ export default function RiskManagement() {
 
         if (error) throw error;
       } else {
-        // 새로 생성
         const { data, error } = await supabase
           .from("patient_reconnect_tracking")
           .insert({
@@ -272,7 +262,6 @@ export default function RiskManagement() {
         }
       }
 
-      // 로컬 상태 업데이트
       const newMap = new Map(reconnectData);
       newMap.set(patientId, {
         ...existingData,
@@ -465,3 +454,5 @@ export default function RiskManagement() {
     </div>
   );
 }
+
+export default RiskManagement;
