@@ -52,6 +52,29 @@ export default function DailyStatusTracking() {
 
   useEffect(() => {
     fetchData();
+
+    // Realtime 구독 설정 - patients 테이블 변경 감지
+    const channel = supabase
+      .channel('patient-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // INSERT, UPDATE, DELETE 모두 감지
+          schema: 'public',
+          table: 'patients'
+        },
+        (payload) => {
+          console.log('Patient data changed:', payload);
+          // 데이터 변경 시 자동으로 다시 불러오기
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    // 컴포넌트 언마운트 시 구독 해제
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [selectedMonth]);
 
   const fetchData = async () => {
