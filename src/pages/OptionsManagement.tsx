@@ -33,7 +33,7 @@ export default function OptionsManagement() {
   const [newInsurance, setNewInsurance] = useState('');
   const [newTreatment, setNewTreatment] = useState('');
   const [newPatientStatus, setNewPatientStatus] = useState('');
-  const [excludeFromTracking, setExcludeFromTracking] = useState(false);
+  const [excludeFromTracking, setExcludeFromTracking] = useState(true);
 
   const { toast } = useToast();
 
@@ -120,7 +120,7 @@ export default function OptionsManagement() {
           break;
         case 'patient_status':
           setNewPatientStatus('');
-          setExcludeFromTracking(false);
+          setExcludeFromTracking(true);
           break;
       }
 
