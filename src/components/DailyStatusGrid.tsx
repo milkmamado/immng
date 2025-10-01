@@ -222,11 +222,15 @@ export function DailyStatusGrid({
       const date = `${yearMonth}-${String(day).padStart(2, '0')}`;
       const status = getStatusForDate(patient.id, date);
       const admissionStatus = getAdmissionStatusForDate(patient, date);
-      const bgColor = getBackgroundColor(admissionStatus);
+      
+      // 해당 날짜에 입원/재원/낮병동 상태가 직접 입력된 경우 배경색 사용 안함
+      const hasDirectAdmissionStatus = status && ['입원', '재원', '낮병동'].includes(status.status_type);
+      const bgColor = (!hasDirectAdmissionStatus && admissionStatus) ? getBackgroundColor(admissionStatus) : '';
       
       // 입원 기간 내 재원/입원 상태는 배경색으로만 표시 (중복 방지)
       const shouldShowStatus = status && !(
         admissionStatus && 
+        !hasDirectAdmissionStatus &&
         (status.status_type === '재원' || status.status_type === '입원')
       );
       
