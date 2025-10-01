@@ -57,10 +57,11 @@ export default function DailyStatusTracking() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // 환자 목록 가져오기
+      // 환자 목록 가져오기 (유입 상태만)
       const { data: patientsData, error: patientsError } = await supabase
         .from('patients')
         .select('id, name, patient_number, diagnosis, detailed_diagnosis, korean_doctor, western_doctor, manager_name, previous_hospital, memo1, memo2')
+        .eq('inflow_status', '유입')
         .order('created_at', { ascending: false });
 
       if (patientsError) throw patientsError;
