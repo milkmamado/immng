@@ -180,7 +180,7 @@ export default function StatisticsManagement() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">통계 관리</h1>
-          <p className="text-gray-600 mt-1">실장별 성과 및 매출 분석</p>
+          <p className="text-gray-600 mt-1">매출 분석</p>
         </div>
         <Select value={selectedMonth} onValueChange={setSelectedMonth}>
           <SelectTrigger className="w-48">
@@ -229,7 +229,6 @@ export default function StatisticsManagement() {
 
       {/* 실장별 통계 */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold">실장별 성과</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {managerStats.map((stats) => (
             <Card key={stats.manager_id} className="overflow-hidden">
