@@ -1,82 +1,144 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Calendar, Activity, Plus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Users, DollarSign, AlertTriangle } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface DashboardStats {
   totalPatients: number;
-  inflowPatients: number;
-  failedPatients: number;
-  todayStatuses: number;
-  thisWeekStatuses: number;
-  recentPatients: Array<{
+  monthlyRevenue: number;
+  riskPatients: Array<{
     id: string;
     name: string;
     patient_number: string;
-    inflow_status?: string;
-    created_at: string;
-    detailed_diagnosis?: string;
+    manager_name?: string;
+    last_visit_date?: string;
   }>;
 }
 
+interface ManagerStat {
+  id: string;
+  name: string;
+  patient_count: number;
+  monthly_revenue: number;
+}
+
 export function Dashboard() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
     totalPatients: 0,
-    inflowPatients: 0,
-    failedPatients: 0,
-    todayStatuses: 0,
-    thisWeekStatuses: 0,
-    recentPatients: []
+    monthlyRevenue: 0,
+    riskPatients: []
   });
+  const [managerStats, setManagerStats] = useState<ManagerStat[]>([]);
+  const [isMasterOrAdmin, setIsMasterOrAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (user) {
+      checkUserRole();
+      fetchDashboardData();
+    }
+  }, [user]);
+
+  const checkUserRole = async () => {
+    if (!user) return;
+
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('approval_status', 'approved')
+      .single();
+
+    setIsMasterOrAdmin(roleData?.role === 'master' || roleData?.role === 'admin');
+  };
 
   const fetchDashboardData = async () => {
     try {
-      // 환자 통계
-      const { data: patients, error: patientsError } = await supabase
+      if (!user) return;
+
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('approval_status', 'approved')
+        .single();
+
+      const isAdmin = roleData?.role === 'master' || roleData?.role === 'admin';
+
+      // 환자 통계 - 역할에 따라 필터링
+      let patientsQuery = supabase
         .from('patients')
-        .select('id, name, patient_number, inflow_status, created_at, detailed_diagnosis')
-        .order('created_at', { ascending: false });
+        .select('id, name, patient_number, assigned_manager, manager_name, last_visit_date, payment_amount')
+        .eq('inflow_status', '유입');
+
+      if (!isAdmin) {
+        patientsQuery = patientsQuery.eq('assigned_manager', user.id);
+      }
+
+      const { data: patients, error: patientsError } = await patientsQuery;
 
       if (patientsError) throw patientsError;
 
-      // 오늘과 이번 주 상태 기록
-      const today = new Date().toISOString().split('T')[0];
-      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      // 당월 매출 계산
+      const now = new Date();
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const monthlyRevenue = patients?.reduce((sum, p) => sum + (p.payment_amount || 0), 0) || 0;
 
-      const { data: todayStatuses, error: todayError } = await supabase
-        .from('daily_patient_status')
-        .select('id')
-        .eq('status_date', today);
-
-      const { data: weekStatuses, error: weekError } = await supabase
-        .from('daily_patient_status')
-        .select('id')
-        .gte('status_date', weekAgo);
-
-      if (todayError) throw todayError;
-      if (weekError) throw weekError;
-
-      const totalPatients = patients?.length || 0;
-      const inflowPatients = patients?.filter(p => p.inflow_status === '유입').length || 0;
-      const failedPatients = patients?.filter(p => p.inflow_status === '실패').length || 0;
+      // 이탈 리스크 환자 (30일 이상 방문 없음)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const riskPatients = patients?.filter(p => {
+        if (!p.last_visit_date) return false;
+        const lastVisit = new Date(p.last_visit_date);
+        return lastVisit < thirtyDaysAgo;
+      }).slice(0, 10) || [];
 
       setStats({
-        totalPatients,
-        inflowPatients,
-        failedPatients,
-        todayStatuses: todayStatuses?.length || 0,
-        thisWeekStatuses: weekStatuses?.length || 0,
-        recentPatients: patients?.slice(0, 5) || []
+        totalPatients: patients?.length || 0,
+        monthlyRevenue,
+        riskPatients
       });
+
+      // 마스터/관리자인 경우 매니저별 통계
+      if (isAdmin) {
+        const { data: userRoles } = await supabase
+          .from('user_roles')
+          .select('user_id')
+          .eq('role', 'manager')
+          .eq('approval_status', 'approved');
+
+        if (userRoles && userRoles.length > 0) {
+          const managerIds = userRoles.map(r => r.user_id);
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, name')
+            .in('id', managerIds);
+
+          const managerStatsData = await Promise.all(
+            (profiles || []).map(async (profile) => {
+              const { data: managerPatients } = await supabase
+                .from('patients')
+                .select('payment_amount')
+                .eq('assigned_manager', profile.id)
+                .eq('inflow_status', '유입');
+
+              const revenue = managerPatients?.reduce((sum, p) => sum + (p.payment_amount || 0), 0) || 0;
+
+              return {
+                id: profile.id,
+                name: profile.name,
+                patient_count: managerPatients?.length || 0,
+                monthly_revenue: revenue
+              };
+            })
+          );
+
+          setManagerStats(managerStatsData);
+        }
+      }
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -96,24 +158,17 @@ export function Dashboard() {
     );
   }
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('ko-KR', {
+      style: 'currency',
+      currency: 'KRW',
+    }).format(amount);
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">환자 관리 대시보드</h1>
-          <p className="text-muted-foreground">Excel 시트 기반 환자 관리 시스템</p>
-        </div>
-        <Button 
-          onClick={() => navigate('/patients')} 
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          환자 등록
-        </Button>
-      </div>
-
       {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">전체 환자</CardTitle>
@@ -122,129 +177,105 @@ export function Dashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalPatients}</div>
             <p className="text-xs text-muted-foreground">
-              등록된 총 환자 수
+              유입 환자 총 수
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">유입 환자</CardTitle>
-            <Badge variant="default">유입</Badge>
+            <CardTitle className="text-sm font-medium">이탈 리스크 환자</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.inflowPatients}</div>
+            <div className="text-2xl font-bold text-orange-600">{stats.riskPatients.length}</div>
             <p className="text-xs text-muted-foreground">
-              성공적으로 유입된 환자
+              30일 이상 방문 없음
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">오늘 상태 기록</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">당월 현재 매출</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.todayStatuses}</div>
+            <div className="text-2xl font-bold">{formatCurrency(stats.monthlyRevenue)}</div>
             <p className="text-xs text-muted-foreground">
-              오늘 입력된 상태 기록
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">이번 주 활동</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.thisWeekStatuses}</div>
-            <p className="text-xs text-muted-foreground">
-              이번 주 전체 상태 기록
+              {new Date().getMonth() + 1}월 매출
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* 최근 등록 환자 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              최근 등록 환자
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats.recentPatients.length === 0 ? (
-              <p className="text-center text-muted-foreground py-4">
-                등록된 환자가 없습니다.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {stats.recentPatients.map((patient) => (
-                  <div key={patient.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <div className="font-medium">{patient.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {patient.patient_number}
-                      </div>
-                      {patient.detailed_diagnosis && (
-                        <div className="text-xs text-muted-foreground">
-                          {patient.detailed_diagnosis}
-                        </div>
-                      )}
+      {/* 이탈 리스크 관리가 필요한 환자 목록 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-orange-500" />
+            이탈 리스크 관리가 필요한 환자
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {stats.riskPatients.length === 0 ? (
+            <p className="text-center text-muted-foreground py-4">
+              리스크 환자가 없습니다.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {stats.riskPatients.map((patient) => (
+                <div key={patient.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <div className="font-medium">{patient.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {patient.patient_number}
                     </div>
-                    <div className="text-right">
-                      <Badge 
-                        variant={patient.inflow_status === '유입' ? 'default' : 'destructive'}
-                      >
-                        {patient.inflow_status}
-                      </Badge>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {new Date(patient.created_at).toLocaleDateString()}
+                    {patient.manager_name && (
+                      <div className="text-xs text-muted-foreground">
+                        담당: {patient.manager_name}
                       </div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-muted-foreground">
+                      최종 방문: {patient.last_visit_date ? new Date(patient.last_visit_date).toLocaleDateString() : '-'}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
+      {/* 매니저별 통계 (마스터/관리자만) */}
+      {isMasterOrAdmin && managerStats.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>빠른 작업</CardTitle>
+            <CardTitle>매니저별 통계</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Button 
-              variant="outline" 
-              className="w-full justify-start"
-              onClick={() => navigate('/patients')}
-            >
-              <Users className="h-4 w-4 mr-2" />
-              환자 기본 관리
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start"
-              onClick={() => navigate('/daily-tracking')}
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              일별 상태 추적
-            </Button>
-            <div className="pt-4 border-t">
-              <p className="text-sm text-muted-foreground mb-2">시스템 정보</p>
-              <div className="space-y-1 text-xs text-muted-foreground">
-                <div>• Excel 시트 기반 구조</div>
-                <div>• 실시간 상태 추적</div>
-                <div>• 통합 환자 관리</div>
-              </div>
+          <CardContent>
+            <div className="space-y-3">
+              {managerStats.map((manager) => (
+                <div key={manager.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <div className="font-medium">{manager.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      환자 수: {manager.patient_count}명
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold text-primary">
+                      {formatCurrency(manager.monthly_revenue)}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
-      </div>
+      )}
     </div>
   );
 }
