@@ -179,17 +179,19 @@ export default function PatientListManagement() {
 
   const fetchOptions = async () => {
     try {
-      const [diagnosis, hospital, insurance, treatment] = await Promise.all([
-        (supabase as any).from('diagnosis_options').select('*').order('name'),
-        (supabase as any).from('hospital_options').select('*').order('name'),
-        (supabase as any).from('insurance_type_options').select('*').order('name'),
-        (supabase as any).from('treatment_detail_options').select('*').order('name')
+      const [diagnosis, hospital, insurance, treatment, patientStatus] = await Promise.all([
+        supabase.from('diagnosis_options').select('*').order('name'),
+        supabase.from('hospital_options').select('*').order('name'),
+        supabase.from('insurance_type_options').select('*').order('name'),
+        supabase.from('treatment_detail_options').select('*').order('name'),
+        supabase.from('patient_status_options').select('*').order('name')
       ]);
 
       if (diagnosis.data) setDiagnosisOptions(diagnosis.data);
       if (hospital.data) setHospitalOptions(hospital.data);
       if (insurance.data) setInsuranceTypeOptions(insurance.data);
       if (treatment.data) setTreatmentDetailOptions(treatment.data);
+      if (patientStatus.data) setPatientStatusOptions(patientStatus.data);
     } catch (error) {
       console.error('Error fetching options:', error);
     }
