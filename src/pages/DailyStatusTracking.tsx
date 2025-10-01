@@ -228,6 +228,7 @@ export default function DailyStatusTracking() {
                 fromYear={2020}
                 toYear={2035}
                 initialFocus
+                className="pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
@@ -285,7 +286,7 @@ export default function DailyStatusTracking() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
+            <CalendarIcon className="h-5 w-5" />
             {selectedMonth.split('-')[0]}년 {selectedMonth.split('-')[1]}월 환자 상태 추적
           </CardTitle>
         </CardHeader>
