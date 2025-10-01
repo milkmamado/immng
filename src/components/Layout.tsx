@@ -1,8 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Bell, Search, User, LogOut, Crown, UserCheck } from "lucide-react";
+import { User, LogOut, Crown, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import {
   DropdownMenu,
@@ -99,21 +98,9 @@ export default function Layout({ children }: LayoutProps) {
           <header className="h-16 flex items-center justify-between px-6 border-b bg-card shadow-sm">
             <div className="flex items-center gap-4">
               <SidebarTrigger className="p-2" />
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="환자명, 등록번호로 검색..." 
-                  className="w-80 pl-10 bg-background"
-                />
-              </div>
             </div>
             
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" className="relative">
-                <Bell className="h-4 w-4" />
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full text-xs"></span>
-              </Button>
-              
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2 px-3 py-2 h-auto">

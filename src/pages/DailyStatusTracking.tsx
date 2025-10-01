@@ -4,10 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DailyStatusGrid } from "@/components/DailyStatusGrid";
-import { Calendar as CalendarIcon, Users, Activity } from "lucide-react";
+import { Calendar as CalendarIcon, Users, Activity, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
 import { ko } from "date-fns/locale";
 
 interface Patient {
@@ -34,6 +35,7 @@ interface DailyStatus {
 
 export default function DailyStatusTracking() {
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [dailyStatuses, setDailyStatuses] = useState<DailyStatus[]>([]);
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
@@ -42,6 +44,7 @@ export default function DailyStatusTracking() {
   const [calendarDate, setCalendarDate] = useState<Date>(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState({
     총환자: 0,
     입원: 0,
@@ -76,6 +79,20 @@ export default function DailyStatusTracking() {
       supabase.removeChannel(channel);
     };
   }, [selectedMonth]);
+
+  // 검색어에 따른 필터링
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredPatients(patients);
+    } else {
+      const search = searchTerm.toLowerCase();
+      const filtered = patients.filter(patient =>
+        patient.name.toLowerCase().includes(search) ||
+        patient.patient_number.toLowerCase().includes(search)
+      );
+      setFilteredPatients(filtered);
+    }
+  }, [patients, searchTerm]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -264,6 +281,15 @@ export default function DailyStatusTracking() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">일별 환자 상태 추적</h1>
         <div className="flex items-center gap-4">
+          <div className="relative w-80">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="환자명, 등록번호로 검색..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
           <CalendarIcon className="h-5 w-5" />
           <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
             <PopoverTrigger asChild>
@@ -352,7 +378,7 @@ export default function DailyStatusTracking() {
         </CardHeader>
         <CardContent>
           <DailyStatusGrid
-            patients={patients}
+            patients={filteredPatients}
             dailyStatuses={dailyStatuses}
             yearMonth={selectedMonth}
             daysInMonth={getDaysInMonth(selectedMonth)}
