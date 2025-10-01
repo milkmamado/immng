@@ -81,7 +81,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('로그아웃 에러:', error);
+    } finally {
+      // 에러가 발생해도 로컬 상태 강제 정리
+      setUser(null);
+      setSession(null);
+      setUserRole(null);
+      // localStorage 강제 정리
+      localStorage.clear();
+      // 페이지 새로고침으로 완전히 초기화
+      window.location.href = '/auth';
+    }
   };
 
   const value = {
