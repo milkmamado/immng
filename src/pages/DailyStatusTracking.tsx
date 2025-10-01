@@ -132,7 +132,7 @@ export default function DailyStatusTracking() {
       }, {} as Record<string, number>);
 
       setStats({
-        총환자: patientsData?.length || 0,
+        총환자: activePatients.length || 0,
         입원: statusCounts['입원'] || 0,
         외래: statusCounts['외래'] || 0,
         전화FU: statusCounts['전화F/U'] || 0
