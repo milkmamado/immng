@@ -72,13 +72,23 @@ export default function StatisticsManagement() {
 
     if (isMaster) {
       // 마스터/관리자는 모든 매니저 목록 가져오기
-      const { data: managersData } = await supabase
-        .from('profiles')
-        .select('id, name')
-        .order('name');
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'manager')
+        .eq('approval_status', 'approved');
 
-      if (managersData) {
-        setManagers(managersData);
+      if (userRoles && userRoles.length > 0) {
+        const managerIds = userRoles.map(r => r.user_id);
+        const { data: managersData } = await supabase
+          .from('profiles')
+          .select('id, name')
+          .in('id', managerIds)
+          .order('name');
+
+        if (managersData) {
+          setManagers(managersData);
+        }
       }
     } else {
       // 일반 매니저는 본인만
