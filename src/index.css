@@ -129,3 +129,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Hide calendar dropdown labels (Month:, Year:) */
+.rdp-vhidden {
+  @apply hidden;
+}
