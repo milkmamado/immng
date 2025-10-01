@@ -65,10 +65,35 @@ export default function DailyStatusTracking() {
         .order('created_at', { ascending: false });
 
       if (patientsError) throw patientsError;
-      setPatients(patientsData || []);
+
+      // 선택된 월의 시작일
+      const [year, month] = selectedMonth.split('-');
+      const monthStartDate = `${year}-${month}-01`;
+
+      // 각 환자에 대해 해당 월 이전에 퇴원했는지 확인
+      const activePatientsPromises = (patientsData || []).map(async (patient) => {
+        // 해당 월 시작일 이전의 마지막 상태 확인
+        const { data: lastStatusBeforeMonth } = await supabase
+          .from('daily_patient_status')
+          .select('status_type, status_date')
+          .eq('patient_id', patient.id)
+          .lt('status_date', monthStartDate)
+          .order('status_date', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        // 이전 달에 퇴원 상태였다면 제외
+        if (lastStatusBeforeMonth && lastStatusBeforeMonth.status_type === '퇴원') {
+          return null;
+        }
+
+        return patient;
+      });
+
+      const activePatients = (await Promise.all(activePatientsPromises)).filter(p => p !== null);
+      setPatients(activePatients);
 
       // 선택된 월의 일별 상태 가져오기
-      const [year, month] = selectedMonth.split('-');
       const startDate = `${year}-${month}-01`;
       const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
       const endDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
