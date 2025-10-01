@@ -249,6 +249,22 @@ export default function PatientListManagement() {
 
       if (error) throw error;
 
+      // 환자의 총 수납금액 재계산 (is_paid=true인 것만)
+      const { data: allPlans } = await supabase
+        .from('treatment_plans')
+        .select('treatment_amount, is_paid')
+        .eq('patient_id', selectedPatientDetail.id);
+
+      const totalPaidAmount = (allPlans || [])
+        .filter(plan => plan.is_paid)
+        .reduce((sum, plan) => sum + plan.treatment_amount, 0);
+
+      // patients 테이블의 payment_amount 업데이트
+      await supabase
+        .from('patients')
+        .update({ payment_amount: totalPaidAmount })
+        .eq('id', selectedPatientDetail.id);
+
       setNewTreatmentDetail('');
       setNewTreatmentAmount('');
       setShowAddForm(false);
