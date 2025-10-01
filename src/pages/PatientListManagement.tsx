@@ -710,13 +710,6 @@ export default function PatientListManagement() {
                       <span>{selectedPatientDetail?.patient_number || '-'}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="font-medium">나이/성별:</span>
-                      <span>
-                        {selectedPatientDetail?.age && selectedPatientDetail?.gender ? 
-                          `${selectedPatientDetail.age}세/${selectedPatientDetail.gender}` : '-'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
                       <span className="font-medium">생년월일:</span>
                       <span>
                         {(selectedPatientDetail as any)?.birth_date ? 
