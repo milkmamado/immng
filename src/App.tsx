@@ -13,6 +13,7 @@ import OptionsManagement from "./pages/OptionsManagement";
 import FirstVisitManagement from "./pages/FirstVisitManagement";
 import PatientListManagement from "./pages/PatientListManagement";
 import DailyStatusTracking from "./pages/DailyStatusTracking";
+import RiskManagement from "./pages/RiskManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -73,6 +74,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <DailyStatusTracking />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/risk-management" 
+          element={
+            <ProtectedRoute>
+              <RiskManagement />
             </ProtectedRoute>
           } 
         />

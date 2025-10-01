@@ -398,6 +398,54 @@ export type Database = {
           },
         ]
       }
+      patient_reconnect_tracking: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          is_reconnected: boolean
+          patient_id: string
+          reconnect_notes: string | null
+          reconnected_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          is_reconnected?: boolean
+          patient_id: string
+          reconnect_notes?: string | null
+          reconnected_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_reconnected?: boolean
+          patient_id?: string
+          reconnect_notes?: string | null
+          reconnected_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_reconnect_tracking_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_reconnect_tracking_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_status_options: {
         Row: {
           created_at: string
