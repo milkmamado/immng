@@ -193,6 +193,12 @@ export function DailyStatusGrid({
       const admissionStatus = getAdmissionStatusForDate(patient, date);
       const bgColor = getBackgroundColor(admissionStatus);
       
+      // 입원 기간 내 재원/입원 상태는 배경색으로만 표시 (중복 방지)
+      const shouldShowStatus = status && !(
+        admissionStatus && 
+        (status.status_type === '재원' || status.status_type === '입원')
+      );
+      
       cells.push(
         <td key={day} className={`p-0.5 border ${bgColor}`}>
           <Button
@@ -201,7 +207,7 @@ export function DailyStatusGrid({
             className="h-10 w-full p-0.5 text-xs hover:bg-transparent"
             onClick={() => handleCellClick(patient.id, day, patient)}
           >
-            {status && (
+            {shouldShowStatus && (
               <div className="flex flex-col items-center gap-0.5">
                 <Badge
                   variant={statusColors[status.status_type as keyof typeof statusColors] || 'default'}
@@ -216,11 +222,6 @@ export function DailyStatusGrid({
                 )}
               </div>
             )}
-            {!status && admissionStatus && (
-              <div className="text-[10px] text-muted-foreground">
-                {admissionStatus.type}
-              </div>
-            )}
           </Button>
         </td>
       );
@@ -233,6 +234,18 @@ export function DailyStatusGrid({
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2 mb-4">
         <span className="text-sm font-medium">상태 범례:</span>
+        <div className="flex items-center gap-1">
+          <div className="w-8 h-6 bg-red-100 dark:bg-red-950/30 border rounded"></div>
+          <span className="text-xs">입원/재원</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-8 h-6 bg-yellow-100 dark:bg-yellow-950/30 border rounded"></div>
+          <span className="text-xs">낮병동</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-8 h-6 bg-green-100 dark:bg-green-950/30 border rounded"></div>
+          <span className="text-xs">외래</span>
+        </div>
         {statusTypes.map(statusType => (
           <Badge
             key={statusType}

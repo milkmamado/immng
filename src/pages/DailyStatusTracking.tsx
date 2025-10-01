@@ -236,6 +236,17 @@ export default function DailyStatusTracking() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('로그인이 필요합니다.');
 
+      // 해당 환자가 현재 사용자에게 할당되어 있는지 확인
+      const patient = patients.find(p => p.id === patientId);
+      if (!patient) {
+        toast({
+          title: "오류",
+          description: "환자 정보를 찾을 수 없습니다.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // 상태가 빈 문자열이면 삭제
       if (!statusType) {
         const { error } = await supabase
@@ -264,7 +275,10 @@ export default function DailyStatusTracking() {
             onConflict: 'patient_id,status_date'
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Upsert error:', error);
+          throw error;
+        }
 
         toast({
           title: "성공",
@@ -273,11 +287,17 @@ export default function DailyStatusTracking() {
       }
 
       fetchData(); // 데이터 새로고침
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating status:', error);
+      
+      // RLS 오류 메시지를 사용자 친화적으로 변경
+      const errorMessage = error?.message?.includes('row-level security') 
+        ? "이 환자의 상태를 수정할 권한이 없습니다."
+        : "상태 업데이트에 실패했습니다.";
+      
       toast({
         title: "오류",
-        description: "상태 업데이트에 실패했습니다.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
