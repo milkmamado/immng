@@ -26,6 +26,7 @@ interface Patient {
   previous_hospital?: string;
   memo1?: string;
   memo2?: string;
+  management_status?: string;
   admission_cycles?: AdmissionCycle[];
 }
 
@@ -44,6 +45,7 @@ interface DailyStatusGridProps {
   daysInMonth: number;
   onStatusUpdate: (patientId: string, date: string, statusType: string, notes?: string) => Promise<void>;
   onMemoUpdate: (patientId: string, memoType: 'memo1' | 'memo2', value: string) => Promise<void>;
+  onManagementStatusUpdate: (patientId: string, status: string) => Promise<void>;
 }
 
 export function DailyStatusGrid({
@@ -53,6 +55,7 @@ export function DailyStatusGrid({
   daysInMonth,
   onStatusUpdate,
   onMemoUpdate,
+  onManagementStatusUpdate,
 }: DailyStatusGridProps) {
   const [selectedCell, setSelectedCell] = useState<{
     patientId: string;
@@ -67,6 +70,8 @@ export function DailyStatusGrid({
     currentValue: string;
   } | null>(null);
   const [memoValue, setMemoValue] = useState<string>('');
+  const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
+  const [editingManagementStatus, setEditingManagementStatus] = useState<string>('');
 
   const statusTypes = ['입원', '퇴원', '재원', '낮병동', '외래', '기타', '전화F/U'];
   
@@ -310,12 +315,29 @@ export function DailyStatusGrid({
                 <tr key={patient.id} className="hover:bg-muted/50">
                   <td className="p-2 border sticky left-0 bg-background">
                     <div className="space-y-0.5">
-                      <div className="font-medium">{patient.name}</div>
+                      <div 
+                        className="font-medium cursor-pointer hover:text-primary transition-colors"
+                        onClick={() => {
+                          setSelectedPatientDetail(patient);
+                          setEditingManagementStatus(patient.management_status || '관리 중');
+                        }}
+                      >
+                        {patient.name}
+                      </div>
                       <div className="text-[10px] text-muted-foreground">
                         담당: {patient.manager_name || '-'}
                       </div>
                       <div className="text-[10px] text-muted-foreground">
                         진단: {patient.diagnosis || '-'}
+                      </div>
+                      <div className="text-[10px]">
+                        <Badge variant={
+                          patient.management_status === '아웃' ? 'destructive' :
+                          patient.management_status === '아웃위기' ? 'default' :
+                          'secondary'
+                        } className="text-[9px] px-1 py-0">
+                          {patient.management_status || '관리 중'}
+                        </Badge>
                       </div>
                     </div>
                   </td>
@@ -434,6 +456,102 @@ export function DailyStatusGrid({
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 환자 상세정보 다이얼로그 */}
+      <Dialog open={!!selectedPatientDetail} onOpenChange={() => setSelectedPatientDetail(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">환자 상세 정보</DialogTitle>
+          </DialogHeader>
+          
+          {selectedPatientDetail && (
+            <div className="space-y-6">
+              {/* 기본 정보 */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">환자명</Label>
+                  <p className="font-medium">{selectedPatientDetail.name}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">환자번호</Label>
+                  <p className="font-medium">{selectedPatientDetail.patient_number}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">담당자</Label>
+                  <p className="font-medium">{selectedPatientDetail.manager_name || '-'}</p>
+                </div>
+              </div>
+
+              {/* 관리 상태 */}
+              <div>
+                <Label htmlFor="management_status">관리 상태</Label>
+                <Select 
+                  value={editingManagementStatus} 
+                  onValueChange={setEditingManagementStatus}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="z-50 bg-background">
+                    <SelectItem value="관리 중">관리 중</SelectItem>
+                    <SelectItem value="아웃위기">아웃위기</SelectItem>
+                    <SelectItem value="아웃">아웃</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  * 2주 이상 활동 없으면 자동으로 "아웃위기", 3주 이상이면 "아웃"으로 변경됩니다.
+                </p>
+              </div>
+
+              {/* 진료 정보 */}
+              <div className="space-y-3">
+                <h3 className="font-semibold">진료 정보</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">진단명</Label>
+                    <p className="font-medium">{selectedPatientDetail.diagnosis || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">상세 진단</Label>
+                    <p className="font-medium">{selectedPatientDetail.detailed_diagnosis || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">한방 주치의</Label>
+                    <p className="font-medium">{selectedPatientDetail.korean_doctor || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">양방 주치의</Label>
+                    <p className="font-medium">{selectedPatientDetail.western_doctor || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">이전 병원</Label>
+                    <p className="font-medium">{selectedPatientDetail.previous_hospital || '-'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 저장 버튼 */}
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                <Button variant="outline" onClick={() => setSelectedPatientDetail(null)}>
+                  닫기
+                </Button>
+                <Button 
+                  onClick={async () => {
+                    if (selectedPatientDetail && editingManagementStatus !== selectedPatientDetail.management_status) {
+                      await onManagementStatusUpdate(selectedPatientDetail.id, editingManagementStatus);
+                      setSelectedPatientDetail(null);
+                    } else {
+                      setSelectedPatientDetail(null);
+                    }
+                  }}
+                >
+                  저장
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

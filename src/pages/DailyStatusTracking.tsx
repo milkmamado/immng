@@ -31,6 +31,8 @@ interface Patient {
   previous_hospital?: string;
   memo1?: string;
   memo2?: string;
+  management_status?: string;
+  created_at?: string;
   admission_cycles?: AdmissionCycle[];
 }
 
@@ -107,7 +109,7 @@ export default function DailyStatusTracking() {
     setLoading(true);
     try {
       // 환자 목록 가져오기 (유입 상태이고 "아웃"이 아닌 환자만)
-      const { data: patientsData, error: patientsError } = await supabase
+      let patientsQuery = supabase
         .from('patients')
         .select(`
           id, name, patient_number, diagnosis, detailed_diagnosis, 
@@ -118,8 +120,11 @@ export default function DailyStatusTracking() {
           )
         `)
         .eq('inflow_status', '유입')
-        .neq('management_status', '아웃')
         .order('created_at', { ascending: false });
+
+      // "아웃" 상태가 아닌 환자만 필터링 (null 또는 다른 값)
+      const { data: patientsData, error: patientsError } = await patientsQuery
+        .or('management_status.is.null,management_status.neq.아웃');
 
       if (patientsError) throw patientsError;
 
@@ -270,6 +275,31 @@ export default function DailyStatusTracking() {
       toast({
         title: "오류",
         description: "메모 저장에 실패했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleManagementStatusUpdate = async (patientId: string, status: string) => {
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .update({ management_status: status })
+        .eq('id', patientId);
+
+      if (error) throw error;
+
+      toast({
+        title: "성공",
+        description: "관리 상태가 업데이트되었습니다.",
+      });
+
+      fetchData(); // 데이터 새로고침
+    } catch (error) {
+      console.error('Error updating management status:', error);
+      toast({
+        title: "오류",
+        description: "관리 상태 업데이트에 실패했습니다.",
         variant: "destructive",
       });
     }
@@ -472,6 +502,7 @@ export default function DailyStatusTracking() {
             daysInMonth={getDaysInMonth(selectedMonth)}
             onStatusUpdate={handleStatusUpdate}
             onMemoUpdate={handleMemoUpdate}
+            onManagementStatusUpdate={handleManagementStatusUpdate}
           />
         </CardContent>
       </Card>
