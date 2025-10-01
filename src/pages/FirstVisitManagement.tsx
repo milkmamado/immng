@@ -16,6 +16,8 @@ interface Patient {
   name: string;
   patient_number: string;
   chart_number?: string;
+  birth_date?: string;
+  phone?: string;
   inflow_status?: string;
   visit_type?: string;
   visit_motivation?: string;
@@ -327,6 +329,17 @@ export default function FirstVisitManagement() {
                   <div className="flex justify-between">
                     <span className="font-medium">차트번호:</span>
                     <span>{selectedPatientDetail?.chart_number || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">생년월일:</span>
+                    <span>
+                      {selectedPatientDetail?.birth_date ? 
+                        new Date(selectedPatientDetail.birth_date).toLocaleDateString('ko-KR') : '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">연락처:</span>
+                    <span>{selectedPatientDetail?.phone || '-'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">등록일:</span>

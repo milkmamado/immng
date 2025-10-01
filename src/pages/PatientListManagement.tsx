@@ -717,6 +717,13 @@ export default function PatientListManagement() {
                       </span>
                     </div>
                     <div className="flex justify-between">
+                      <span className="font-medium">생년월일:</span>
+                      <span>
+                        {(selectedPatientDetail as any)?.birth_date ? 
+                          new Date((selectedPatientDetail as any).birth_date).toLocaleDateString('ko-KR') : '-'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
                       <span className="font-medium">연락처:</span>
                       <span>{selectedPatientDetail?.phone || '-'}</span>
                     </div>

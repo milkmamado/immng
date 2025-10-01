@@ -476,6 +476,7 @@ export type Database = {
           admission_date: string | null
           age: number | null
           assigned_manager: string
+          birth_date: string | null
           chart_number: string | null
           counseling_content: string | null
           counselor: string | null
@@ -520,6 +521,7 @@ export type Database = {
           admission_date?: string | null
           age?: number | null
           assigned_manager: string
+          birth_date?: string | null
           chart_number?: string | null
           counseling_content?: string | null
           counselor?: string | null
@@ -564,6 +566,7 @@ export type Database = {
           admission_date?: string | null
           age?: number | null
           assigned_manager?: string
+          birth_date?: string | null
           chart_number?: string | null
           counseling_content?: string | null
           counselor?: string | null

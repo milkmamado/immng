@@ -24,6 +24,8 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
     visit_type: '',             // 입원/외래(통원)
     visit_motivation: '',       // 내원동기
     name: '',                   // 이름
+    birth_date: '',             // 생년월일
+    phone: '',                  // 연락처
     diagnosis: '',              // 진단명
     detailed_diagnosis: '',     // 세부진단명
     counselor: '',              // 환자 or 보호자
@@ -52,6 +54,8 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
         visit_type: patient.visit_type || '',
         visit_motivation: patient.visit_motivation || '',
         name: patient.name || '',
+        birth_date: patient.birth_date || '',
+        phone: patient.phone || '',
         diagnosis: patient.diagnosis || '',
         detailed_diagnosis: patient.detailed_diagnosis || '',
         counselor: patient.counselor || '',
@@ -108,6 +112,8 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
         visit_type: formData.visit_type || null,
         visit_motivation: formData.visit_motivation || null,
         name: formData.name,
+        birth_date: formData.birth_date || null,
+        phone: formData.phone || null,
         diagnosis: formData.diagnosis || null,
         detailed_diagnosis: formData.detailed_diagnosis || null,
         counselor: formData.counselor || null,
@@ -162,6 +168,8 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
         visit_type: '',
         visit_motivation: '',
         name: '',
+        birth_date: '',
+        phone: '',
         diagnosis: '',
         detailed_diagnosis: '',
         counselor: '',
@@ -252,6 +260,31 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
             onChange={handleInputChange}
             required
             placeholder="환자명"
+          />
+        </div>
+
+        {/* 생년월일 */}
+        <div>
+          <Label htmlFor="birth_date">생년월일</Label>
+          <Input
+            id="birth_date"
+            name="birth_date"
+            type="date"
+            value={formData.birth_date}
+            onChange={handleInputChange}
+          />
+        </div>
+
+        {/* 연락처 */}
+        <div>
+          <Label htmlFor="phone">연락처</Label>
+          <Input
+            id="phone"
+            name="phone"
+            type="tel"
+            value={formData.phone}
+            onChange={handleInputChange}
+            placeholder="010-0000-0000"
           />
         </div>
 
