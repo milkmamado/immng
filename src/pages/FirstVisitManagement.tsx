@@ -134,7 +134,8 @@ export default function FirstVisitManagement() {
     const search = searchTerm.toLowerCase();
     return (
       patient.name.toLowerCase().includes(search) ||
-      patient.patient_number.toLowerCase().includes(search)
+      patient.patient_number.toLowerCase().includes(search) ||
+      (patient.manager_name && patient.manager_name.toLowerCase().includes(search))
     );
   });
 
@@ -162,7 +163,7 @@ export default function FirstVisitManagement() {
             <div className="relative w-80">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="환자명, 등록번호로 검색..."
+                placeholder="환자명, 등록번호, 담당자로 검색..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"

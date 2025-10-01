@@ -98,7 +98,8 @@ export default function PatientListManagement() {
     const filtered = patients.filter(patient =>
       patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       patient.patient_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (patient.phone && patient.phone.includes(searchTerm))
+      (patient.phone && patient.phone.includes(searchTerm)) ||
+      (patient.manager_name && patient.manager_name.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     setFilteredPatients(filtered);
   }, [patients, searchTerm]);
@@ -638,7 +639,7 @@ export default function PatientListManagement() {
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="환자명, 차트번호로 검색..."
+                placeholder="환자명, 차트번호, 담당자로 검색..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-80"
