@@ -235,7 +235,7 @@ export function DailyStatusGrid({
           <Button
             variant="ghost"
             size="sm"
-            className="h-10 w-full p-0.5 text-xs hover:bg-transparent"
+            className="h-10 w-full p-0.5 text-xs bg-transparent hover:bg-black/5 dark:hover:bg-white/5"
             onClick={() => handleCellClick(patient.id, day, patient)}
           >
             {shouldShowStatus && (
