@@ -5,7 +5,8 @@ import {
   Heart,
   Shield,
   ClipboardCheck,
-  Settings
+  Settings,
+  BarChart3
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,6 +29,7 @@ const navigationItems = [
   { title: "관리 환자 리스트", url: "/patient-list", icon: Users },
   { title: "일별 환자 관리 현황", url: "/daily-tracking", icon: ClipboardCheck },
   { title: "이탈 리스크 관리", url: "/risk-management", icon: Calendar },
+  { title: "통계 관리", url: "/statistics", icon: BarChart3 },
 ];
 
 const managementItems: never[] = [];
