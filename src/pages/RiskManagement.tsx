@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -34,7 +34,7 @@ interface ReconnectTracking {
   reconnected_at?: string;
 }
 
-function RiskManagement() {
+export default function RiskManagement() {
   const [riskPatients, setRiskPatients] = useState<Patient[]>([]);
   const [reconnectData, setReconnectData] = useState<Map<string, ReconnectTracking>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -454,5 +454,3 @@ function RiskManagement() {
     </div>
   );
 }
-
-export default RiskManagement;
