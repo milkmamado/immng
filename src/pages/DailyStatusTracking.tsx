@@ -231,6 +231,10 @@ export default function DailyStatusTracking() {
                 toYear={2035}
                 initialFocus
                 className="pointer-events-auto"
+                labels={{
+                  labelMonthDropdown: () => "월",
+                  labelYearDropdown: () => "연도"
+                }}
               />
             </PopoverContent>
           </Popover>
