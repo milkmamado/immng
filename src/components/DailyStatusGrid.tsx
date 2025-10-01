@@ -293,10 +293,7 @@ export function DailyStatusGrid({
                 환자명
               </th>
               <th className="min-w-[120px] p-2 text-left font-medium border">
-                메모1
-              </th>
-              <th className="min-w-[120px] p-2 text-left font-medium border">
-                메모2
+                메모
               </th>
               <th className="min-w-[100px] p-2 text-left font-medium border">
                 주치의
@@ -327,12 +324,6 @@ export function DailyStatusGrid({
                     onDoubleClick={() => handleMemoDoubleClick(patient.id, 'memo1', patient.memo1 || '')}
                   >
                     {patient.memo1 || '-'}
-                  </td>
-                  <td 
-                    className="p-2 border text-xs cursor-pointer hover:bg-muted/50"
-                    onDoubleClick={() => handleMemoDoubleClick(patient.id, 'memo2', patient.memo2 || '')}
-                  >
-                    {patient.memo2 || '-'}
                   </td>
                   <td className="p-2 border text-xs">
                     {[patient.korean_doctor, patient.western_doctor].filter(Boolean).join(', ') || '-'}
@@ -418,7 +409,7 @@ export function DailyStatusGrid({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {memoCell?.memoType === 'memo1' ? '메모1' : '메모2'} 편집
+              메모 편집
             </DialogTitle>
           </DialogHeader>
           
