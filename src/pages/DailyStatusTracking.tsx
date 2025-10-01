@@ -208,9 +208,9 @@ export default function DailyStatusTracking() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Array.from({ length: 12 }, (_, i) => {
+              {Array.from({ length: 36 }, (_, i) => {
                 const date = new Date();
-                date.setMonth(i);
+                date.setMonth(date.getMonth() - 24 + i); // 과거 2년부터 미래 1년까지
                 const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
                 const label = `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
                 return (
