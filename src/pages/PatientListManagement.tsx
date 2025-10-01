@@ -133,12 +133,12 @@ export default function PatientListManagement() {
           let monthly_avg_outpatient_days = 0;
           
           if (statusData && statusData.length > 0) {
-            // 입원 관련: 입원, 재원
-            const inpatientStatuses = ['입원', '재원'];
+            // 입원 관련: 입원, 재입원, 낮병동
+            const inpatientStatuses = ['입원', '재입원', '낮병동'];
             const inpatientDays = statusData.filter(s => inpatientStatuses.includes(s.status_type));
             
-            // 외래 관련: 낮병동, 외래
-            const outpatientStatuses = ['낮병동', '외래'];
+            // 외래 관련: 외래
+            const outpatientStatuses = ['외래'];
             const outpatientDays = statusData.filter(s => outpatientStatuses.includes(s.status_type));
             
             // 전체 기간 계산 (첫 기록부터 마지막 기록까지)
