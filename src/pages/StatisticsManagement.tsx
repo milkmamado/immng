@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { Users, TrendingUp, DollarSign, Activity } from 'lucide-react';
 
 interface ManagerStats {
@@ -20,10 +21,14 @@ interface ManagerStats {
 }
 
 export default function StatisticsManagement() {
+  const { user } = useAuth();
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
+  const [selectedManager, setSelectedManager] = useState<string>('all');
+  const [managers, setManagers] = useState<{ id: string; name: string }[]>([]);
+  const [isMasterOrAdmin, setIsMasterOrAdmin] = useState(false);
   const [managerStats, setManagerStats] = useState<ManagerStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalStats, setTotalStats] = useState({
@@ -43,8 +48,43 @@ export default function StatisticsManagement() {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchStatistics();
-  }, [selectedMonth]);
+    checkUserRole();
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchStatistics();
+    }
+  }, [selectedMonth, selectedManager, user]);
+
+  const checkUserRole = async () => {
+    if (!user) return;
+
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('approval_status', 'approved')
+      .single();
+
+    const isMaster = roleData?.role === 'master' || roleData?.role === 'admin';
+    setIsMasterOrAdmin(isMaster);
+
+    if (isMaster) {
+      // 마스터/관리자는 모든 매니저 목록 가져오기
+      const { data: managersData } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .order('name');
+
+      if (managersData) {
+        setManagers(managersData);
+      }
+    } else {
+      // 일반 매니저는 본인만
+      setSelectedManager(user.id);
+    }
+  };
 
   const fetchStatistics = async () => {
     setLoading(true);
@@ -54,11 +94,19 @@ export default function StatisticsManagement() {
       const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
       const endDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
 
-      // 유입 환자 목록 가져오기
-      const { data: patients, error: patientsError } = await supabase
+      // 유입 환자 목록 가져오기 (역할에 따라 필터링)
+      let query = supabase
         .from('patients')
         .select('id, assigned_manager, manager_name, payment_amount')
         .eq('inflow_status', '유입');
+
+      // 일반 매니저는 본인 환자만, 마스터/관리자가 특정 매니저 선택 시 해당 매니저만
+      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
+        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
+        query = query.eq('assigned_manager', targetManager);
+      }
+
+      const { data: patients, error: patientsError } = await query;
 
       if (patientsError) throw patientsError;
 
@@ -262,20 +310,39 @@ export default function StatisticsManagement() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">통계 관리</h1>
-          <p className="text-gray-600 mt-1">매출 분석</p>
+          <p className="text-gray-600 mt-1">
+            {isMasterOrAdmin ? '매출 분석 (전체)' : '내 매출 분석'}
+          </p>
         </div>
-        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {generateMonthOptions().map(option => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-4">
+          {isMasterOrAdmin && (
+            <Select value={selectedManager} onValueChange={setSelectedManager}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="상담실장 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">전체</SelectItem>
+                {managers.map(manager => (
+                  <SelectItem key={manager.id} value={manager.id}>
+                    {manager.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {generateMonthOptions().map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* 전체 통계 요약 */}
@@ -372,9 +439,11 @@ export default function StatisticsManagement() {
       </Card>
 
       {/* 실장별 통계 */}
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {managerStats.map((stats) => (
+      {isMasterOrAdmin && selectedManager === 'all' && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold">실장별 통계</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {managerStats.map((stats) => (
             <Card key={stats.manager_id} className="overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-primary to-medical-accent text-white">
                 <CardTitle className="flex items-center gap-2">
@@ -435,9 +504,10 @@ export default function StatisticsManagement() {
                 </div>
               </CardContent>
             </Card>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
