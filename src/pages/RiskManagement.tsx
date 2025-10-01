@@ -443,10 +443,17 @@ export default function RiskManagement() {
                         placeholder="재연락 상담 내용을 기록하세요..."
                         value={trackingData?.reconnect_notes || ""}
                         onChange={(e) => handleNotesChange(patient.id, e.target.value)}
-                        onBlur={(e) => handleNotesSave(patient.id, e.target.value)}
                         rows={3}
                         className="resize-none"
                       />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleNotesSave(patient.id, trackingData?.reconnect_notes || "")}
+                        className="w-full"
+                      >
+                        메모 저장
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
