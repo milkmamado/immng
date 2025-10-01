@@ -430,6 +430,25 @@ export default function PatientListManagement() {
     return statusOption?.exclude_from_daily_tracking || false;
   };
 
+  // 관리 상태에 따른 배경색 반환
+  const getManagementStatusBgColor = (managementStatus?: string) => {
+    if (!managementStatus) return '';
+    
+    switch (managementStatus) {
+      case '아웃위기':
+        return 'bg-orange-100 dark:bg-orange-950/30';
+      case '아웃':
+        return 'bg-red-100 dark:bg-red-950/30';
+      default:
+        // 다른 exclude_from_daily_tracking 상태들 (사망, 치료종료 등)
+        const statusOption = patientStatusOptions.find(opt => opt.name === managementStatus);
+        if (statusOption?.exclude_from_daily_tracking) {
+          return 'bg-pink-100 dark:bg-pink-950/30';
+        }
+        return '';
+    }
+  };
+
   const getInflowStatusColor = (status?: string) => {
     switch (status) {
       case '유입':
@@ -650,11 +669,11 @@ export default function PatientListManagement() {
               </TableHeader>
               <TableBody>
                 {filteredPatients.map((patient) => {
-                  const isExcluded = isExcludedFromTracking((patient as any).management_status);
+                  const bgColor = getManagementStatusBgColor((patient as any).management_status);
                   return (
                     <TableRow 
                       key={patient.id}
-                      className={`cursor-pointer hover:bg-muted/50 ${isExcluded ? 'bg-pink-50' : ''}`}
+                      className={`cursor-pointer hover:bg-muted/50 ${bgColor}`}
                       onClick={() => {
                         setSelectedPatientDetail(patient);
                         setViewMode('full');
