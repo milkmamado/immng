@@ -226,15 +226,11 @@ export default function DailyStatusTracking() {
                   }
                 }}
                 locale={ko}
-                captionLayout="dropdown-buttons"
+                captionLayout="dropdown"
                 fromYear={2020}
                 toYear={2035}
                 initialFocus
-                className="pointer-events-auto"
-                labels={{
-                  labelMonthDropdown: () => "월",
-                  labelYearDropdown: () => "연도"
-                }}
+                className="pointer-events-auto [&_.rdp-caption_label]:hidden"
               />
             </PopoverContent>
           </Popover>
