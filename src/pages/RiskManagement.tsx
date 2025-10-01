@@ -227,11 +227,24 @@ export default function RiskManagement() {
     }
   };
 
-  const handleNotesChange = async (patientId: string, notes: string) => {
+  const handleNotesChange = (patientId: string, notes: string) => {
+    // 로컬 상태만 업데이트 (타이핑 시)
+    const existingData = reconnectData.get(patientId);
+    const newMap = new Map(reconnectData);
+    newMap.set(patientId, {
+      ...existingData,
+      patient_id: patientId,
+      reconnect_notes: notes
+    });
+    setReconnectData(newMap);
+  };
+
+  const handleNotesSave = async (patientId: string, notes: string) => {
     try {
       const existingData = reconnectData.get(patientId);
 
       if (existingData?.id) {
+        // 기존 데이터 업데이트
         const { error } = await supabase
           .from("patient_reconnect_tracking")
           .update({
@@ -242,6 +255,7 @@ export default function RiskManagement() {
 
         if (error) throw error;
       } else {
+        // 새로 생성
         const { data, error } = await supabase
           .from("patient_reconnect_tracking")
           .insert({
@@ -262,13 +276,10 @@ export default function RiskManagement() {
         }
       }
 
-      const newMap = new Map(reconnectData);
-      newMap.set(patientId, {
-        ...existingData,
-        patient_id: patientId,
-        reconnect_notes: notes
+      toast({
+        title: "저장 완료",
+        description: "메모가 저장되었습니다.",
       });
-      setReconnectData(newMap);
 
     } catch (error) {
       console.error("Error updating notes:", error);
@@ -432,14 +443,7 @@ export default function RiskManagement() {
                         placeholder="재연락 상담 내용을 기록하세요..."
                         value={trackingData?.reconnect_notes || ""}
                         onChange={(e) => handleNotesChange(patient.id, e.target.value)}
-                        onBlur={(e) => {
-                          if (e.target.value !== trackingData?.reconnect_notes) {
-                            toast({
-                              title: "저장 완료",
-                              description: "메모가 저장되었습니다.",
-                            });
-                          }
-                        }}
+                        onBlur={(e) => handleNotesSave(patient.id, e.target.value)}
                         rows={3}
                         className="resize-none"
                       />
