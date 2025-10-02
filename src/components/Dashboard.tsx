@@ -70,7 +70,7 @@ export function Dashboard() {
       // 환자 통계 - 역할에 따라 필터링
       let patientsQuery = supabase
         .from('patients')
-        .select('id, name, patient_number, assigned_manager, manager_name, last_visit_date, payment_amount')
+        .select('id, name, patient_number, assigned_manager, manager_name, last_visit_date, payment_amount, created_at')
         .eq('inflow_status', '유입');
 
       if (!isAdmin) {
@@ -86,14 +86,35 @@ export function Dashboard() {
       const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
       const monthlyRevenue = patients?.reduce((sum, p) => sum + (p.payment_amount || 0), 0) || 0;
 
-      // 이탈 리스크 환자 (30일 이상 방문 없음)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      const riskPatients = patients?.filter(p => {
-        if (!p.last_visit_date) return false;
-        const lastVisit = new Date(p.last_visit_date);
-        return lastVisit < thirtyDaysAgo;
+      // 이탈 리스크 환자 계산 (이탈리스크관리 페이지와 동일한 로직)
+      // daily_patient_status에서 마지막 체크 날짜 가져오기
+      const { data: statusData } = await supabase
+        .from('daily_patient_status')
+        .select('patient_id, status_date')
+        .order('status_date', { ascending: false });
+
+      const lastCheckMap = new Map<string, string>();
+      statusData?.forEach(status => {
+        if (!lastCheckMap.has(status.patient_id)) {
+          lastCheckMap.set(status.patient_id, status.status_date);
+        }
+      });
+
+      const today = new Date();
+      const riskPatients = patients?.filter(patient => {
+        const lastCheckDate = lastCheckMap.get(patient.id);
+        let daysSinceCheck = 0;
+
+        if (!lastCheckDate) {
+          const createdDate = new Date(patient.created_at);
+          daysSinceCheck = Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+        } else {
+          const lastDate = new Date(lastCheckDate);
+          daysSinceCheck = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+        }
+
+        // 14일 이상인 환자만 리스크 환자로 판단
+        return daysSinceCheck >= 14;
       }).slice(0, 10) || [];
 
       setStats({
@@ -190,7 +211,7 @@ export function Dashboard() {
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">{stats.riskPatients.length}</div>
             <p className="text-xs text-muted-foreground">
-              30일 이상 방문 없음
+              14일 이상 체크 없음
             </p>
           </CardContent>
         </Card>
