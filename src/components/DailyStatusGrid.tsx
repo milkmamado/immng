@@ -242,16 +242,22 @@ export function DailyStatusGrid({
           >
             {shouldShowStatus && (
               <div className="flex flex-col items-center gap-0.5">
-                <Badge
-                  variant={statusColors[status.status_type as keyof typeof statusColors] || 'default'}
-                  className="text-[10px] px-1 py-0"
-                >
-                  {status.status_type}
-                </Badge>
-                {status.notes && (
-                  <span className="text-[9px] text-muted-foreground truncate max-w-full">
-                    {status.notes.substring(0, 10)}...
-                  </span>
+                {status.status_type === '관리중' ? (
+                  <span className="text-xs font-medium">복원 &lt;</span>
+                ) : (
+                  <>
+                    <Badge
+                      variant={statusColors[status.status_type as keyof typeof statusColors] || 'default'}
+                      className="text-[10px] px-1 py-0"
+                    >
+                      {status.status_type}
+                    </Badge>
+                    {status.notes && (
+                      <span className="text-[9px] text-muted-foreground truncate max-w-full">
+                        {status.notes.substring(0, 10)}...
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
             )}
