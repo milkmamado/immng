@@ -260,8 +260,10 @@ export function DailyStatusGrid({
   // 환자 통계 계산
   const calculatePatientStats = async (patientId: string) => {
     try {
-      // 해당 환자의 모든 상태 데이터
-      const patientStatuses = dailyStatuses.filter(s => s.patient_id === patientId);
+      // 해당 환자의 모든 상태 데이터 (날짜순 정렬)
+      const patientStatuses = dailyStatuses
+        .filter(s => s.patient_id === patientId)
+        .sort((a, b) => a.status_date.localeCompare(b.status_date));
       
       // 당월 데이터 필터링
       const [year, month] = yearMonth.split('-');
@@ -273,11 +275,40 @@ export function DailyStatusGrid({
         s => s.status_date >= monthStart && s.status_date <= monthEnd
       );
 
+      // 입원일수 계산 함수 (입원일부터 퇴원일까지의 기간)
+      const calculateAdmissionDays = (statuses: typeof patientStatuses) => {
+        let totalDays = 0;
+        let admissionDate: string | null = null;
+
+        for (const status of statuses) {
+          if (status.status_type === '입원' || status.status_type === '재원') {
+            if (!admissionDate) {
+              admissionDate = status.status_date;
+            }
+          } else if (status.status_type === '퇴원' && admissionDate) {
+            // 입원일부터 퇴원일까지의 일수 계산 (퇴원일 포함)
+            const admission = new Date(admissionDate);
+            const discharge = new Date(status.status_date);
+            const days = Math.floor((discharge.getTime() - admission.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+            totalDays += days;
+            admissionDate = null;
+          }
+        }
+
+        // 퇴원하지 않은 입원이 있으면 오늘까지 계산
+        if (admissionDate) {
+          const admission = new Date(admissionDate);
+          const today = new Date();
+          const days = Math.floor((today.getTime() - admission.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+          totalDays += days;
+        }
+
+        return totalDays;
+      };
+
       // 당월 통계 계산
       const currentMonthStats = {
-        admissionDays: currentMonthStatuses.filter(s => 
-          s.status_type === '입원' || s.status_type === '재원'
-        ).length,
+        admissionDays: calculateAdmissionDays(currentMonthStatuses),
         dayCare: currentMonthStatuses.filter(s => s.status_type === '낮병동').length,
         outpatient: currentMonthStatuses.filter(s => s.status_type === '외래').length,
         phoneFollowUp: currentMonthStatuses.filter(s => s.status_type === '전화F/U').length,
@@ -286,9 +317,7 @@ export function DailyStatusGrid({
 
       // 전체 통계 계산
       const totalStats = {
-        admissionDays: patientStatuses.filter(s => 
-          s.status_type === '입원' || s.status_type === '재원'
-        ).length,
+        admissionDays: calculateAdmissionDays(patientStatuses),
         dayCare: patientStatuses.filter(s => s.status_type === '낮병동').length,
         outpatient: patientStatuses.filter(s => s.status_type === '외래').length,
         phoneFollowUp: patientStatuses.filter(s => s.status_type === '전화F/U').length,
@@ -689,27 +718,6 @@ export function DailyStatusGrid({
                 </div>
               </div>
 
-              {/* 관리 상태 */}
-              <div>
-                <Label htmlFor="management_status">관리 상태</Label>
-                <Select 
-                  value={editingManagementStatus} 
-                  onValueChange={setEditingManagementStatus}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="z-50 bg-background">
-                    <SelectItem value="관리 중">관리 중</SelectItem>
-                    <SelectItem value="아웃위기">아웃위기</SelectItem>
-                    <SelectItem value="아웃">아웃</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  * 2주 이상 활동 없으면 자동으로 "아웃위기", 3주 이상이면 "아웃"으로 변경됩니다.
-                </p>
-              </div>
-
               {/* 진료 정보 */}
               <div className="space-y-3">
                 <h3 className="font-semibold">진료 정보</h3>
@@ -811,18 +819,6 @@ export function DailyStatusGrid({
               <div className="flex justify-end gap-2 pt-4 border-t">
                 <Button variant="outline" onClick={() => setSelectedPatientDetail(null)}>
                   닫기
-                </Button>
-                <Button 
-                  onClick={async () => {
-                    if (selectedPatientDetail && editingManagementStatus !== selectedPatientDetail.management_status) {
-                      await onManagementStatusUpdate(selectedPatientDetail.id, editingManagementStatus);
-                      setSelectedPatientDetail(null);
-                    } else {
-                      setSelectedPatientDetail(null);
-                    }
-                  }}
-                >
-                  저장
                 </Button>
               </div>
             </div>
