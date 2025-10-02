@@ -184,28 +184,8 @@ export default function DailyStatusTracking() {
       const [year, month] = selectedMonth.split('-');
       const monthStartDate = `${year}-${month}-01`;
 
-      // 각 환자에 대해 해당 월 이전에 퇴원했는지 확인
-      const activePatientsPromises = (patientsData || []).map(async (patient) => {
-        // 해당 월 시작일 이전의 마지막 상태 확인
-        const { data: lastStatusBeforeMonth } = await supabase
-          .from('daily_patient_status')
-          .select('status_type, status_date')
-          .eq('patient_id', patient.id)
-          .lt('status_date', monthStartDate)
-          .order('status_date', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        // 이전 달에 퇴원 상태였다면 제외
-        if (lastStatusBeforeMonth && lastStatusBeforeMonth.status_type === '퇴원') {
-          return null;
-        }
-
-        return patient;
-      });
-
-      const activePatients = (await Promise.all(activePatientsPromises)).filter(p => p !== null);
-      setPatients(activePatients);
+      // management_status가 "관리 중"이면 모두 표시
+      setPatients(patientsData || []);
 
       // 선택된 월의 일별 상태 가져오기
       const startDate = `${year}-${month}-01`;
@@ -237,7 +217,7 @@ export default function DailyStatusTracking() {
       }, {} as Record<string, number>);
 
       setStats({
-        총환자: activePatients.length || 0,
+        총환자: patientsData?.length || 0,
         입원: statusCounts['입원'] || 0,
         외래: statusCounts['외래'] || 0,
         전화FU: statusCounts['전화F/U'] || 0
