@@ -347,13 +347,18 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
         {/* 환자 or 보호자 */}
         <div>
           <Label htmlFor="counselor">환자 or 보호자</Label>
-          <Input
-            id="counselor"
-            name="counselor"
-            value={formData.counselor}
-            onChange={handleInputChange}
-            placeholder="환자 or 보호자"
-          />
+          <Select 
+            value={formData.counselor} 
+            onValueChange={(value) => handleSelectChange('counselor', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="선택하세요" />
+            </SelectTrigger>
+            <SelectContent className="z-[100] bg-background">
+              <SelectItem value="환자">환자</SelectItem>
+              <SelectItem value="보호자">보호자</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* 이전병원(본원) */}
