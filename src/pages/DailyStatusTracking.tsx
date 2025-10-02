@@ -98,7 +98,11 @@ export default function DailyStatusTracking() {
       const search = searchTerm.toLowerCase();
       const filtered = patients.filter(patient =>
         patient.name.toLowerCase().includes(search) ||
-        patient.patient_number.toLowerCase().includes(search)
+        patient.patient_number.toLowerCase().includes(search) ||
+        (patient.manager_name && patient.manager_name.toLowerCase().includes(search)) ||
+        (patient.western_doctor && patient.western_doctor.toLowerCase().includes(search)) ||
+        (patient.korean_doctor && patient.korean_doctor.toLowerCase().includes(search)) ||
+        (patient.previous_hospital && patient.previous_hospital.toLowerCase().includes(search))
       );
       setFilteredPatients(filtered);
     }
@@ -424,7 +428,7 @@ export default function DailyStatusTracking() {
           <div className="relative w-80">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="환자명, 등록번호로 검색..."
+              placeholder="환자명, 등록번호, 담당자, 주치의, 이전병원으로 검색..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
