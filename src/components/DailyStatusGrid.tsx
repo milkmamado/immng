@@ -332,7 +332,7 @@ export function DailyStatusGrid({
 
       <div 
         ref={tableScrollRef} 
-        className="overflow-x-auto select-none"
+        className="overflow-x-auto select-none scrollbar-hide"
         style={{ cursor: 'grab' }}
         onMouseDown={handleMouseDown}
         onMouseLeave={handleMouseLeave}
