@@ -48,14 +48,16 @@ export default function StatisticsManagement() {
   const { toast } = useToast();
 
   useEffect(() => {
-    checkUserRole();
+    if (user) {
+      checkUserRole();
+    }
   }, [user]);
 
   useEffect(() => {
-    if (user) {
+    if (user && (isMasterOrAdmin || selectedManager !== 'all')) {
       fetchStatistics();
     }
-  }, [selectedMonth, selectedManager, user]);
+  }, [selectedMonth, selectedManager, user, isMasterOrAdmin]);
 
   const checkUserRole = async () => {
     if (!user) return;
