@@ -143,22 +143,39 @@ export function ManageUsers({ type }: ManageUsersProps) {
     }
   };
 
-  const handleDeleteUser = async (roleId: string) => {
-    if (!window.confirm('정말로 이 사용자를 삭제하시겠습니까?')) {
+  const handleDeleteUser = async (userId: string) => {
+    if (!window.confirm('정말로 이 사용자를 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
       return;
     }
 
     try {
-      const { error } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('id', roleId);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('인증 세션이 없습니다.');
+      }
 
-      if (error) throw error;
+      const response = await fetch(
+        `https://fxqcvxlnfbqqxxjlnebh.supabase.co/functions/v1/delete-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ userId }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || '사용자 삭제에 실패했습니다.');
+      }
 
       toast({
         title: "사용자 삭제 완료",
-        description: "사용자가 성공적으로 삭제되었습니다.",
+        description: "사용자가 완전히 삭제되었습니다.",
       });
 
       fetchUsers();
@@ -167,7 +184,7 @@ export function ManageUsers({ type }: ManageUsersProps) {
       toast({
         variant: "destructive",
         title: "삭제 실패",
-        description: "사용자 삭제 중 오류가 발생했습니다.",
+        description: error.message || "사용자 삭제 중 오류가 발생했습니다.",
       });
     }
   };
@@ -277,7 +294,7 @@ export function ManageUsers({ type }: ManageUsersProps) {
                   <Button
                     size="sm"
                     variant="destructive"
-                    onClick={() => handleDeleteUser(userData.id || userData.role_id || '')}
+                    onClick={() => handleDeleteUser(userData.user_id)}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
