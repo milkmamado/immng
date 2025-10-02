@@ -209,6 +209,7 @@ export default function UserManual() {
                     <ul className="ml-4 mt-1">
                       <li>- 환자 건강 상태 악화 시 표시</li>
                       <li>- 특별 관리가 필요한 환자로 분류됨</li>
+                      <li>- 일별 관리에서 제외됨</li>
                     </ul>
                   </li>
                   <li>
@@ -217,6 +218,36 @@ export default function UserManual() {
                       <li>- 치료가 완전히 종료된 환자</li>
                       <li>- 일별 관리에서 제외됨</li>
                     </ul>
+                  </li>
+                  <li>
+                    <strong>• 사망:</strong>
+                    <ul className="ml-4 mt-1">
+                      <li>- 환자 사망 시 표시</li>
+                      <li>- 일별 관리에서 제외됨</li>
+                    </ul>
+                  </li>
+                </ul>
+                <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mt-3">
+                  <p className="text-sm text-yellow-900">
+                    <strong>💡 중요:</strong> 상태악화, 치료종료, 사망 상태의 환자는 일별 관리에서 제외됩니다. 
+                    다시 관리 상태를 <strong>"관리 중"</strong>으로 변경하면 일별 환자 관리 현황에 다시 표시되어 
+                    정상적인 일별 관리가 가능합니다.
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-2">💊 치료 계획 관리</h4>
+                <p className="text-gray-700 mb-2">환자 상세 페이지에서 다음을 관리할 수 있습니다:</p>
+                <ul className="space-y-2 text-gray-700 ml-4">
+                  <li>
+                    <strong>• 치료 계획 추가:</strong> 치료 상세 내용과 치료 금액 기록
+                  </li>
+                  <li>
+                    <strong>• 수납 관리:</strong> 치료비 결제 완료 체크 및 결제일 기록
+                  </li>
+                  <li>
+                    <strong>• 월평균 일수:</strong> 입원/외래 월평균 일수 자동 계산
                   </li>
                 </ul>
               </div>
@@ -266,7 +297,7 @@ export default function UserManual() {
                       <li>• <Badge className="bg-gray-500">퇴원</Badge> - 퇴원</li>
                     </ul>
                   </li>
-                  <li>4. 메모1, 메모2 란에 특이사항 입력 가능</li>
+                  <li>4. 메모 란에 특이사항 입력 가능</li>
                 </ol>
               </div>
 
