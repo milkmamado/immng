@@ -72,6 +72,7 @@ export function DailyStatusGrid({
   const [memoValue, setMemoValue] = useState<string>('');
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const [editingManagementStatus, setEditingManagementStatus] = useState<string>('');
+  const [savedScrollPosition, setSavedScrollPosition] = useState<number>(0);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -170,6 +171,11 @@ export function DailyStatusGrid({
   const handleSave = async () => {
     if (!selectedCell || !selectedStatus) return;
 
+    // 현재 스크롤 위치 저장
+    if (tableScrollRef.current) {
+      setSavedScrollPosition(tableScrollRef.current.scrollLeft);
+    }
+
     await onStatusUpdate(selectedCell.patientId, selectedCell.date, selectedStatus, notes);
     setSelectedCell(null);
     setSelectedStatus('');
@@ -178,6 +184,11 @@ export function DailyStatusGrid({
 
   const handleDelete = async () => {
     if (!selectedCell) return;
+
+    // 현재 스크롤 위치 저장
+    if (tableScrollRef.current) {
+      setSavedScrollPosition(tableScrollRef.current.scrollLeft);
+    }
 
     // 빈 상태로 업데이트하여 삭제 효과
     await onStatusUpdate(selectedCell.patientId, selectedCell.date, '', '');
@@ -217,6 +228,13 @@ export function DailyStatusGrid({
     }
     return days;
   };
+
+  // 스크롤 위치 복원
+  useEffect(() => {
+    if (tableScrollRef.current && savedScrollPosition > 0) {
+      tableScrollRef.current.scrollLeft = savedScrollPosition;
+    }
+  }, [dailyStatuses, savedScrollPosition]);
 
   // 마우스 드래그 스크롤 핸들러
   const handleMouseDown = (e: React.MouseEvent) => {
