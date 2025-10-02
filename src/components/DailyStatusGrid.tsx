@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -251,20 +251,24 @@ export function DailyStatusGrid({
     return days;
   };
 
-  // 스크롤 위치 복원 (여러 번 시도)
+  // 스크롤 위치 복원 (useLayoutEffect로 DOM 업데이트 직후 실행)
+  useLayoutEffect(() => {
+    if (savedScrollPosition > 0 && tableScrollRef.current) {
+      console.log('Immediate scroll restore to:', savedScrollPosition);
+      tableScrollRef.current.scrollLeft = savedScrollPosition;
+    }
+  }, [dailyStatuses]);
+
+  // 스크롤 위치 복원 (여러 번 시도하여 확실하게)
   useEffect(() => {
     if (tableScrollRef.current && savedScrollPosition > 0) {
       console.log('Restoring scroll position:', savedScrollPosition);
       
-      // requestAnimationFrame을 사용하여 DOM 렌더링 후 스크롤 복원
-      const rafId = requestAnimationFrame(() => {
-        if (tableScrollRef.current) {
-          tableScrollRef.current.scrollLeft = savedScrollPosition;
-        }
-      });
+      // 즉시 실행
+      tableScrollRef.current.scrollLeft = savedScrollPosition;
       
-      // 추가로 여러 번 시도하여 확실하게 복원
-      const timeoutIds = [50, 100, 200, 300].map(delay => 
+      // 여러 시점에서 재시도 (브라우저 렌더링 완료 후)
+      const timeoutIds = [0, 10, 50, 100, 200, 300, 500].map(delay => 
         setTimeout(() => {
           if (tableScrollRef.current && tableScrollRef.current.scrollLeft !== savedScrollPosition) {
             tableScrollRef.current.scrollLeft = savedScrollPosition;
@@ -274,7 +278,6 @@ export function DailyStatusGrid({
       );
       
       return () => {
-        cancelAnimationFrame(rafId);
         timeoutIds.forEach(id => clearTimeout(id));
       };
     }
