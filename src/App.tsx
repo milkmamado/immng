@@ -16,6 +16,7 @@ import DailyStatusTracking from "./pages/DailyStatusTracking";
 import RiskManagement from "./pages/RiskManagement";
 import StatisticsManagement from "./pages/StatisticsManagement";
 import MarketingStatistics from "./pages/MarketingStatistics";
+import UserManual from "./pages/UserManual";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -92,6 +93,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <StatisticsManagement />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/user-manual" 
+          element={
+            <ProtectedRoute>
+              <UserManual />
             </ProtectedRoute>
           } 
         />

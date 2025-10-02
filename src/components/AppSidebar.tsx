@@ -7,7 +7,8 @@ import {
   ClipboardCheck,
   Settings,
   BarChart3,
-  TrendingUp
+  TrendingUp,
+  BookOpen
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -31,6 +32,7 @@ const navigationItems = [
   { title: "일별 환자 관리 현황", url: "/daily-tracking", icon: ClipboardCheck },
   { title: "이탈 리스크 관리", url: "/risk-management", icon: Calendar },
   { title: "통계 관리", url: "/statistics", icon: BarChart3 },
+  { title: "사용자 메뉴얼", url: "/user-manual", icon: BookOpen },
 ];
 
 const managementItems: never[] = [];
