@@ -72,6 +72,7 @@ export function DailyStatusGrid({
   const [memoValue, setMemoValue] = useState<string>('');
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const [editingManagementStatus, setEditingManagementStatus] = useState<string>('');
+  const [tableScrollWidth, setTableScrollWidth] = useState<number>(0);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const stickyScrollRef = useRef<HTMLDivElement>(null);
@@ -215,6 +216,29 @@ export function DailyStatusGrid({
     }
     return days;
   };
+
+  // 테이블 스크롤 너비 업데이트
+  useEffect(() => {
+    const updateScrollWidth = () => {
+      if (tableScrollRef.current) {
+        setTableScrollWidth(tableScrollRef.current.scrollWidth);
+      }
+    };
+
+    // 초기 로드 시
+    updateScrollWidth();
+
+    // 윈도우 리사이즈 시
+    window.addEventListener('resize', updateScrollWidth);
+
+    // 약간의 딜레이 후 재계산 (테이블 렌더링 완료 보장)
+    const timer = setTimeout(updateScrollWidth, 100);
+
+    return () => {
+      window.removeEventListener('resize', updateScrollWidth);
+      clearTimeout(timer);
+    };
+  }, [patients, daysInMonth]);
 
   // 스크롤 동기화
   useEffect(() => {
@@ -399,22 +423,24 @@ export function DailyStatusGrid({
       </div>
 
       {/* 하단 고정 스크롤바 */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t z-50 py-2 shadow-lg">
-        <div className="container mx-auto px-6">
-          <div 
-            ref={stickyScrollRef}
-            className="overflow-x-auto overflow-y-hidden"
-            style={{ height: '20px' }}
-          >
+      {tableScrollWidth > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-background border-t z-50 py-2 shadow-lg">
+          <div className="container mx-auto px-6">
             <div 
-              style={{ 
-                width: tableScrollRef.current?.scrollWidth || '100%',
-                height: '1px'
-              }} 
-            />
+              ref={stickyScrollRef}
+              className="overflow-x-auto overflow-y-hidden"
+              style={{ height: '20px' }}
+            >
+              <div 
+                style={{ 
+                  width: `${tableScrollWidth}px`,
+                  height: '1px'
+                }} 
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* 상태 편집 다이얼로그 */}
       <Dialog open={!!selectedCell} onOpenChange={() => setSelectedCell(null)}>
