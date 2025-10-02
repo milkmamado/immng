@@ -107,7 +107,7 @@ export default function StatisticsManagement() {
       // 유입 환자 목록 가져오기 (역할에 따라 필터링)
       let query = supabase
         .from('patients')
-        .select('id, assigned_manager, manager_name, payment_amount')
+        .select('id, assigned_manager, manager_name')
         .eq('inflow_status', '유입');
 
       // 일반 매니저는 본인 환자만, 마스터/관리자가 특정 매니저 선택 시 해당 매니저만
@@ -120,12 +120,23 @@ export default function StatisticsManagement() {
 
       if (patientsError) throw patientsError;
 
+      // 해당 월의 실제 결제 데이터 가져오기
+      const { data: payments, error: paymentsError } = await supabase
+        .from('treatment_plans')
+        .select('treatment_amount, payment_date, is_paid, patient_id')
+        .eq('is_paid', true)
+        .gte('payment_date', startDate)
+        .lte('payment_date', endDate);
+
+      if (paymentsError) throw paymentsError;
+
       // 해당 월의 일별 상태 가져오기
       const { data: dailyStatuses, error: statusError } = await supabase
         .from('daily_patient_status')
         .select('patient_id, status_type, status_date')
         .gte('status_date', startDate)
-        .lte('status_date', endDate);
+        .lte('status_date', endDate)
+        .order('status_date', { ascending: false });
 
       if (statusError) throw statusError;
 
@@ -154,24 +165,42 @@ export default function StatisticsManagement() {
 
         const stats = managerMap.get(managerId)!;
         stats.total_patients += 1;
-        stats.total_revenue += patient.payment_amount || 0;
       });
 
-      // 상태별 집계
-      dailyStatuses?.forEach(status => {
-        const patient = patients?.find(p => p.id === status.patient_id);
+      // 실제 결제 데이터로 매출 계산
+      payments?.forEach(payment => {
+        const patient = patients?.find(p => p.id === payment.patient_id);
         if (!patient) return;
 
         const stats = managerMap.get(patient.assigned_manager);
         if (!stats) return;
 
-        if (status.status_type === '입원' || status.status_type === '재원') {
+        stats.total_revenue += payment.treatment_amount || 0;
+      });
+
+      // 환자별 최신 상태만 집계 (중복 방지)
+      const patientLatestStatus = new Map<string, string>();
+      dailyStatuses?.forEach(status => {
+        if (!patientLatestStatus.has(status.patient_id)) {
+          patientLatestStatus.set(status.patient_id, status.status_type);
+        }
+      });
+
+      // 상태별 집계
+      patientLatestStatus.forEach((statusType, patientId) => {
+        const patient = patients?.find(p => p.id === patientId);
+        if (!patient) return;
+
+        const stats = managerMap.get(patient.assigned_manager);
+        if (!stats) return;
+
+        if (statusType === '입원' || statusType === '재원') {
           stats.status_breakdown.입원 += 1;
-        } else if (status.status_type === '외래') {
+        } else if (statusType === '외래') {
           stats.status_breakdown.외래 += 1;
-        } else if (status.status_type === '낮병동') {
+        } else if (statusType === '낮병동') {
           stats.status_breakdown.낮병동 += 1;
-        } else if (status.status_type === '전화F/U') {
+        } else if (statusType === '전화F/U') {
           stats.status_breakdown.전화FU += 1;
         }
       });
