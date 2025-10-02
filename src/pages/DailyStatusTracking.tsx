@@ -57,10 +57,9 @@ export default function DailyStatusTracking() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState({
-    총환자: 0,
-    입원: 0,
-    외래: 0,
-    전화FU: 0
+    당월총환자: 0,
+    당월매출: 0,
+    누적총매출: 0
   });
   const { toast } = useToast();
 
@@ -213,26 +212,26 @@ export default function DailyStatusTracking() {
       // 전체 데이터를 DailyStatusGrid에 전달 (색상 범례 계산용)
       setDailyStatuses(fullStatusData || []);
 
-      // 통계 계산: 각 환자의 해당 월 최신 상태만 카운트
-      const latestStatusByPatient = new Map<string, DailyStatus>();
-      currentMonthStatuses.forEach(status => {
-        const existing = latestStatusByPatient.get(status.patient_id);
-        if (!existing || status.status_date > existing.status_date) {
-          latestStatusByPatient.set(status.patient_id, status);
-        }
-      });
+      // 통계 계산: 당월 매출 및 누적 총매출
+      // 모든 수납 완료된 치료 계획 가져오기
+      const { data: treatmentPlans } = await supabase
+        .from('treatment_plans')
+        .select('treatment_amount, payment_date, is_paid')
+        .eq('is_paid', true);
 
-      // 최신 상태만으로 통계 계산
-      const statusCounts = Array.from(latestStatusByPatient.values()).reduce((acc, status) => {
-        acc[status.status_type] = (acc[status.status_type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      // 당월 매출 계산
+      const currentMonthRevenue = (treatmentPlans || [])
+        .filter(tp => tp.payment_date && tp.payment_date >= startDate && tp.payment_date <= endDate)
+        .reduce((sum, tp) => sum + (tp.treatment_amount || 0), 0);
+
+      // 누적 총매출 계산
+      const totalRevenue = (treatmentPlans || [])
+        .reduce((sum, tp) => sum + (tp.treatment_amount || 0), 0);
 
       setStats({
-        총환자: patientsData?.length || 0,
-        입원: statusCounts['입원'] || 0,
-        외래: statusCounts['외래'] || 0,
-        전화FU: statusCounts['전화F/U'] || 0
+        당월총환자: patientsData?.length || 0,
+        당월매출: currentMonthRevenue,
+        누적총매출: totalRevenue
       });
 
     } catch (error) {
@@ -483,12 +482,12 @@ export default function DailyStatusTracking() {
       </div>
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="flex items-center justify-between p-6">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">총 환자</p>
-              <p className="text-2xl font-bold">{stats.총환자}</p>
+              <p className="text-sm font-medium text-muted-foreground">당월 총 환자</p>
+              <p className="text-2xl font-bold">{stats.당월총환자}</p>
             </div>
             <Users className="h-8 w-8 text-blue-600" />
           </CardContent>
@@ -497,34 +496,20 @@ export default function DailyStatusTracking() {
         <Card>
           <CardContent className="flex items-center justify-between p-6">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">입원</p>
-              <p className="text-2xl font-bold text-red-600">{stats.입원}</p>
+              <p className="text-sm font-medium text-muted-foreground">당월 매출</p>
+              <p className="text-2xl font-bold text-green-600">{stats.당월매출.toLocaleString()}원</p>
             </div>
-            <Badge variant="destructive" className="h-8 w-8 rounded-full flex items-center justify-center">
-              입
-            </Badge>
+            <Activity className="h-8 w-8 text-green-600" />
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="flex items-center justify-between p-6">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">외래</p>
-              <p className="text-2xl font-bold text-green-600">{stats.외래}</p>
+              <p className="text-sm font-medium text-muted-foreground">누적 총매출</p>
+              <p className="text-2xl font-bold text-primary">{stats.누적총매출.toLocaleString()}원</p>
             </div>
-            <Badge variant="default" className="h-8 w-8 rounded-full flex items-center justify-center">
-              외
-            </Badge>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center justify-between p-6">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">전화F/U</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.전화FU}</p>
-            </div>
-            <Activity className="h-8 w-8 text-blue-600" />
+            <Activity className="h-8 w-8 text-primary" />
           </CardContent>
         </Card>
       </div>
