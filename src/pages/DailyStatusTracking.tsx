@@ -313,9 +313,6 @@ export default function DailyStatusTracking() {
         return;
       }
 
-      // 현재 스크롤 위치 저장
-      const scrollPosition = window.scrollY;
-
       // 상태가 빈 문자열이면 삭제
       if (!statusType) {
         const { error } = await supabase
@@ -326,13 +323,16 @@ export default function DailyStatusTracking() {
 
         if (error) throw error;
 
+        // 로컬 상태에서도 삭제
+        setDailyStatuses(prev => prev.filter(s => !(s.patient_id === patientId && s.status_date === date)));
+
         toast({
           title: "성공",
           description: "상태가 삭제되었습니다.",
         });
       } else {
         // 상태가 있으면 업데이트/삽입
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('daily_patient_status')
           .upsert({
             patient_id: patientId,
@@ -342,11 +342,31 @@ export default function DailyStatusTracking() {
             created_by: user.id
           }, {
             onConflict: 'patient_id,status_date'
-          });
+          })
+          .select()
+          .single();
 
         if (error) {
           console.error('Upsert error:', error);
           throw error;
+        }
+
+        // 로컬 상태 업데이트
+        if (data) {
+          setDailyStatuses(prev => {
+            const existingIndex = prev.findIndex(
+              s => s.patient_id === patientId && s.status_date === date
+            );
+            if (existingIndex >= 0) {
+              // 기존 항목 업데이트
+              const updated = [...prev];
+              updated[existingIndex] = data;
+              return updated;
+            } else {
+              // 새 항목 추가
+              return [...prev, data];
+            }
+          });
         }
 
         toast({
@@ -354,13 +374,6 @@ export default function DailyStatusTracking() {
           description: "상태가 업데이트되었습니다.",
         });
       }
-
-      await fetchData(); // 데이터 새로고침
-      
-      // 스크롤 위치 복원
-      setTimeout(() => {
-        window.scrollTo(0, scrollPosition);
-      }, 0);
     } catch (error: any) {
       console.error('Error updating status:', error);
       
