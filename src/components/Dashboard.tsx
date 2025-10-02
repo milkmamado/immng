@@ -70,7 +70,7 @@ export function Dashboard() {
       // 환자 통계 - 역할에 따라 필터링
       let patientsQuery = supabase
         .from('patients')
-        .select('id, name, patient_number, assigned_manager, manager_name, last_visit_date, payment_amount, management_status')
+        .select('id, name, patient_number, assigned_manager, manager_name, last_visit_date, payment_amount')
         .eq('inflow_status', '유입');
 
       if (!isAdmin) {
@@ -86,9 +86,14 @@ export function Dashboard() {
       const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
       const monthlyRevenue = patients?.reduce((sum, p) => sum + (p.payment_amount || 0), 0) || 0;
 
-      // 이탈 리스크 환자 (아웃위기 또는 아웃 상태인 환자)
+      // 이탈 리스크 환자 (30일 이상 방문 없음)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
       const riskPatients = patients?.filter(p => {
-        return p.management_status === '아웃위기' || p.management_status === '아웃';
+        if (!p.last_visit_date) return false;
+        const lastVisit = new Date(p.last_visit_date);
+        return lastVisit < thirtyDaysAgo;
       }).slice(0, 10) || [];
 
       setStats({
@@ -185,7 +190,7 @@ export function Dashboard() {
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">{stats.riskPatients.length}</div>
             <p className="text-xs text-muted-foreground">
-              아웃위기 및 아웃 상태
+              30일 이상 방문 없음
             </p>
           </CardContent>
         </Card>
