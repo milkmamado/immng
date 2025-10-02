@@ -193,23 +193,29 @@ export default function DailyStatusTracking() {
       // management_status가 "관리 중"이면 모두 표시
       setPatients(patientsData || []);
 
-      // 선택된 월의 일별 상태 가져오기
+      // 전체 일별 상태 가져오기 (모든 월 - 색상 범례 연속성을 위해)
+      const { data: fullStatusData, error: fullStatusError } = await supabase
+        .from('daily_patient_status')
+        .select('*')
+        .order('status_date', { ascending: true });
+
+      if (fullStatusError) throw fullStatusError;
+
+      // 선택된 월의 일별 상태만 필터링 (표시용)
       const startDate = `${year}-${month}-01`;
       const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
       const endDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
+      
+      const currentMonthStatuses = (fullStatusData || []).filter(
+        status => status.status_date >= startDate && status.status_date <= endDate
+      );
 
-      const { data: statusData, error: statusError } = await supabase
-        .from('daily_patient_status')
-        .select('*')
-        .gte('status_date', startDate)
-        .lte('status_date', endDate);
-
-      if (statusError) throw statusError;
-      setDailyStatuses(statusData || []);
+      // 전체 데이터를 DailyStatusGrid에 전달 (색상 범례 계산용)
+      setDailyStatuses(fullStatusData || []);
 
       // 통계 계산: 각 환자의 해당 월 최신 상태만 카운트
       const latestStatusByPatient = new Map<string, DailyStatus>();
-      (statusData || []).forEach(status => {
+      currentMonthStatuses.forEach(status => {
         const existing = latestStatusByPatient.get(status.patient_id);
         if (!existing || status.status_date > existing.status_date) {
           latestStatusByPatient.set(status.patient_id, status);

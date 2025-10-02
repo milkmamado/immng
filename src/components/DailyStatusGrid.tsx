@@ -256,18 +256,27 @@ export function DailyStatusGrid({
     if (tableScrollRef.current && savedScrollPosition > 0) {
       console.log('Restoring scroll position:', savedScrollPosition);
       
-      // 여러 번 시도하여 확실하게 복원
-      const attempts = [0, 50, 100, 200];
-      const timeoutIds = attempts.map(delay => 
+      // requestAnimationFrame을 사용하여 DOM 렌더링 후 스크롤 복원
+      const rafId = requestAnimationFrame(() => {
+        if (tableScrollRef.current) {
+          tableScrollRef.current.scrollLeft = savedScrollPosition;
+        }
+      });
+      
+      // 추가로 여러 번 시도하여 확실하게 복원
+      const timeoutIds = [50, 100, 200, 300].map(delay => 
         setTimeout(() => {
-          if (tableScrollRef.current) {
+          if (tableScrollRef.current && tableScrollRef.current.scrollLeft !== savedScrollPosition) {
             tableScrollRef.current.scrollLeft = savedScrollPosition;
-            console.log(`Scroll restored to: ${tableScrollRef.current.scrollLeft} (after ${delay}ms)`);
+            console.log(`Scroll restored to: ${savedScrollPosition} (after ${delay}ms)`);
           }
         }, delay)
       );
       
-      return () => timeoutIds.forEach(id => clearTimeout(id));
+      return () => {
+        cancelAnimationFrame(rafId);
+        timeoutIds.forEach(id => clearTimeout(id));
+      };
     }
   }, [dailyStatuses, savedScrollPosition]);
 
