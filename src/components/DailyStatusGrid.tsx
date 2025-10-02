@@ -97,9 +97,28 @@ export function DailyStatusGrid({
     );
   };
 
-  // 해당 날짜가 입원 기간 내인지 daily_patient_status 데이터로 추론
+  // 해당 날짜가 입원 기간 내인지 admission_cycles 및 daily_patient_status 데이터로 확인
   const getAdmissionStatusForDate = (patient: Patient, date: string) => {
-    // 해당 환자의 모든 상태를 날짜순 정렬
+    // 1. admission_cycles로 입원 기간 확인 (가장 정확함)
+    if (patient.admission_cycles && patient.admission_cycles.length > 0) {
+      for (const cycle of patient.admission_cycles) {
+        const admissionDate = cycle.admission_date;
+        const dischargeDate = cycle.discharge_date;
+        
+        // 입원 날짜부터 퇴원 날짜(또는 현재)까지의 기간에 해당 날짜가 포함되는지 확인
+        if (date >= admissionDate) {
+          if (!dischargeDate || date <= dischargeDate) {
+            // 입원 중인 기간
+            return {
+              type: cycle.admission_type || '입원',
+              isOngoing: !dischargeDate || date < dischargeDate
+            };
+          }
+        }
+      }
+    }
+
+    // 2. admission_cycles에 정보가 없으면 daily_patient_status로 추론
     const patientStatuses = dailyStatuses
       .filter(s => s.patient_id === patient.id)
       .sort((a, b) => a.status_date.localeCompare(b.status_date));
@@ -126,7 +145,6 @@ export function DailyStatusGrid({
       } else if (status.status_type === '퇴원') {
         lastDischargeDate = status.status_date;
       }
-      // 낮병동은 연속 상태가 아니므로 제외
     }
 
     // 입원 기록이 있고, 퇴원하지 않았거나 입원이 퇴원보다 최근이면 입원 중
