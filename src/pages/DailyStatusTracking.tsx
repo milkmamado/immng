@@ -108,7 +108,7 @@ export default function DailyStatusTracking() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // 환자 목록 가져오기 (유입 상태이고 "아웃"이 아닌 환자만)
+      // 환자 목록 가져오기 (유입 상태이고 최종 상태가 아닌 환자만)
       let patientsQuery = supabase
         .from('patients')
         .select(`
@@ -122,9 +122,9 @@ export default function DailyStatusTracking() {
         .eq('inflow_status', '유입')
         .order('created_at', { ascending: false });
 
-      // "아웃" 및 "아웃위기" 상태가 아닌 환자만 필터링
+      // 최종 상태(사망, 상태악화, 치료종료) 및 "아웃", "아웃위기" 환자 제외
       const { data: patientsData, error: patientsError } = await patientsQuery
-        .or('management_status.is.null,management_status.eq.관리 중');
+        .not('management_status', 'in', '("사망","상태악화","치료종료","아웃","아웃위기")');
 
       if (patientsError) throw patientsError;
 
@@ -156,9 +156,15 @@ export default function DailyStatusTracking() {
           daysSinceCheck = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
         }
 
+        // 최종 상태(사망, 상태악화, 치료종료)는 자동 업데이트하지 않음
+        const finalStatuses = ['사망', '상태악화', '치료종료'];
+        if (finalStatuses.includes(patient.management_status)) {
+          continue;
+        }
+
         let newManagementStatus = patient.management_status || "관리 중";
         
-        // 자동 상태 업데이트 로직
+        // 자동 상태 업데이트 로직 (관리 중, 아웃위기, 아웃만)
         if (daysSinceCheck >= 21) {
           newManagementStatus = "아웃";
         } else if (daysSinceCheck >= 14) {
