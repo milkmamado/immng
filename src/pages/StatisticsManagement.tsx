@@ -199,11 +199,19 @@ export default function StatisticsManagement() {
       setTotalStats(totals);
 
       // 새로운 통계 계산 로직 추가
-      // 1. 아웃 환자 수
-      const { data: allPatientsWithStatus } = await supabase
+      // 1. 아웃 환자 수 - 담당자 필터 적용
+      let statusQuery = supabase
         .from('patients')
-        .select('id, management_status, created_at, first_visit_date')
+        .select('id, management_status, created_at, first_visit_date, assigned_manager')
         .eq('inflow_status', '유입');
+      
+      // 담당자 필터 적용 (일반 매니저 또는 특정 매니저 선택 시)
+      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
+        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
+        statusQuery = statusQuery.eq('assigned_manager', targetManager);
+      }
+      
+      const { data: allPatientsWithStatus } = await statusQuery;
 
       const outPatientsCount = allPatientsWithStatus?.filter(
         p => p.management_status === '아웃'
