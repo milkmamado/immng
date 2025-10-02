@@ -233,19 +233,23 @@ export function DailyStatusGrid({
     return days;
   };
 
-  // 스크롤 위치 복원
+  // 스크롤 위치 복원 (여러 번 시도)
   useEffect(() => {
     if (tableScrollRef.current && savedScrollPosition > 0) {
       console.log('Restoring scroll position:', savedScrollPosition);
-      // DOM 업데이트 후 스크롤 복원을 위해 약간의 딜레이
-      const timeoutId = setTimeout(() => {
-        if (tableScrollRef.current) {
-          tableScrollRef.current.scrollLeft = savedScrollPosition;
-          console.log('Scroll restored to:', tableScrollRef.current.scrollLeft);
-        }
-      }, 100);
       
-      return () => clearTimeout(timeoutId);
+      // 여러 번 시도하여 확실하게 복원
+      const attempts = [0, 50, 100, 200];
+      const timeoutIds = attempts.map(delay => 
+        setTimeout(() => {
+          if (tableScrollRef.current) {
+            tableScrollRef.current.scrollLeft = savedScrollPosition;
+            console.log(`Scroll restored to: ${tableScrollRef.current.scrollLeft} (after ${delay}ms)`);
+          }
+        }, delay)
+      );
+      
+      return () => timeoutIds.forEach(id => clearTimeout(id));
     }
   }, [dailyStatuses, savedScrollPosition]);
 
