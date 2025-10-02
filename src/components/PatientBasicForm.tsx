@@ -388,18 +388,6 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
           />
         </div>
 
-        {/* 한방주치의 */}
-        <div>
-          <Label htmlFor="korean_doctor">한방주치의</Label>
-          <Input
-            id="korean_doctor"
-            name="korean_doctor"
-            value={formData.korean_doctor}
-            onChange={handleInputChange}
-            placeholder="한방주치의"
-          />
-        </div>
-
         {/* 담당자(상담실장) */}
         <div>
           <Label htmlFor="manager_name">담당자(상담실장)</Label>
@@ -409,6 +397,18 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
             value={formData.manager_name}
             onChange={handleInputChange}
             placeholder="담당자(상담실장)"
+          />
+        </div>
+
+        {/* 한방주치의 */}
+        <div>
+          <Label htmlFor="korean_doctor">한방주치의</Label>
+          <Input
+            id="korean_doctor"
+            name="korean_doctor"
+            value={formData.korean_doctor}
+            onChange={handleInputChange}
+            placeholder="한방주치의"
           />
         </div>
 
