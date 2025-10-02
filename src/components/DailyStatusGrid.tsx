@@ -173,7 +173,9 @@ export function DailyStatusGrid({
 
     // 현재 스크롤 위치 저장
     if (tableScrollRef.current) {
-      setSavedScrollPosition(tableScrollRef.current.scrollLeft);
+      const currentScroll = tableScrollRef.current.scrollLeft;
+      setSavedScrollPosition(currentScroll);
+      console.log('Saving scroll position:', currentScroll);
     }
 
     await onStatusUpdate(selectedCell.patientId, selectedCell.date, selectedStatus, notes);
@@ -187,7 +189,9 @@ export function DailyStatusGrid({
 
     // 현재 스크롤 위치 저장
     if (tableScrollRef.current) {
-      setSavedScrollPosition(tableScrollRef.current.scrollLeft);
+      const currentScroll = tableScrollRef.current.scrollLeft;
+      setSavedScrollPosition(currentScroll);
+      console.log('Saving scroll position:', currentScroll);
     }
 
     // 빈 상태로 업데이트하여 삭제 효과
@@ -232,7 +236,16 @@ export function DailyStatusGrid({
   // 스크롤 위치 복원
   useEffect(() => {
     if (tableScrollRef.current && savedScrollPosition > 0) {
-      tableScrollRef.current.scrollLeft = savedScrollPosition;
+      console.log('Restoring scroll position:', savedScrollPosition);
+      // DOM 업데이트 후 스크롤 복원을 위해 약간의 딜레이
+      const timeoutId = setTimeout(() => {
+        if (tableScrollRef.current) {
+          tableScrollRef.current.scrollLeft = savedScrollPosition;
+          console.log('Scroll restored to:', tableScrollRef.current.scrollLeft);
+        }
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [dailyStatuses, savedScrollPosition]);
 
