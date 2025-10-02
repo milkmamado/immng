@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertCircle, AlertTriangle, Phone } from "lucide-react";
 import { format } from "date-fns";
 
@@ -51,11 +52,14 @@ export default function RiskManagement() {
   const [reconnectData, setReconnectData] = useState<Map<string, ReconnectTracking>>(new Map());
   const [loading, setLoading] = useState(true);
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
+  const [selectedManager, setSelectedManager] = useState<string>('all');
+  const [managers, setManagers] = useState<{ id: string; name: string }[]>([]);
   const { user, userRole } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
+      fetchManagerList();
       fetchRiskPatients();
     }
     
@@ -81,17 +85,52 @@ export default function RiskManagement() {
     };
   }, [user, userRole]);
 
+  useEffect(() => {
+    if (user) {
+      fetchRiskPatients();
+    }
+  }, [selectedManager]);
+
+  const fetchManagerList = async () => {
+    const isMasterOrAdmin = userRole === 'master' || userRole === 'admin';
+    
+    if (isMasterOrAdmin) {
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'manager')
+        .eq('approval_status', 'approved');
+
+      if (userRoles && userRoles.length > 0) {
+        const managerIds = userRoles.map(r => r.user_id);
+        const { data: managersData } = await supabase
+          .from('profiles')
+          .select('id, name')
+          .in('id', managerIds)
+          .order('name');
+
+        if (managersData) {
+          setManagers(managersData);
+        }
+      }
+    }
+  };
+
   const fetchRiskPatients = async () => {
     try {
       setLoading(true);
 
+      const isMasterOrAdmin = userRole === 'master' || userRole === 'admin';
+      
       let patientsQuery = supabase
         .from("patients")
         .select("*")
         .eq("inflow_status", "유입");
 
-      if (userRole !== "master") {
-        patientsQuery = patientsQuery.eq("assigned_manager", user?.id);
+      // 일반 매니저는 본인 환자만, 마스터/관리자가 특정 매니저 선택 시 해당 매니저만
+      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
+        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
+        patientsQuery = patientsQuery.eq("assigned_manager", targetManager);
       }
 
       const { data: patientsData, error: patientsError } = await patientsQuery;
@@ -385,7 +424,22 @@ export default function RiskManagement() {
             2주 이상 일정 체크가 없는 유입 환자 목록
           </p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-center">
+          {(userRole === 'master' || userRole === 'admin') && (
+            <Select value={selectedManager} onValueChange={setSelectedManager}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="상담실장 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">전체</SelectItem>
+                {managers.map(manager => (
+                  <SelectItem key={manager.id} value={manager.id}>
+                    {manager.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <div className="flex items-center gap-2">
             <Badge variant="destructive" className="gap-1">
               <AlertCircle className="w-3 h-3" />
