@@ -72,10 +72,11 @@ export function DailyStatusGrid({
   const [memoValue, setMemoValue] = useState<string>('');
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const [editingManagementStatus, setEditingManagementStatus] = useState<string>('');
-  const [tableScrollWidth, setTableScrollWidth] = useState<number>(0);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
-  const stickyScrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
 
   const statusTypes = ['입원', '퇴원', '재원', '낮병동', '외래', '기타', '전화F/U'];
   
@@ -217,56 +218,34 @@ export function DailyStatusGrid({
     return days;
   };
 
-  // 테이블 스크롤 너비 업데이트
-  useEffect(() => {
-    const updateScrollWidth = () => {
-      if (tableScrollRef.current) {
-        setTableScrollWidth(tableScrollRef.current.scrollWidth);
-      }
-    };
+  // 마우스 드래그 스크롤 핸들러
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!tableScrollRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - tableScrollRef.current.offsetLeft);
+    setScrollLeft(tableScrollRef.current.scrollLeft);
+    tableScrollRef.current.style.cursor = 'grabbing';
+  };
 
-    // 초기 로드 시
-    updateScrollWidth();
+  const handleMouseLeave = () => {
+    if (!tableScrollRef.current) return;
+    setIsDragging(false);
+    tableScrollRef.current.style.cursor = 'grab';
+  };
 
-    // 윈도우 리사이즈 시
-    window.addEventListener('resize', updateScrollWidth);
+  const handleMouseUp = () => {
+    if (!tableScrollRef.current) return;
+    setIsDragging(false);
+    tableScrollRef.current.style.cursor = 'grab';
+  };
 
-    // 약간의 딜레이 후 재계산 (테이블 렌더링 완료 보장)
-    const timer = setTimeout(updateScrollWidth, 100);
-
-    return () => {
-      window.removeEventListener('resize', updateScrollWidth);
-      clearTimeout(timer);
-    };
-  }, [patients, daysInMonth]);
-
-  // 스크롤 동기화
-  useEffect(() => {
-    const tableScroll = tableScrollRef.current;
-    const stickyScroll = stickyScrollRef.current;
-
-    if (!tableScroll || !stickyScroll) return;
-
-    const syncFromTable = () => {
-      if (stickyScroll) {
-        stickyScroll.scrollLeft = tableScroll.scrollLeft;
-      }
-    };
-
-    const syncFromSticky = () => {
-      if (tableScroll) {
-        tableScroll.scrollLeft = stickyScroll.scrollLeft;
-      }
-    };
-
-    tableScroll.addEventListener('scroll', syncFromTable);
-    stickyScroll.addEventListener('scroll', syncFromSticky);
-
-    return () => {
-      tableScroll.removeEventListener('scroll', syncFromTable);
-      stickyScroll.removeEventListener('scroll', syncFromSticky);
-    };
-  }, []);
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !tableScrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - tableScrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2; // 스크롤 속도 조절
+    tableScrollRef.current.scrollLeft = scrollLeft - walk;
+  };
 
   const renderPatientRow = (patient: Patient) => {
     const cells = [];
@@ -351,7 +330,15 @@ export function DailyStatusGrid({
         ))}
       </div>
 
-      <div ref={tableScrollRef} className="overflow-x-auto">
+      <div 
+        ref={tableScrollRef} 
+        className="overflow-x-auto select-none"
+        style={{ cursor: 'grab' }}
+        onMouseDown={handleMouseDown}
+        onMouseLeave={handleMouseLeave}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+      >
         <table className="min-w-full border-collapse border text-sm">
           <thead>
             <tr className="bg-muted">
@@ -421,26 +408,6 @@ export function DailyStatusGrid({
           </tbody>
         </table>
       </div>
-
-      {/* 하단 고정 스크롤바 */}
-      {tableScrollWidth > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-background border-t z-50 py-2 shadow-lg">
-          <div className="container mx-auto px-6">
-            <div 
-              ref={stickyScrollRef}
-              className="overflow-x-auto overflow-y-hidden"
-              style={{ height: '20px' }}
-            >
-              <div 
-                style={{ 
-                  width: `${tableScrollWidth}px`,
-                  height: '1px'
-                }} 
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 상태 편집 다이얼로그 */}
       <Dialog open={!!selectedCell} onOpenChange={() => setSelectedCell(null)}>
