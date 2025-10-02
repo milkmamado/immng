@@ -317,6 +317,37 @@ export default function RiskManagement() {
     }
   };
 
+  const handleReturnToManagement = async (patientId: string) => {
+    try {
+      // 오늘 날짜로 daily_patient_status 레코드 추가
+      const { error } = await supabase
+        .from("daily_patient_status")
+        .insert({
+          patient_id: patientId,
+          status_date: new Date().toISOString().split('T')[0],
+          status_type: "관리 중",
+          created_by: user?.id!
+        });
+
+      if (error) throw error;
+
+      // 환자 목록 새로고침 (자동으로 관리 상태가 "관리 중"으로 변경됨)
+      await fetchRiskPatients();
+
+      toast({
+        title: "복귀 완료",
+        description: "환자가 관리 중 상태로 복귀되었습니다.",
+      });
+    } catch (error) {
+      console.error("Error returning to management:", error);
+      toast({
+        title: "오류",
+        description: "관리 중 복귀 처리 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getRiskBadge = (riskLevel: "아웃" | "아웃위기") => {
     if (riskLevel === "아웃") {
       return (
@@ -477,14 +508,24 @@ export default function RiskManagement() {
                         rows={3}
                         className="resize-none"
                       />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleNotesSave(patient.id, trackingData?.reconnect_notes || "")}
-                        className="w-full"
-                      >
-                        메모 저장
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleNotesSave(patient.id, trackingData?.reconnect_notes || "")}
+                          className="flex-1"
+                        >
+                          메모 저장
+                        </Button>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => handleReturnToManagement(patient.id)}
+                          className="flex-1"
+                        >
+                          관리 중으로 복귀
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
