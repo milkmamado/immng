@@ -122,9 +122,9 @@ export default function DailyStatusTracking() {
         .eq('inflow_status', '유입')
         .order('created_at', { ascending: false });
 
-      // "아웃" 상태가 아닌 환자만 필터링 (null 또는 다른 값)
+      // "아웃" 및 "아웃위기" 상태가 아닌 환자만 필터링
       const { data: patientsData, error: patientsError } = await patientsQuery
-        .or('management_status.is.null,management_status.neq.아웃');
+        .or('management_status.is.null,management_status.eq.관리 중');
 
       if (patientsError) throw patientsError;
 
@@ -178,7 +178,7 @@ export default function DailyStatusTracking() {
         }
       }
 
-      // "아웃" 상태 환자는 제외 (neq로 이미 필터링됨)
+      // "아웃" 및 "아웃위기" 상태 환자는 제외 (관리 중만 필터링됨)
 
       // 선택된 월의 시작일
       const [year, month] = selectedMonth.split('-');
