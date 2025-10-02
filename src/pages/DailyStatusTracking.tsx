@@ -541,15 +541,17 @@ export default function DailyStatusTracking() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <DailyStatusGrid
-            patients={filteredPatients}
-            dailyStatuses={dailyStatuses}
-            yearMonth={selectedMonth}
-            daysInMonth={getDaysInMonth(selectedMonth)}
-            onStatusUpdate={handleStatusUpdate}
-            onMemoUpdate={handleMemoUpdate}
-            onManagementStatusUpdate={handleManagementStatusUpdate}
-          />
+      <DailyStatusGrid
+        patients={filteredPatients}
+        dailyStatuses={dailyStatuses}
+        yearMonth={selectedMonth}
+        daysInMonth={getDaysInMonth(selectedMonth)}
+        onStatusUpdate={handleStatusUpdate}
+        onMemoUpdate={handleMemoUpdate}
+        onManagementStatusUpdate={handleManagementStatusUpdate}
+        onPreviousMonth={handlePreviousMonth}
+        onNextMonth={handleNextMonth}
+      />
         </CardContent>
       </Card>
     </div>

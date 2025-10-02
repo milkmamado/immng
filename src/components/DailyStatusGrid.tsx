@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface AdmissionCycle {
   id: string;
@@ -48,6 +49,8 @@ interface DailyStatusGridProps {
   onStatusUpdate: (patientId: string, date: string, statusType: string, notes?: string) => Promise<void>;
   onMemoUpdate: (patientId: string, memoType: 'memo1' | 'memo2', value: string) => Promise<void>;
   onManagementStatusUpdate: (patientId: string, status: string) => Promise<void>;
+  onPreviousMonth: () => void;
+  onNextMonth: () => void;
 }
 
 export function DailyStatusGrid({
@@ -58,6 +61,8 @@ export function DailyStatusGrid({
   onStatusUpdate,
   onMemoUpdate,
   onManagementStatusUpdate,
+  onPreviousMonth,
+  onNextMonth,
 }: DailyStatusGridProps) {
   const [selectedCell, setSelectedCell] = useState<{
     patientId: string;
@@ -544,16 +549,27 @@ export function DailyStatusGrid({
         ))}
       </div>
 
-      <div 
-        ref={tableScrollRef} 
-        className="overflow-x-auto select-none scrollbar-hide"
-        style={{ cursor: 'grab' }}
-        onMouseDown={handleMouseDown}
-        onMouseLeave={handleMouseLeave}
-        onMouseUp={handleMouseUp}
-        onMouseMove={handleMouseMove}
-      >
-        <table className="min-w-full border-collapse border text-sm">
+      <div className="flex items-center gap-2">
+        <Button 
+          variant="outline" 
+          size="icon"
+          onClick={onPreviousMonth}
+          aria-label="이전 월"
+          className="flex-shrink-0"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+
+        <div 
+          ref={tableScrollRef} 
+          className="overflow-x-auto select-none scrollbar-hide flex-1"
+          style={{ cursor: 'grab' }}
+          onMouseDown={handleMouseDown}
+          onMouseLeave={handleMouseLeave}
+          onMouseUp={handleMouseUp}
+          onMouseMove={handleMouseMove}
+        >
+          <table className="min-w-full border-collapse border text-sm">
           <thead>
             <tr className="bg-muted">
               <th className="min-w-[100px] p-2 text-left font-medium border sticky left-0 bg-muted z-10">
@@ -622,6 +638,17 @@ export function DailyStatusGrid({
             })}
           </tbody>
         </table>
+        </div>
+
+        <Button 
+          variant="outline" 
+          size="icon"
+          onClick={onNextMonth}
+          aria-label="다음 월"
+          className="flex-shrink-0"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* 상태 편집 다이얼로그 */}
