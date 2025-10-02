@@ -243,7 +243,7 @@ export function DailyStatusGrid({
             {shouldShowStatus && (
               <div className="flex flex-col items-center gap-0.5">
                 {status.status_type === '관리중' ? (
-                  <span className="text-xs font-medium">복원 &lt;</span>
+                  <span className="text-xs font-medium">돌환 &lt;</span>
                 ) : (
                   <>
                     <Badge
