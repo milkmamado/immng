@@ -275,8 +275,8 @@ export function DailyStatusGrid({
         s => s.status_date >= monthStart && s.status_date <= monthEnd
       );
 
-      // 입원일수 계산 함수 (입원일부터 퇴원일까지의 기간)
-      const calculateAdmissionDays = (statuses: typeof patientStatuses) => {
+      // 입원일수 계산 함수 (입원일부터 퇴원일까지의 기간, 월 범위 제한 가능)
+      const calculateAdmissionDays = (statuses: typeof patientStatuses, limitStart?: string, limitEnd?: string) => {
         let totalDays = 0;
         let admissionDate: string | null = null;
 
@@ -287,35 +287,64 @@ export function DailyStatusGrid({
             }
           } else if (status.status_type === '퇴원' && admissionDate) {
             // 입원일부터 퇴원일까지의 일수 계산 (퇴원일 포함)
-            const admission = new Date(admissionDate);
-            const discharge = new Date(status.status_date);
-            const days = Math.floor((discharge.getTime() - admission.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-            totalDays += days;
+            let startDate = admissionDate;
+            let endDate = status.status_date;
+            
+            // 월 범위 제한이 있으면 적용
+            if (limitStart && startDate < limitStart) {
+              startDate = limitStart;
+            }
+            if (limitEnd && endDate > limitEnd) {
+              endDate = limitEnd;
+            }
+            
+            // 범위 내에 있을 때만 계산
+            if (startDate <= endDate) {
+              const start = new Date(startDate);
+              const end = new Date(endDate);
+              const days = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+              totalDays += days;
+            }
+            
             admissionDate = null;
           }
         }
 
-        // 퇴원하지 않은 입원이 있으면 오늘까지 계산
+        // 퇴원하지 않은 입원이 있으면 오늘까지 또는 월말까지 계산
         if (admissionDate) {
-          const admission = new Date(admissionDate);
-          const today = new Date();
-          const days = Math.floor((today.getTime() - admission.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-          totalDays += days;
+          let startDate = admissionDate;
+          let endDate = new Date().toISOString().split('T')[0];
+          
+          // 월 범위 제한이 있으면 적용
+          if (limitStart && startDate < limitStart) {
+            startDate = limitStart;
+          }
+          if (limitEnd && endDate > limitEnd) {
+            endDate = limitEnd;
+          }
+          
+          // 범위 내에 있을 때만 계산
+          if (startDate <= endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const days = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+            totalDays += days;
+          }
         }
 
         return totalDays;
       };
 
-      // 당월 통계 계산
+      // 당월 통계 계산 (해당 월 범위 내로 제한)
       const currentMonthStats = {
-        admissionDays: calculateAdmissionDays(currentMonthStatuses),
+        admissionDays: calculateAdmissionDays(patientStatuses, monthStart, monthEnd),
         dayCare: currentMonthStatuses.filter(s => s.status_type === '낮병동').length,
         outpatient: currentMonthStatuses.filter(s => s.status_type === '외래').length,
         phoneFollowUp: currentMonthStatuses.filter(s => s.status_type === '전화F/U').length,
         revenue: 0
       };
 
-      // 전체 통계 계산
+      // 전체 통계 계산 (제한 없음)
       const totalStats = {
         admissionDays: calculateAdmissionDays(patientStatuses),
         dayCare: patientStatuses.filter(s => s.status_type === '낮병동').length,
