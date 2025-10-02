@@ -16,7 +16,8 @@ import {
   Filter,
   Save,
   Plus,
-  AlertCircle
+  AlertCircle,
+  Settings
 } from "lucide-react";
 
 export default function UserManual() {
@@ -94,19 +95,11 @@ export default function UserManual() {
                   <ul className="space-y-2 text-gray-700">
                     <li className="flex items-start gap-2">
                       <span className="text-primary mt-1">•</span>
-                      <span><strong>전체 환자 수:</strong> 현재 관리 중인 총 환자 수를 표시합니다</span>
+                      <span><strong>전체 환자 수:</strong> 시스템에 등록된 총 환자 수를 표시합니다</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-primary mt-1">•</span>
-                      <span><strong>이번 달 신규 환자:</strong> 당월 새롭게 유입된 환자 수를 확인할 수 있습니다</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary mt-1">•</span>
-                      <span><strong>이탈 위험 환자:</strong> 관리가 필요한 환자를 자동으로 감지합니다</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary mt-1">•</span>
-                      <span><strong>미수금 현황:</strong> 결제가 완료되지 않은 환자를 추적합니다</span>
+                      <span><strong>이번 달 신규 환자:</strong> 당월 신규 등록된 환자 수를 확인할 수 있습니다</span>
                     </li>
                   </ul>
                 </div>
@@ -199,17 +192,17 @@ export default function UserManual() {
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">💊 입원/치료 기록 관리</h4>
+                  <h4 className="font-semibold text-gray-900 mb-2">💊 치료 계획 관리</h4>
                   <p className="text-gray-700 mb-2">환자 상세 페이지에서 다음을 관리할 수 있습니다:</p>
                   <ul className="space-y-2 text-gray-700 ml-4">
                     <li>
-                      <strong>• 입원 사이클:</strong> 입원일, 퇴원일, 입원 유형(입원/낮병동) 기록
+                      <strong>• 치료 계획 추가:</strong> 치료 상세 내용과 치료 금액 기록
                     </li>
                     <li>
-                      <strong>• 치료 계획:</strong> 치료비, 결제 상태 관리
+                      <strong>• 수납 관리:</strong> 치료비 결제 완료 체크 및 결제일 기록
                     </li>
                     <li>
-                      <strong>• 환자 노트:</strong> 특이사항, 상담 내용 기록
+                      <strong>• 월평균 일수:</strong> 입원/외래 월평균 일수 자동 계산
                     </li>
                   </ul>
                 </div>
@@ -238,31 +231,30 @@ export default function UserManual() {
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-2">📅 일별 상태 기록하기</h4>
                   <ol className="space-y-2 text-gray-700 ml-4">
-                    <li>1. 캘린더에서 날짜 선택 (기본: 오늘)</li>
-                    <li>2. 환자 리스트에서 상태를 기록할 환자 선택</li>
-                    <li>3. 해당 날짜에 환자 상태 선택:
+                    <li>1. 상단에서 월 선택 (이전/다음 월 이동 가능)</li>
+                    <li>2. 환자 리스트에서 상태를 기록할 환자의 날짜 칸 클릭</li>
+                    <li>3. 드롭다운에서 해당 날짜 환자 상태 선택:
                       <ul className="ml-4 mt-1 space-y-1">
-                        <li>• <Badge className="bg-blue-500">입원</Badge> - 병원에 입원 중</li>
-                        <li>• <Badge className="bg-purple-500">재원</Badge> - 재입원 상태</li>
+                        <li>• <Badge className="bg-blue-500">입원</Badge> - 신규 입원</li>
+                        <li>• <Badge className="bg-purple-500">재입원</Badge> - 재입원 상태</li>
                         <li>• <Badge className="bg-green-500">외래</Badge> - 외래 진료</li>
                         <li>• <Badge className="bg-yellow-500">낮병동</Badge> - 낮병동 이용</li>
                         <li>• <Badge className="bg-orange-500">전화F/U</Badge> - 전화 상담</li>
                         <li>• <Badge className="bg-gray-500">퇴원</Badge> - 퇴원</li>
                       </ul>
                     </li>
-                    <li>4. 필요시 메모 추가 후 저장</li>
+                    <li>4. 메모1, 메모2 란에 특이사항 입력 가능</li>
+                    <li>5. 관리 상태는 자동으로 업데이트되며 수동 변경도 가능</li>
                   </ol>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">📊 상세 정보 보기</h4>
-                  <p className="text-gray-700 mb-2">환자명을 클릭하면 다음 정보를 확인할 수 있습니다:</p>
+                  <h4 className="font-semibold text-gray-900 mb-2">📊 통계 카드</h4>
+                  <p className="text-gray-700 mb-2">상단에 표시되는 통계 정보:</p>
                   <ul className="space-y-1 text-gray-700 ml-4">
-                    <li>• <strong>입원일수:</strong> 입원 상태 기록의 총 일수</li>
-                    <li>• <strong>외래방문:</strong> 외래 진료 횟수</li>
-                    <li>• <strong>낮병동:</strong> 낮병동 이용 일수</li>
-                    <li>• <strong>전화상담:</strong> 전화 F/U 횟수</li>
-                    <li>• <strong>최근 활동:</strong> 마지막 방문/상담 날짜</li>
+                    <li>• <strong>당월 총 환자:</strong> 현재 관리 중인 환자 수</li>
+                    <li>• <strong>당월 매출:</strong> 해당 월 수납 완료된 금액</li>
+                    <li>• <strong>누적 총 매출:</strong> 전체 기간 수납 완료 금액</li>
                   </ul>
                 </div>
 
@@ -289,21 +281,20 @@ export default function UserManual() {
               <div className="space-y-4">
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-2">⚠️ 리스크 판단 기준</h4>
-                  <p className="text-gray-700 mb-2">다음 조건에 해당하는 환자가 자동으로 표시됩니다:</p>
+                  <p className="text-gray-700 mb-2">시스템이 자동으로 다음 기준에 따라 환자를 분류합니다:</p>
                   <ul className="space-y-2 text-gray-700 ml-4">
-                    <li>• <strong>7일 이상 연락 없음:</strong> 마지막 방문/상담 후 7일 경과</li>
-                    <li>• <strong>14일 이상 연락 없음:</strong> 더욱 주의가 필요한 환자</li>
-                    <li>• <strong>30일 이상 연락 없음:</strong> 이탈 위험이 매우 높은 환자</li>
+                    <li>• <strong>아웃위기 (14일+):</strong> 마지막 일별 체크 후 14일 이상 경과</li>
+                    <li>• <strong>아웃 (21일+):</strong> 마지막 일별 체크 후 21일 이상 경과</li>
                   </ul>
                 </div>
 
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-2">📞 재연락 관리</h4>
                   <ol className="space-y-2 text-gray-700 ml-4">
-                    <li>1. 리스크 환자 리스트에서 환자 선택</li>
-                    <li>2. <Badge variant="default">재연락 완료</Badge> 버튼 클릭</li>
-                    <li>3. 재연락 내용 메모 작성</li>
-                    <li>4. 저장하면 해당 환자가 리스트에서 제거됩니다</li>
+                    <li>1. 리스크 환자 리스트에서 환자 카드 확인</li>
+                    <li>2. <strong>재연락 완료</strong> 체크박스 클릭</li>
+                    <li>3. 메모 영역에 재연락 내용 작성 후 저장</li>
+                    <li>4. <Badge variant="default">관리 중 복귀</Badge> 버튼으로 일별 관리로 복귀</li>
                   </ol>
                 </div>
 
@@ -353,11 +344,11 @@ export default function UserManual() {
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">📊 상태별 분포 (일수 기준)</h4>
-                  <p className="text-gray-700 mb-2">선택한 월 동안 각 상태의 <strong>총 일수</strong>를 표시합니다:</p>
+                  <h4 className="font-semibold text-gray-900 mb-2">📊 상태별 일수 (실장별)</h4>
+                  <p className="text-gray-700 mb-2">실장별로 선택한 월 동안 각 상태의 <strong>총 일수</strong>를 표시:</p>
                   <ul className="space-y-1 text-gray-700 ml-4">
-                    <li>• <strong>입원:</strong> 입원 + 재원 상태로 기록된 총 일수</li>
-                    <li>• <strong>외래:</strong> 외래 진료로 기록된 총 일수</li>
+                    <li>• <strong>입원:</strong> 입원 + 재입원 상태 총 일수</li>
+                    <li>• <strong>외래:</strong> 외래 진료 총 일수</li>
                     <li>• <strong>낮병동:</strong> 낮병동 이용 총 일수</li>
                     <li>• <strong>전화F/U:</strong> 전화 상담 총 횟수</li>
                   </ul>
@@ -383,6 +374,101 @@ export default function UserManual() {
                   <p className="text-sm text-purple-900">
                     <strong>💡 분석 팁:</strong> 재진관리비율이 70% 이상이면 양호한 수준입니다. 
                     낮은 경우 이탈 리스크 관리를 강화하세요.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 마케팅 통계 */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-primary" />
+                7. 마케팅 통계
+              </CardTitle>
+              <CardDescription>진단명, 이전병원, 보험 분석으로 마케팅 전략 수립</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2">📊 제공되는 통계</h4>
+                  <ul className="space-y-2 text-gray-700 ml-4">
+                    <li>
+                      <strong>• 진단명별 방문유형:</strong> 각 진단명에 따른 외래/입원/낮병동 비율 분석
+                    </li>
+                    <li>
+                      <strong>• 이전병원 Top 10:</strong> 환자가 많이 유입되는 병원 순위
+                    </li>
+                    <li>
+                      <strong>• 보험유형 분포:</strong> 환자들의 보험 가입 현황 분석
+                    </li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2">📅 기간 선택</h4>
+                  <p className="text-gray-700 mb-2">분석 기간을 선택할 수 있습니다:</p>
+                  <ul className="space-y-1 text-gray-700 ml-4">
+                    <li>• 최근 1개월 / 3개월 / 6개월 / 9개월 / 1년</li>
+                  </ul>
+                </div>
+
+                <div className="bg-green-50 border-l-4 border-green-500 p-4">
+                  <p className="text-sm text-green-900">
+                    <strong>💡 활용 팁:</strong> 이전병원 통계를 참고하여 마케팅 제휴나 
+                    홍보 전략을 수립할 수 있습니다.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 옵션 관리 */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="w-5 h-5 text-primary" />
+                8. 옵션 관리
+              </CardTitle>
+              <CardDescription>드롭다운 항목 관리로 입력 편의성 향상</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2">⚙️ 관리 가능한 옵션</h4>
+                  <ul className="space-y-2 text-gray-700 ml-4">
+                    <li>
+                      <strong>• 진단명:</strong> 환자 등록 시 선택 가능한 진단명 목록
+                    </li>
+                    <li>
+                      <strong>• 이전병원:</strong> 이전 병원 선택 옵션
+                    </li>
+                    <li>
+                      <strong>• 실비보험유형:</strong> 보험 유형 선택 옵션
+                    </li>
+                    <li>
+                      <strong>• 치료상세:</strong> 치료 계획 입력 시 선택 옵션
+                    </li>
+                    <li>
+                      <strong>• 환자 관리 상태:</strong> 관리 상태 옵션 (일별 관리 제외 설정 가능)
+                    </li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2">➕ 옵션 추가/삭제</h4>
+                  <ol className="space-y-2 text-gray-700 ml-4">
+                    <li>1. 옵션 관리 페이지에서 해당 탭 선택</li>
+                    <li>2. 입력창에 새 옵션명 입력 후 <Badge variant="default">추가</Badge> 버튼 클릭</li>
+                    <li>3. 기존 옵션 삭제는 각 항목의 <Badge variant="destructive">삭제</Badge> 버튼 클릭</li>
+                  </ol>
+                </div>
+
+                <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                  <p className="text-sm text-yellow-900">
+                    <strong>⚠️ 주의:</strong> 환자 관리 상태에서 "일별 관리 제외" 옵션을 체크하면 
+                    해당 상태의 환자는 일별 환자 관리 현황에 표시되지 않습니다.
                   </p>
                 </div>
               </div>
@@ -430,12 +516,9 @@ export default function UserManual() {
                     <ol className="space-y-1 ml-4">
                       <li>1. 해당 날짜를 캘린더에서 선택</li>
                       <li>2. 환자 리스트에서 수정할 환자 찾기</li>
-                      <li>3. 이미 기록된 상태는 다시 클릭하면 <strong>수정 모드</strong>로 전환됩니다</li>
-                      <li>4. 올바른 상태를 선택하고 저장</li>
+                      <li>3. 이미 기록된 날짜 칸을 다시 클릭</li>
+                      <li>4. 드롭다운에서 올바른 상태 선택 또는 빈 값 선택으로 삭제</li>
                     </ol>
-                    <p className="mt-2 text-sm bg-yellow-50 p-2 rounded">
-                      💡 잘못된 기록을 완전히 삭제하려면 환자 상세 페이지에서 해당 기록을 삭제할 수 있습니다.
-                    </p>
                   </AccordionContent>
                 </AccordionItem>
 
@@ -468,10 +551,9 @@ export default function UserManual() {
                       검색이 안 되는 경우 다음을 확인해주세요:
                     </p>
                     <ul className="space-y-1 ml-4">
-                      <li>• 환자의 <strong>유입 상태</strong>가 "유입"인지 확인 (아웃, 사망 등은 검색 제외)</li>
-                      <li>• 담당 매니저가 본인으로 지정되어 있는지 확인</li>
                       <li>• 검색어의 띄어쓰기 확인 (예: "김민수" vs "김 민수")</li>
                       <li>• 환자번호는 정확한 형식으로 검색 (예: "P-2025-401")</li>
+                      <li>• 일부 페이지는 특정 조건의 환자만 표시됩니다 (예: 일별 관리는 "관리 중" 환자만)</li>
                     </ul>
                   </AccordionContent>
                 </AccordionItem>
@@ -488,29 +570,29 @@ export default function UserManual() {
                       <li>1. <strong>방법 A:</strong> 일별 환자 관리 현황에서 해당 환자의 최근 상태 기록 
                         (입원, 외래, 전화F/U 등)</li>
                       <li>2. <strong>방법 B:</strong> 이탈 리스크 관리 페이지에서 
-                        "재연락 완료" 버튼 클릭 후 메모 저장</li>
+                        <Badge variant="default">관리 중 복귀</Badge> 버튼 클릭</li>
                     </ol>
                     <p className="mt-2 text-sm bg-blue-50 p-2 rounded">
-                      💡 두 방법 모두 "마지막 활동 날짜"를 업데이트하여 리스크 판단 기준을 리셋합니다.
+                      💡 재연락 완료 체크박스는 재연락 여부만 표시하며, 리스트에서 제거하려면 위 방법을 사용하세요.
                     </p>
                   </AccordionContent>
                 </AccordionItem>
 
                 <AccordionItem value="faq-6">
                   <AccordionTrigger className="text-left">
-                    Q. 입원일수가 실제와 다르게 표시돼요
+                    Q. 입원일수/외래일수가 실제와 다르게 표시돼요
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-700">
                     <p className="mb-2">
-                      입원일수는 <strong>일별 상태 기록</strong>을 기준으로 계산됩니다:
+                      일수는 <strong>일별 상태 기록</strong>을 기준으로 계산됩니다:
                     </p>
                     <ul className="space-y-2 ml-4">
-                      <li>• <strong>계산 방법:</strong> "입원" 또는 "재원" 상태로 기록된 <strong>총 날짜 수</strong></li>
+                      <li>• <strong>계산 방법:</strong> 해당 상태로 기록된 <strong>총 날짜 수</strong></li>
                       <li>• <strong>예시:</strong> 9월 1일, 9월 5일, 9월 10일에 입원 기록 → 3일</li>
                     </ul>
                     <p className="mt-2">
-                      <strong>정확한 입원일수를 표시하려면:</strong> 입원 기간 동안 
-                      매일 "입원" 상태를 기록해야 합니다. 퇴원일에는 "퇴원"을 기록하세요.
+                      <strong>정확한 일수를 표시하려면:</strong> 해당 기간 동안 
+                      매일 상태를 기록해야 합니다.
                     </p>
                   </AccordionContent>
                 </AccordionItem>
@@ -547,19 +629,23 @@ export default function UserManual() {
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-700">
                     <p className="mb-2">
-                      환자 데이터는 <strong>삭제보다는 상태 변경</strong>을 권장합니다:
+                      환자 삭제는 초진관리 페이지에서 가능합니다:
                     </p>
-                    <ul className="space-y-2 ml-4">
-                      <li>• <strong>더 이상 관리하지 않는 환자:</strong> 관리 상태를 "아웃"으로 변경</li>
-                      <li>• <strong>사망한 환자:</strong> 관리 상태를 "사망"으로 변경</li>
-                      <li>• <strong>치료 완료:</strong> 관리 상태를 "치료종료"로 변경</li>
+                    <ol className="space-y-1 ml-4">
+                      <li>1. 초진관리 메뉴로 이동</li>
+                      <li>2. 삭제할 환자 찾기</li>
+                      <li>3. 작업 열의 <Badge variant="destructive">삭제</Badge> 버튼 클릭</li>
+                    </ol>
+                    <p className="mt-2 bg-yellow-50 p-2 rounded text-sm">
+                      <strong>💡 권장:</strong> 완전 삭제보다는 관리 상태 변경을 추천합니다:
+                    </p>
+                    <ul className="space-y-1 ml-4 mt-2 text-sm">
+                      <li>• <strong>아웃:</strong> 더 이상 관리하지 않는 환자</li>
+                      <li>• <strong>사망:</strong> 사망한 환자</li>
+                      <li>• <strong>치료종료:</strong> 치료 완료</li>
                     </ul>
-                    <p className="mt-2">
-                      상태를 변경하면 대부분의 목록에서 자동으로 제외되며, 
-                      과거 통계 데이터는 보존됩니다.
-                    </p>
-                    <p className="mt-2 text-sm bg-red-50 p-2 rounded">
-                      ⚠️ 완전한 삭제가 필요한 경우 마스터 계정으로 문의하세요.
+                    <p className="mt-2 text-sm">
+                      상태 변경 시 일별 관리에서 자동 제외되며 과거 통계는 보존됩니다.
                     </p>
                   </AccordionContent>
                 </AccordionItem>
@@ -627,8 +713,7 @@ export default function UserManual() {
                     <li>✓ 환자 등록 전 중복 여부 확인 (이름 + 생년월일)</li>
                     <li>✓ 연락처는 하이픈(-) 없이 숫자만 입력</li>
                     <li>✓ 결제 완료 시 반드시 "결제 완료" 체크</li>
-                    <li>✓ 중요한 메모는 "중요" 표시로 강조</li>
-                    <li>✓ 입원/퇴원 날짜는 반드시 정확하게 입력</li>
+                    <li>✓ 중요한 내용은 메모1, 메모2에 상세히 기록</li>
                   </ul>
                 </div>
 
