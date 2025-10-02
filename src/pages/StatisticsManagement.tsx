@@ -178,29 +178,21 @@ export default function StatisticsManagement() {
         stats.total_revenue += payment.treatment_amount || 0;
       });
 
-      // 환자별 최신 상태만 집계 (중복 방지)
-      const patientLatestStatus = new Map<string, string>();
+      // 상태별 일수 집계 (입원/재원, 외래, 낮병동, 전화F/U 각각의 총 일수)
       dailyStatuses?.forEach(status => {
-        if (!patientLatestStatus.has(status.patient_id)) {
-          patientLatestStatus.set(status.patient_id, status.status_type);
-        }
-      });
-
-      // 상태별 집계
-      patientLatestStatus.forEach((statusType, patientId) => {
-        const patient = patients?.find(p => p.id === patientId);
+        const patient = patients?.find(p => p.id === status.patient_id);
         if (!patient) return;
 
         const stats = managerMap.get(patient.assigned_manager);
         if (!stats) return;
 
-        if (statusType === '입원' || statusType === '재원') {
+        if (status.status_type === '입원' || status.status_type === '재원') {
           stats.status_breakdown.입원 += 1;
-        } else if (statusType === '외래') {
+        } else if (status.status_type === '외래') {
           stats.status_breakdown.외래 += 1;
-        } else if (statusType === '낮병동') {
+        } else if (status.status_type === '낮병동') {
           stats.status_breakdown.낮병동 += 1;
-        } else if (statusType === '전화F/U') {
+        } else if (status.status_type === '전화F/U') {
           stats.status_breakdown.전화FU += 1;
         }
       });
