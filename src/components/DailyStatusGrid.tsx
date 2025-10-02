@@ -399,18 +399,20 @@ export function DailyStatusGrid({
       </div>
 
       {/* 하단 고정 스크롤바 */}
-      <div className="sticky bottom-0 left-0 right-0 bg-background border-t z-20 py-2">
-        <div 
-          ref={stickyScrollRef}
-          className="overflow-x-auto overflow-y-hidden"
-          style={{ height: '20px' }}
-        >
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t z-50 py-2 shadow-lg">
+        <div className="container mx-auto px-6">
           <div 
-            style={{ 
-              width: tableScrollRef.current?.scrollWidth || '100%',
-              height: '1px'
-            }} 
-          />
+            ref={stickyScrollRef}
+            className="overflow-x-auto overflow-y-hidden"
+            style={{ height: '20px' }}
+          >
+            <div 
+              style={{ 
+                width: tableScrollRef.current?.scrollWidth || '100%',
+                height: '1px'
+              }} 
+            />
+          </div>
         </div>
       </div>
 
