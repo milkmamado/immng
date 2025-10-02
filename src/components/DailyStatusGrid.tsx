@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface AdmissionCycle {
   id: string;
@@ -73,6 +75,22 @@ export function DailyStatusGrid({
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const [editingManagementStatus, setEditingManagementStatus] = useState<string>('');
   const [savedScrollPosition, setSavedScrollPosition] = useState<number>(0);
+  const [patientStats, setPatientStats] = useState<{
+    currentMonth: {
+      admissionDays: number;
+      dayCare: number;
+      outpatient: number;
+      phoneFollowUp: number;
+      revenue: number;
+    };
+    total: {
+      admissionDays: number;
+      dayCare: number;
+      outpatient: number;
+      phoneFollowUp: number;
+      revenue: number;
+    };
+  } | null>(null);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -237,6 +255,70 @@ export function DailyStatusGrid({
     const date = new Date(year, month - 1, day);
     const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
     return dayNames[date.getDay()];
+  };
+
+  // 환자 통계 계산
+  const calculatePatientStats = async (patientId: string) => {
+    try {
+      // 해당 환자의 모든 상태 데이터
+      const patientStatuses = dailyStatuses.filter(s => s.patient_id === patientId);
+      
+      // 당월 데이터 필터링
+      const [year, month] = yearMonth.split('-');
+      const monthStart = `${year}-${month}-01`;
+      const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+      const monthEnd = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
+      
+      const currentMonthStatuses = patientStatuses.filter(
+        s => s.status_date >= monthStart && s.status_date <= monthEnd
+      );
+
+      // 당월 통계 계산
+      const currentMonthStats = {
+        admissionDays: currentMonthStatuses.filter(s => 
+          s.status_type === '입원' || s.status_type === '재원'
+        ).length,
+        dayCare: currentMonthStatuses.filter(s => s.status_type === '낮병동').length,
+        outpatient: currentMonthStatuses.filter(s => s.status_type === '외래').length,
+        phoneFollowUp: currentMonthStatuses.filter(s => s.status_type === '전화F/U').length,
+        revenue: 0
+      };
+
+      // 전체 통계 계산
+      const totalStats = {
+        admissionDays: patientStatuses.filter(s => 
+          s.status_type === '입원' || s.status_type === '재원'
+        ).length,
+        dayCare: patientStatuses.filter(s => s.status_type === '낮병동').length,
+        outpatient: patientStatuses.filter(s => s.status_type === '외래').length,
+        phoneFollowUp: patientStatuses.filter(s => s.status_type === '전화F/U').length,
+        revenue: 0
+      };
+
+      // 수납 완료 매출 계산
+      const { data: treatmentPlans } = await supabase
+        .from('treatment_plans')
+        .select('treatment_amount, payment_date, is_paid')
+        .eq('patient_id', patientId)
+        .eq('is_paid', true);
+
+      if (treatmentPlans) {
+        // 당월 매출
+        currentMonthStats.revenue = treatmentPlans
+          .filter(tp => tp.payment_date && tp.payment_date >= monthStart && tp.payment_date <= monthEnd)
+          .reduce((sum, tp) => sum + (tp.treatment_amount || 0), 0);
+
+        // 전체 매출
+        totalStats.revenue = treatmentPlans.reduce((sum, tp) => sum + (tp.treatment_amount || 0), 0);
+      }
+
+      setPatientStats({
+        currentMonth: currentMonthStats,
+        total: totalStats
+      });
+    } catch (error) {
+      console.error('Error calculating patient stats:', error);
+    }
   };
 
   const renderDayHeaders = () => {
@@ -442,6 +524,7 @@ export function DailyStatusGrid({
                         onClick={() => {
                           setSelectedPatientDetail(patient);
                           setEditingManagementStatus(patient.management_status || '관리 중');
+                          calculatePatientStats(patient.id);
                         }}
                       >
                         {patient.name}
@@ -653,6 +736,76 @@ export function DailyStatusGrid({
                   </div>
                 </div>
               </div>
+
+              {/* 통계 정보 */}
+              {patientStats && (
+                <div className="space-y-3">
+                  <h3 className="font-semibold">활동 통계</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* 당월 통계 */}
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium">당월</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">입원일수</span>
+                          <span className="font-medium">{patientStats.currentMonth.admissionDays}일</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">낮병동</span>
+                          <span className="font-medium">{patientStats.currentMonth.dayCare}회</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">외래</span>
+                          <span className="font-medium">{patientStats.currentMonth.outpatient}회</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">전화F/U</span>
+                          <span className="font-medium">{patientStats.currentMonth.phoneFollowUp}회</span>
+                        </div>
+                        <div className="flex justify-between pt-2 border-t">
+                          <span className="text-muted-foreground">매출</span>
+                          <span className="font-semibold text-primary">
+                            {patientStats.currentMonth.revenue.toLocaleString()}원
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* 총 통계 */}
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium">총 누적</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">입원일수</span>
+                          <span className="font-medium">{patientStats.total.admissionDays}일</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">낮병동</span>
+                          <span className="font-medium">{patientStats.total.dayCare}회</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">외래</span>
+                          <span className="font-medium">{patientStats.total.outpatient}회</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">전화F/U</span>
+                          <span className="font-medium">{patientStats.total.phoneFollowUp}회</span>
+                        </div>
+                        <div className="flex justify-between pt-2 border-t">
+                          <span className="text-muted-foreground">매출</span>
+                          <span className="font-semibold text-primary">
+                            {patientStats.total.revenue.toLocaleString()}원
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
 
               {/* 저장 버튼 */}
               <div className="flex justify-end gap-2 pt-4 border-t">
