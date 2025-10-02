@@ -440,6 +440,15 @@ export default function DailyStatusTracking() {
               <ChevronLeft className="h-4 w-4" />
             </Button>
             
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={handlePreviousMonth}
+              aria-label="이전 월"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
             <CalendarIcon className="h-5 w-5" />
             <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
               <PopoverTrigger asChild>
@@ -468,6 +477,15 @@ export default function DailyStatusTracking() {
                 />
               </PopoverContent>
             </Popover>
+            
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={handleNextMonth}
+              aria-label="다음 월"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
             
             <Button 
               variant="outline" 
