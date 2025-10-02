@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { PatientBasicForm } from "@/components/PatientBasicForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ export default function FirstVisitManagement() {
   const [selectedPatientForEdit, setSelectedPatientForEdit] = useState<Patient | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
+  const { userRole } = useAuth();
 
   useEffect(() => {
     fetchPatients();
@@ -150,10 +152,12 @@ export default function FirstVisitManagement() {
           <Heart className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold">초진관리</h1>
         </div>
-        <Button onClick={() => setShowForm(true)} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          새 환자 등록
-        </Button>
+        {userRole === 'manager' && (
+          <Button onClick={() => setShowForm(true)} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            새 환자 등록
+          </Button>
+        )}
       </div>
 
       <Card className="w-full overflow-x-auto">
