@@ -273,9 +273,18 @@ export function DailyStatusGrid({
       const status = getStatusForDate(patient.id, date);
       const admissionStatus = getAdmissionStatusForDate(patient, date);
       
-      // 해당 날짜에 입원/재원 상태가 직접 입력된 경우 배경색 사용 안함 (낮병동 제외)
+      // 해당 날짜에 입원/재원 상태가 직접 입력된 경우 체크
       const hasDirectAdmissionStatus = status && ['입원', '재원'].includes(status.status_type);
-      const bgColor = (!hasDirectAdmissionStatus && admissionStatus) ? getBackgroundColor(admissionStatus) : '';
+      
+      // 배경색 결정: 낮병동/외래는 직접 입력된 경우 배경색 적용
+      let bgColor = '';
+      if (status && status.status_type === '낮병동') {
+        bgColor = 'bg-yellow-100 dark:bg-yellow-950/30';
+      } else if (status && status.status_type === '외래') {
+        bgColor = 'bg-green-100 dark:bg-green-950/30';
+      } else {
+        bgColor = (!hasDirectAdmissionStatus && admissionStatus) ? getBackgroundColor(admissionStatus) : '';
+      }
       
       // 입원 기간 내 재원/입원 상태는 배경색으로만 표시 (중복 방지)
       const shouldShowStatus = status && !(
