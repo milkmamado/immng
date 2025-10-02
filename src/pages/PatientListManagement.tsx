@@ -157,23 +157,27 @@ export default function PatientListManagement() {
             daysSinceCheck = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
           }
 
+          // 최종 상태(사망, 상태악화, 치료종료)는 자동 업데이트하지 않음
+          const finalStatuses = ['사망', '상태악화', '치료종료'];
           let newManagementStatus = patient.management_status || "관리 중";
           
-          // 자동 상태 업데이트 로직
-          if (daysSinceCheck >= 21) {
-            newManagementStatus = "아웃";
-          } else if (daysSinceCheck >= 14) {
-            newManagementStatus = "아웃위기";
-          } else {
-            newManagementStatus = "관리 중";
-          }
+          if (!finalStatuses.includes(patient.management_status)) {
+            // 자동 상태 업데이트 로직 (관리 중, 아웃위기, 아웃만)
+            if (daysSinceCheck >= 21) {
+              newManagementStatus = "아웃";
+            } else if (daysSinceCheck >= 14) {
+              newManagementStatus = "아웃위기";
+            } else {
+              newManagementStatus = "관리 중";
+            }
 
-          // management_status가 변경되었으면 업데이트
-          if (patient.management_status !== newManagementStatus) {
-            await supabase
-              .from("patients")
-              .update({ management_status: newManagementStatus })
-              .eq("id", patient.id);
+            // management_status가 변경되었으면 업데이트
+            if (patient.management_status !== newManagementStatus) {
+              await supabase
+                .from("patients")
+                .update({ management_status: newManagementStatus })
+                .eq("id", patient.id);
+            }
           }
 
           // 월평균 입원/외래 일수 계산
