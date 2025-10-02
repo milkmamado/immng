@@ -358,8 +358,18 @@ export default function RiskManagement() {
 
   const handleReturnToManagement = async (patientId: string) => {
     try {
-      // 오늘 날짜로 daily_patient_status 레코드 추가
-      const { error } = await supabase
+      // 1. 환자의 management_status를 "관리 중"으로 업데이트
+      const { error: updateError } = await supabase
+        .from("patients")
+        .update({
+          management_status: "관리 중"
+        })
+        .eq("id", patientId);
+
+      if (updateError) throw updateError;
+
+      // 2. 오늘 날짜로 daily_patient_status 레코드 추가
+      const { error: insertError } = await supabase
         .from("daily_patient_status")
         .insert({
           patient_id: patientId,
@@ -368,9 +378,9 @@ export default function RiskManagement() {
           created_by: user?.id!
         });
 
-      if (error) throw error;
+      if (insertError) throw insertError;
 
-      // 환자 목록 새로고침 (자동으로 관리 상태가 "관리 중"으로 변경됨)
+      // 환자 목록 새로고침
       await fetchRiskPatients();
 
       toast({
