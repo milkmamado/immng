@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -72,6 +72,9 @@ export function DailyStatusGrid({
   const [memoValue, setMemoValue] = useState<string>('');
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const [editingManagementStatus, setEditingManagementStatus] = useState<string>('');
+  
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const stickyScrollRef = useRef<HTMLDivElement>(null);
 
   const statusTypes = ['입원', '퇴원', '재원', '낮병동', '외래', '기타', '전화F/U'];
   
@@ -213,6 +216,34 @@ export function DailyStatusGrid({
     return days;
   };
 
+  // 스크롤 동기화
+  useEffect(() => {
+    const tableScroll = tableScrollRef.current;
+    const stickyScroll = stickyScrollRef.current;
+
+    if (!tableScroll || !stickyScroll) return;
+
+    const syncFromTable = () => {
+      if (stickyScroll) {
+        stickyScroll.scrollLeft = tableScroll.scrollLeft;
+      }
+    };
+
+    const syncFromSticky = () => {
+      if (tableScroll) {
+        tableScroll.scrollLeft = stickyScroll.scrollLeft;
+      }
+    };
+
+    tableScroll.addEventListener('scroll', syncFromTable);
+    stickyScroll.addEventListener('scroll', syncFromSticky);
+
+    return () => {
+      tableScroll.removeEventListener('scroll', syncFromTable);
+      stickyScroll.removeEventListener('scroll', syncFromSticky);
+    };
+  }, []);
+
   const renderPatientRow = (patient: Patient) => {
     const cells = [];
     
@@ -296,7 +327,7 @@ export function DailyStatusGrid({
         ))}
       </div>
 
-      <div className="overflow-x-auto">
+      <div ref={tableScrollRef} className="overflow-x-auto">
         <table className="min-w-full border-collapse border text-sm">
           <thead>
             <tr className="bg-muted">
@@ -365,6 +396,22 @@ export function DailyStatusGrid({
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* 하단 고정 스크롤바 */}
+      <div className="sticky bottom-0 left-0 right-0 bg-background border-t z-20 py-2">
+        <div 
+          ref={stickyScrollRef}
+          className="overflow-x-auto overflow-y-hidden"
+          style={{ height: '20px' }}
+        >
+          <div 
+            style={{ 
+              width: tableScrollRef.current?.scrollWidth || '100%',
+              height: '1px'
+            }} 
+          />
+        </div>
       </div>
 
       {/* 상태 편집 다이얼로그 */}
