@@ -73,24 +73,16 @@ export default function StatisticsManagement() {
     setIsMasterOrAdmin(isMaster);
 
     if (isMaster) {
-      // 마스터/관리자는 모든 매니저 목록 가져오기
-      const { data: userRoles } = await supabase
-        .from('user_roles')
-        .select('user_id')
+      // 마스터/관리자는 모든 매니저 목록 가져오기 (approved_users view 사용)
+      const { data: managersData } = await supabase
+        .from('approved_users')
+        .select('user_id, name')
         .eq('role', 'manager')
-        .eq('approval_status', 'approved');
+        .eq('approval_status', 'approved')
+        .order('name');
 
-      if (userRoles && userRoles.length > 0) {
-        const managerIds = userRoles.map(r => r.user_id);
-        const { data: managersData } = await supabase
-          .from('profiles')
-          .select('id, name')
-          .in('id', managerIds)
-          .order('name');
-
-        if (managersData) {
-          setManagers(managersData);
-        }
+      if (managersData) {
+        setManagers(managersData.map(m => ({ id: m.user_id!, name: m.name || '이름 없음' })));
       }
     } else {
       // 일반 매니저는 본인만
