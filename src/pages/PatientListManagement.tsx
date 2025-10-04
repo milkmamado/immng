@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -88,6 +89,7 @@ export default function PatientListManagement() {
   const [patientStatusOptions, setPatientStatusOptions] = useState<PatientStatusOption[]>([]);
   
   const { toast } = useToast();
+  const { userRole } = useAuth();
 
   useEffect(() => {
     fetchPatients();
@@ -282,6 +284,16 @@ export default function PatientListManagement() {
   };
 
   const addTreatmentPlan = async () => {
+    // 관리자 권한 체크
+    if (userRole === 'admin') {
+      toast({
+        title: "권한 없음",
+        description: "관리자는 치료 계획을 추가할 수 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!selectedPatientDetail || !newTreatmentDetail.trim() || !newTreatmentAmount.trim()) {
       toast({
         title: "입력 오류",
@@ -350,6 +362,16 @@ export default function PatientListManagement() {
   const savePatientField = async (field: string, value: any) => {
     if (!selectedPatientDetail) return;
 
+    // 관리자 권한 체크
+    if (userRole === 'admin') {
+      toast({
+        title: "권한 없음",
+        description: "관리자는 환자 정보를 수정할 수 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('patients')
@@ -385,6 +407,16 @@ export default function PatientListManagement() {
   };
 
   const togglePaymentStatus = async (treatmentPlan: TreatmentPlan) => {
+    // 관리자 권한 체크
+    if (userRole === 'admin') {
+      toast({
+        title: "권한 없음",
+        description: "관리자는 수납 상태를 변경할 수 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('treatment_plans')
