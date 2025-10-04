@@ -95,23 +95,16 @@ export default function RiskManagement() {
     const isMasterOrAdmin = userRole === 'master' || userRole === 'admin';
     
     if (isMasterOrAdmin) {
-      const { data: userRoles } = await supabase
-        .from('user_roles')
-        .select('user_id')
+      // approved_users view를 사용하여 매니저 목록 조회 (일관성 개선)
+      const { data: managersData } = await supabase
+        .from('approved_users')
+        .select('user_id, name')
         .eq('role', 'manager')
-        .eq('approval_status', 'approved');
+        .eq('approval_status', 'approved')
+        .order('name');
 
-      if (userRoles && userRoles.length > 0) {
-        const managerIds = userRoles.map(r => r.user_id);
-        const { data: managersData } = await supabase
-          .from('profiles')
-          .select('id, name')
-          .in('id', managerIds)
-          .order('name');
-
-        if (managersData) {
-          setManagers(managersData);
-        }
+      if (managersData) {
+        setManagers(managersData.map(m => ({ id: m.user_id!, name: m.name || '이름 없음' })));
       }
     }
   };
@@ -234,6 +227,16 @@ export default function RiskManagement() {
   };
 
   const handleReconnectToggle = async (patientId: string, checked: boolean) => {
+    // 관리자 권한 체크 - 읽기 전용
+    if (userRole === 'admin') {
+      toast({
+        title: "권한 없음",
+        description: "관리자는 재연락 상태를 변경할 수 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const existingData = reconnectData.get(patientId);
 
@@ -305,6 +308,16 @@ export default function RiskManagement() {
   };
 
   const handleNotesSave = async (patientId: string, notes: string) => {
+    // 관리자 권한 체크 - 읽기 전용
+    if (userRole === 'admin') {
+      toast({
+        title: "권한 없음",
+        description: "관리자는 재연락 메모를 저장할 수 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const existingData = reconnectData.get(patientId);
 
@@ -357,6 +370,16 @@ export default function RiskManagement() {
   };
 
   const handleReturnToManagement = async (patientId: string) => {
+    // 관리자 권한 체크 - 읽기 전용
+    if (userRole === 'admin') {
+      toast({
+        title: "권한 없음",
+        description: "관리자는 환자 상태를 변경할 수 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       // 1. 환자의 management_status를 "관리 중"으로 업데이트
       const { error: updateError } = await supabase
