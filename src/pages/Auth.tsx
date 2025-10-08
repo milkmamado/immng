@@ -122,10 +122,6 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary p-4">
       <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="text-center space-y-2">
-          <CardTitle className="text-2xl font-bold">Immune Hospital</CardTitle>
-        </CardHeader>
-        
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
