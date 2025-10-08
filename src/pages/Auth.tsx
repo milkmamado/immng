@@ -123,13 +123,7 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-4">
-            <Heart className="w-6 h-6 text-primary-foreground" />
-          </div>
-          <CardTitle className="text-2xl font-bold">암한방병원</CardTitle>
-          <CardDescription>
-            {isLogin ? '환자 관리 시스템 로그인' : '계정을 생성하세요'}
-          </CardDescription>
+          <CardTitle className="text-2xl font-bold">Immune Hospital</CardTitle>
         </CardHeader>
         
         <CardContent>
