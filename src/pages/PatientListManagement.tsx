@@ -49,6 +49,7 @@ interface Patient {
   guardian_relationship?: string;
   guardian_phone?: string;
   management_status?: string;
+  memo1?: string;
   created_at: string;
 }
 
@@ -1337,6 +1338,21 @@ export default function PatientListManagement() {
                       onChange={(e) => updateEditingField('examination_schedule', e.target.value)}
                       rows={3}
                     />
+                  </div>
+
+                  {/* 담당자 메모 */}
+                  <div className="md:col-span-2">
+                    <Label htmlFor="manager-memo">담당자 메모</Label>
+                    <Textarea
+                      id="manager-memo"
+                      placeholder="담당자 메모를 입력하세요"
+                      value={selectedPatientDetail?.memo1 || ''}
+                      onChange={(e) => updateEditingField('memo1', e.target.value)}
+                      rows={3}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      일별 환자 관리 현황의 메모칸과 연동됩니다
+                    </p>
                   </div>
 
                   {/* 일정 정보 */}
