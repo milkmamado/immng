@@ -447,7 +447,9 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               disabled
             >
               <SelectTrigger className="bg-muted">
-                <SelectValue placeholder="API에서 자동 입력" />
+                <SelectValue>
+                  {formData.diagnosis_category || "API에서 자동 입력"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="z-[100] bg-background">
                 {diagnosisCategoryOptions.map(option => (
@@ -468,7 +470,9 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               disabled={!formData.diagnosis_category}
             >
               <SelectTrigger className={!formData.diagnosis_category ? "bg-muted" : ""}>
-                <SelectValue placeholder={formData.diagnosis_category ? "API에서 자동 입력" : "대분류를 먼저 선택하세요"} />
+                <SelectValue>
+                  {formData.diagnosis_detail || (formData.diagnosis_category ? "API에서 자동 입력" : "대분류를 먼저 선택하세요")}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="z-[100] bg-background">
                 {diagnosisDetailOptions.map(option => (
@@ -489,7 +493,9 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               disabled
             >
               <SelectTrigger className="bg-muted">
-                <SelectValue placeholder="API에서 자동 입력" />
+                <SelectValue>
+                  {formData.hospital_category || "API에서 자동 입력"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="z-[100] bg-background">
                 {hospitalCategoryOptions.map(option => (
@@ -510,7 +516,9 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               disabled={!formData.hospital_category}
             >
               <SelectTrigger className={!formData.hospital_category ? "bg-muted" : ""}>
-                <SelectValue placeholder={formData.hospital_category ? "API에서 자동 입력" : "대분류를 먼저 선택하세요"} />
+                <SelectValue>
+                  {formData.hospital_branch || (formData.hospital_category ? "API에서 자동 입력" : "대분류를 먼저 선택하세요")}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="z-[100] bg-background">
                 {hospitalBranchOptions.map(option => (
