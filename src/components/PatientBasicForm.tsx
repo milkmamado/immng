@@ -49,7 +49,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     memo2: '',                  // 메모2
     
     // 기타 필드 (기존 유지)
-    birth_date: '',
     counselor: '',
     diet_info: '',
     korean_doctor: '',
@@ -93,7 +92,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         manager_name: patient.manager_name || '',
         memo1: patient.memo1 || '',
         memo2: patient.memo2 || '',
-        birth_date: patient.birth_date || '',
         counselor: patient.counselor || '',
         diet_info: patient.diet_info || '',
         korean_doctor: patient.korean_doctor || '',
@@ -242,23 +240,12 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         manager_name: formData.manager_name || null,
         memo1: formData.memo1 || null,
         memo2: formData.memo2 || null,
-        birth_date: formData.birth_date || null,
         counselor: formData.counselor || null,
         diet_info: formData.diet_info || null,
         korean_doctor: formData.korean_doctor || null,
         western_doctor: formData.western_doctor || null,
         assigned_manager: user.id
       };
-
-      if (!patient) {
-        // 새 환자 등록 시 자동으로 환자번호 생성
-        const { data: generatedData, error: generateError } = await supabase
-          .rpc('generate_patient_number');
-        
-        if (generateError) throw generateError;
-        
-        patientData.patient_number = generatedData;
-      }
 
       if (patient) {
         const { error } = await supabase
@@ -310,7 +297,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         manager_name: '',
         memo1: '',
         memo2: '',
-        birth_date: '',
         counselor: '',
         diet_info: '',
         korean_doctor: '',
@@ -564,19 +550,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
           <Badge variant="outline">수동입력</Badge>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* 환자번호 - 수정 시에만 표시 */}
-          {patient && (
-            <div>
-              <Label htmlFor="patient_number">환자번호</Label>
-              <Input
-                id="patient_number"
-                value={patient.patient_number}
-                disabled
-                className="bg-muted"
-              />
-            </div>
-          )}
-
           {/* 유입/실패 */}
           <div>
             <Label htmlFor="inflow_status">유입상태 *</Label>
@@ -675,18 +648,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               value={formData.manager_name}
               onChange={handleInputChange}
               placeholder="담당자"
-            />
-          </div>
-
-          {/* 생년월일 */}
-          <div>
-            <Label htmlFor="birth_date">생년월일</Label>
-            <Input
-              id="birth_date"
-              name="birth_date"
-              type="date"
-              value={formData.birth_date}
-              onChange={handleInputChange}
             />
           </div>
 

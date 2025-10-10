@@ -14,7 +14,7 @@ import { format } from "date-fns";
 
 interface Patient {
   id: string;
-  patient_number: string;
+  customer_number?: string;
   name: string;
   phone?: string;
   age?: number;
@@ -27,7 +27,6 @@ interface Patient {
   last_status_date?: string;
   days_since_last_check: number;
   risk_level: "아웃" | "아웃위기";
-  customer_number?: string;
   visit_type?: string;
   counselor?: string;
   korean_doctor?: string;
@@ -523,7 +522,7 @@ export default function RiskManagement() {
                         </span>
                       </div>
                       <div className="flex gap-4 text-sm text-muted-foreground">
-                        <span>환자번호: {patient.patient_number}</span>
+                        <span>고객번호: {patient.customer_number || '-'}</span>
                         {patient.age && <span>나이: {patient.age}세</span>}
                         {patient.gender && <span>성별: {patient.gender}</span>}
                       </div>
@@ -642,10 +641,6 @@ export default function RiskManagement() {
                     <div className="flex justify-between">
                       <span className="font-medium">이름:</span>
                       <span>{selectedPatientDetail.name}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium">환자번호:</span>
-                      <span>{selectedPatientDetail.patient_number}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">고객번호:</span>

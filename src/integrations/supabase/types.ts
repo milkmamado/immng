@@ -498,7 +498,6 @@ export type Database = {
           admission_date: string | null
           age: number | null
           assigned_manager: string
-          birth_date: string | null
           counselor: string | null
           created_at: string
           crm_memo: string | null
@@ -528,7 +527,6 @@ export type Database = {
           memo2: string | null
           monthly_avg_days: number | null
           name: string
-          patient_number: string
           payment_amount: number | null
           phone: string | null
           referral_source: string | null
@@ -544,7 +542,6 @@ export type Database = {
           admission_date?: string | null
           age?: number | null
           assigned_manager: string
-          birth_date?: string | null
           counselor?: string | null
           created_at?: string
           crm_memo?: string | null
@@ -574,7 +571,6 @@ export type Database = {
           memo2?: string | null
           monthly_avg_days?: number | null
           name: string
-          patient_number: string
           payment_amount?: number | null
           phone?: string | null
           referral_source?: string | null
@@ -590,7 +586,6 @@ export type Database = {
           admission_date?: string | null
           age?: number | null
           assigned_manager?: string
-          birth_date?: string | null
           counselor?: string | null
           created_at?: string
           crm_memo?: string | null
@@ -620,7 +615,6 @@ export type Database = {
           memo2?: string | null
           monthly_avg_days?: number | null
           name?: string
-          patient_number?: string
           payment_amount?: number | null
           phone?: string | null
           referral_source?: string | null
@@ -860,52 +854,19 @@ export type Database = {
           age: number | null
           assigned_manager: string | null
           created_at: string | null
-          detailed_diagnosis: string | null
+          diagnosis_category: string | null
+          diagnosis_detail: string | null
           gender: string | null
           id: string | null
           inflow_status: string | null
           last_visit_date: string | null
+          manager_email: string | null
           manager_name: string | null
           name: string | null
-          patient_number: string | null
           payment_amount: number | null
           phone: string | null
           updated_at: string | null
           visit_type: string | null
-        }
-        Insert: {
-          age?: number | null
-          assigned_manager?: string | null
-          created_at?: string | null
-          detailed_diagnosis?: string | null
-          gender?: string | null
-          id?: string | null
-          inflow_status?: string | null
-          last_visit_date?: string | null
-          manager_name?: string | null
-          name?: string | null
-          patient_number?: string | null
-          payment_amount?: number | null
-          phone?: string | null
-          updated_at?: string | null
-          visit_type?: string | null
-        }
-        Update: {
-          age?: number | null
-          assigned_manager?: string | null
-          created_at?: string | null
-          detailed_diagnosis?: string | null
-          gender?: string | null
-          id?: string | null
-          inflow_status?: string | null
-          last_visit_date?: string | null
-          manager_name?: string | null
-          name?: string | null
-          patient_number?: string | null
-          payment_amount?: number | null
-          phone?: string | null
-          updated_at?: string | null
-          visit_type?: string | null
         }
         Relationships: []
       }

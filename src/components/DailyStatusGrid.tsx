@@ -20,7 +20,7 @@ interface AdmissionCycle {
 interface Patient {
   id: string;
   name: string;
-  patient_number: string;
+  customer_number?: string;
   diagnosis?: string;
   detailed_diagnosis?: string;
   korean_doctor?: string;
@@ -763,14 +763,14 @@ export function DailyStatusGrid({
                 <div>
                   <Label className="text-muted-foreground">환자명</Label>
                   <p className="font-medium">{selectedPatientDetail.name}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">환자번호</Label>
-                  <p className="font-medium">{selectedPatientDetail.patient_number}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">담당자</Label>
-                  <p className="font-medium">{selectedPatientDetail.manager_name || '-'}</p>
+                 </div>
+                 <div>
+                   <Label className="text-muted-foreground">고객번호</Label>
+                   <p className="font-medium">{selectedPatientDetail.customer_number || '-'}</p>
+                 </div>
+                 <div>
+                   <Label className="text-muted-foreground">담당자</Label>
+                   <p className="font-medium">{selectedPatientDetail.manager_name || '-'}</p>
                 </div>
               </div>
 

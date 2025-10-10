@@ -17,7 +17,6 @@ import { Users, Search, Plus, Check, X } from "lucide-react";
 interface Patient {
   id: string;
   name: string;
-  patient_number: string;
   customer_number?: string;
   phone?: string;
   age?: number;
@@ -101,7 +100,7 @@ export default function PatientListManagement() {
   useEffect(() => {
     const filtered = patients.filter(patient =>
       patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.patient_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (patient.customer_number && patient.customer_number.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (patient.phone && patient.phone.includes(searchTerm)) ||
       (patient.manager_name && patient.manager_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (patient.western_doctor && patient.western_doctor.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -831,17 +830,6 @@ export default function PatientListManagement() {
                     <div className="flex justify-between">
                       <span className="font-medium">고객번호:</span>
                       <span>{selectedPatientDetail?.customer_number || '-'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium">환자번호:</span>
-                      <span>{selectedPatientDetail?.patient_number || '-'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium">생년월일:</span>
-                      <span>
-                        {(selectedPatientDetail as any)?.birth_date ? 
-                          new Date((selectedPatientDetail as any).birth_date).toLocaleDateString('ko-KR') : '-'}
-                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">연락처:</span>

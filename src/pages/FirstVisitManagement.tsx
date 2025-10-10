@@ -16,9 +16,7 @@ import { Input } from "@/components/ui/input";
 interface Patient {
   id: string;
   name: string;
-  patient_number: string;
   customer_number?: string;
-  birth_date?: string;
   phone?: string;
   gender?: string;
   age?: number;
@@ -150,7 +148,7 @@ export default function FirstVisitManagement() {
     const search = searchTerm.toLowerCase();
     return (
       patient.name.toLowerCase().includes(search) ||
-      patient.patient_number.toLowerCase().includes(search) ||
+      (patient.customer_number && patient.customer_number.toLowerCase().includes(search)) ||
       (patient.manager_name && patient.manager_name.toLowerCase().includes(search)) ||
       (patient.western_doctor && patient.western_doctor.toLowerCase().includes(search)) ||
       (patient.korean_doctor && patient.korean_doctor.toLowerCase().includes(search)) ||
@@ -362,13 +360,6 @@ export default function FirstVisitManagement() {
                   <div className="flex justify-between">
                     <span className="font-medium">고객번호:</span>
                     <span>{selectedPatientDetail?.customer_number || '-'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">생년월일:</span>
-                    <span>
-                      {selectedPatientDetail?.birth_date ? 
-                        new Date(selectedPatientDetail.birth_date).toLocaleDateString('ko-KR') : '-'}
-                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">연락처:</span>

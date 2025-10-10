@@ -10,7 +10,7 @@ interface DashboardStats {
   riskPatients: Array<{
     id: string;
     name: string;
-    patient_number: string;
+    customer_number?: string;
     manager_name?: string;
     last_visit_date?: string;
   }>;
@@ -70,7 +70,7 @@ export function Dashboard() {
       // 환자 통계 - 역할에 따라 필터링
       let patientsQuery = supabase
         .from('patients')
-        .select('id, name, patient_number, assigned_manager, manager_name, last_visit_date, payment_amount, created_at')
+        .select('id, name, customer_number, assigned_manager, manager_name, last_visit_date, payment_amount, created_at')
         .eq('inflow_status', '유입');
 
       if (!isAdmin) {
@@ -250,7 +250,7 @@ export function Dashboard() {
                   <div>
                     <div className="font-medium">{patient.name}</div>
                     <div className="text-sm text-muted-foreground">
-                      {patient.patient_number}
+                      {patient.customer_number || '-'}
                     </div>
                     {patient.manager_name && (
                       <div className="text-xs text-muted-foreground">
