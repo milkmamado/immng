@@ -523,14 +523,11 @@ export type Database = {
           last_visit_date: string | null
           management_status: string | null
           manager_name: string | null
-          memo1: string | null
-          memo2: string | null
           monthly_avg_days: number | null
           name: string
           patient_or_guardian: string | null
           payment_amount: number | null
           phone: string | null
-          referral_source: string | null
           resident_number_masked: string | null
           treatment_plan: string | null
           updated_at: string
@@ -568,14 +565,11 @@ export type Database = {
           last_visit_date?: string | null
           management_status?: string | null
           manager_name?: string | null
-          memo1?: string | null
-          memo2?: string | null
           monthly_avg_days?: number | null
           name: string
           patient_or_guardian?: string | null
           payment_amount?: number | null
           phone?: string | null
-          referral_source?: string | null
           resident_number_masked?: string | null
           treatment_plan?: string | null
           updated_at?: string
@@ -613,14 +607,11 @@ export type Database = {
           last_visit_date?: string | null
           management_status?: string | null
           manager_name?: string | null
-          memo1?: string | null
-          memo2?: string | null
           monthly_avg_days?: number | null
           name?: string
           patient_or_guardian?: string | null
           payment_amount?: number | null
           phone?: string | null
-          referral_source?: string | null
           resident_number_masked?: string | null
           treatment_plan?: string | null
           updated_at?: string
