@@ -93,6 +93,11 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         korean_doctor: patient.korean_doctor || '',
         western_doctor: patient.western_doctor || ''
       });
+      
+      // manager_name이 없으면 현재 사용자 이름 가져오기
+      if (!patient.manager_name) {
+        fetchCurrentUserName();
+      }
     } else if (initialData) {
       // 조회 다이얼로그에서 넘어온 초기 데이터 설정
       fetchCurrentUserName();
