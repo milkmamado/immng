@@ -47,12 +47,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     manager_name: '',           // 담당자(상담실장)
     memo1: '',                  // 메모1
     memo2: '',                  // 메모2
-    
-    // 기타 필드 (기존 유지)
-    counselor: '',
-    diet_info: '',
-    korean_doctor: '',
-    western_doctor: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -91,11 +85,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         guardian_phone: patient.guardian_phone || '',
         manager_name: patient.manager_name || '',
         memo1: patient.memo1 || '',
-        memo2: patient.memo2 || '',
-        counselor: patient.counselor || '',
-        diet_info: patient.diet_info || '',
-        korean_doctor: patient.korean_doctor || '',
-        western_doctor: patient.western_doctor || ''
+        memo2: patient.memo2 || ''
       });
     } else if (initialData) {
       // 조회 다이얼로그에서 넘어온 초기 데이터 설정
@@ -240,10 +230,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         manager_name: formData.manager_name || null,
         memo1: formData.memo1 || null,
         memo2: formData.memo2 || null,
-        counselor: formData.counselor || null,
-        diet_info: formData.diet_info || null,
-        korean_doctor: formData.korean_doctor || null,
-        western_doctor: formData.western_doctor || null,
         assigned_manager: user.id
       };
 
@@ -296,11 +282,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         guardian_phone: '',
         manager_name: '',
         memo1: '',
-        memo2: '',
-        counselor: '',
-        diet_info: '',
-        korean_doctor: '',
-        western_doctor: ''
+        memo2: ''
       });
 
       onClose();
@@ -651,61 +633,8 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
             />
           </div>
 
-          {/* 환자 or 보호자 */}
-          <div>
-            <Label htmlFor="counselor">환자 or 보호자</Label>
-            <Select 
-              value={formData.counselor} 
-              onValueChange={(value) => handleSelectChange('counselor', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="선택하세요" />
-              </SelectTrigger>
-              <SelectContent className="z-[100] bg-background">
-                <SelectItem value="환자">환자</SelectItem>
-                <SelectItem value="보호자">보호자</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* 식이 */}
-          <div>
-            <Label htmlFor="diet_info">식이</Label>
-            <Input
-              id="diet_info"
-              name="diet_info"
-              value={formData.diet_info}
-              onChange={handleInputChange}
-              placeholder="식이 정보"
-            />
-          </div>
-
-          {/* 한방주치의 */}
-          <div>
-            <Label htmlFor="korean_doctor">한방주치의</Label>
-            <Input
-              id="korean_doctor"
-              name="korean_doctor"
-              value={formData.korean_doctor}
-              onChange={handleInputChange}
-              placeholder="한방주치의"
-            />
-          </div>
-
-          {/* 양방주치의 */}
-          <div>
-            <Label htmlFor="western_doctor">양방주치의</Label>
-            <Input
-              id="western_doctor"
-              name="western_doctor"
-              value={formData.western_doctor}
-              onChange={handleInputChange}
-              placeholder="양방주치의"
-            />
-          </div>
-
           {/* 메모1 */}
-          <div className="md:col-span-2 lg:col-span-3">
+          <div className="md:col-span-2 lg:grid-cols-3">
             <Label htmlFor="memo1">메모1</Label>
             <Textarea
               id="memo1"

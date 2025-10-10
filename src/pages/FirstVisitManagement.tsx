@@ -17,23 +17,27 @@ interface Patient {
   id: string;
   name: string;
   customer_number?: string;
+  resident_number_masked?: string;
   phone?: string;
   gender?: string;
   age?: number;
   address?: string;
   inflow_status?: string;
+  first_visit_date?: string;
   visit_type?: string;
   visit_motivation?: string;
   diagnosis_category?: string;
   diagnosis_detail?: string;
-  counselor?: string;
   hospital_category?: string;
   hospital_branch?: string;
-  diet_info?: string;
-  korean_doctor?: string;
+  referral_source?: string;
+  guardian_name?: string;
+  guardian_relationship?: string;
+  guardian_phone?: string;
   manager_name?: string;
-  western_doctor?: string;
   crm_memo?: string;
+  memo1?: string;
+  memo2?: string;
   created_at: string;
 }
 
@@ -150,8 +154,6 @@ export default function FirstVisitManagement() {
       patient.name.toLowerCase().includes(search) ||
       (patient.customer_number && patient.customer_number.toLowerCase().includes(search)) ||
       (patient.manager_name && patient.manager_name.toLowerCase().includes(search)) ||
-      (patient.western_doctor && patient.western_doctor.toLowerCase().includes(search)) ||
-      (patient.korean_doctor && patient.korean_doctor.toLowerCase().includes(search)) ||
       (patient.visit_type && patient.visit_type.toLowerCase().includes(search)) ||
       (patient.hospital_category && patient.hospital_category.toLowerCase().includes(search))
     );
@@ -239,12 +241,8 @@ export default function FirstVisitManagement() {
                     <TableCell className="max-w-32 truncate">
                       {patient.diagnosis_detail || '-'}
                     </TableCell>
-                    <TableCell>{patient.counselor || '-'}</TableCell>
                     <TableCell>{patient.hospital_category || '-'}</TableCell>
-                    <TableCell>{patient.diet_info || '-'}</TableCell>
-                    <TableCell>{patient.korean_doctor || '-'}</TableCell>
                     <TableCell>{patient.manager_name || '-'}</TableCell>
-                    <TableCell>{patient.western_doctor || '-'}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         {patient.crm_memo ? (
@@ -348,131 +346,133 @@ export default function FirstVisitManagement() {
           </DialogHeader>
           <div className="mt-4 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
+              {/* API 자동입력 정보 */}
+              <Card className="md:col-span-2">
                 <CardHeader>
-                  <CardTitle className="text-lg">기본 정보</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="font-medium">이름:</span>
-                    <span>{selectedPatientDetail?.name || '-'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">고객번호:</span>
-                    <span>{selectedPatientDetail?.customer_number || '-'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">연락처:</span>
-                    <span>{selectedPatientDetail?.phone || '-'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">성별/나이:</span>
-                    <span>
-                      {selectedPatientDetail?.gender || '-'} / {selectedPatientDetail?.age ? `${selectedPatientDetail.age}세` : '-'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">주소:</span>
-                    <span>{selectedPatientDetail?.address || '-'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">등록일:</span>
-                    <span>
-                      {selectedPatientDetail?.created_at ? 
-                        new Date(selectedPatientDetail.created_at).toLocaleDateString('ko-KR') : '-'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">유입/실패:</span>
-                    <Badge variant={getInflowStatusColor(selectedPatientDetail?.inflow_status)}>
-                      {selectedPatientDetail?.inflow_status || '-'}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">입원/외래:</span>
-                    <span>{selectedPatientDetail?.visit_type || '-'}</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">진료 정보</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="font-medium">진단명 (대분류):</span>
-                    <span>{selectedPatientDetail?.diagnosis_category || '-'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">진단명 (중분류):</span>
-                    <span>{selectedPatientDetail?.diagnosis_detail || '-'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">한방주치의:</span>
-                    <span>{selectedPatientDetail?.korean_doctor || '-'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">양방주치의:</span>
-                    <span>{selectedPatientDetail?.western_doctor || '-'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">환자 or 보호자:</span>
-                    <span>{selectedPatientDetail?.counselor || '-'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">담당자(상담실장):</span>
-                    <span>{selectedPatientDetail?.manager_name || '-'}</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">추가 정보</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="font-medium">이전병원 (대분류):</span>
-                    <span>{selectedPatientDetail?.hospital_category || '-'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">이전병원 (중분류):</span>
-                    <span>{selectedPatientDetail?.hospital_branch || '-'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">식이:</span>
-                    <span>{selectedPatientDetail?.diet_info || '-'}</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">내원동기</CardTitle>
+                  <CardTitle className="text-lg">API 자동입력 정보</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm leading-relaxed">
-                    {selectedPatientDetail?.visit_motivation || '내원동기가 기록되지 않았습니다.'}
-                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="flex justify-between">
+                      <span className="font-medium">고객명:</span>
+                      <span>{selectedPatientDetail?.name || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">고객번호:</span>
+                      <span>{selectedPatientDetail?.customer_number || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">주민번호:</span>
+                      <span>{selectedPatientDetail?.resident_number_masked || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">휴대폰번호:</span>
+                      <span>{selectedPatientDetail?.phone || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">성별:</span>
+                      <span>{selectedPatientDetail?.gender || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">나이:</span>
+                      <span>{selectedPatientDetail?.age ? `${selectedPatientDetail.age}세` : '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">진단명 (대분류):</span>
+                      <span>{selectedPatientDetail?.diagnosis_category || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">진단명 (중분류):</span>
+                      <span>{selectedPatientDetail?.diagnosis_detail || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">이전병원 (대분류):</span>
+                      <span>{selectedPatientDetail?.hospital_category || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">이전병원 (중분류):</span>
+                      <span>{selectedPatientDetail?.hospital_branch || '-'}</span>
+                    </div>
+                    <div className="flex justify-between md:col-span-2 lg:col-span-3">
+                      <span className="font-medium">주소:</span>
+                      <span className="text-right">{selectedPatientDetail?.address || '-'}</span>
+                    </div>
+                    <div className="flex flex-col md:col-span-2 lg:col-span-3">
+                      <span className="font-medium mb-2">내원동기:</span>
+                      <p className="text-sm leading-relaxed bg-muted p-3 rounded">
+                        {selectedPatientDetail?.visit_motivation || '내원동기가 기록되지 않았습니다.'}
+                      </p>
+                    </div>
+                    <div className="flex flex-col md:col-span-2 lg:col-span-3">
+                      <span className="font-medium mb-2">CRM메모:</span>
+                      <pre className="text-sm leading-relaxed bg-muted p-3 rounded whitespace-pre-wrap">
+                        {selectedPatientDetail?.crm_memo || 'CRM메모가 기록되지 않았습니다.'}
+                      </pre>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* 추가 입력 정보 */}
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle className="text-lg">추가 입력 정보</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="flex justify-between">
+                      <span className="font-medium">유입상태:</span>
+                      <Badge variant={getInflowStatusColor(selectedPatientDetail?.inflow_status)}>
+                        {selectedPatientDetail?.inflow_status || '-'}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">초진일자:</span>
+                      <span>
+                        {selectedPatientDetail?.first_visit_date ? 
+                          new Date(selectedPatientDetail.first_visit_date).toLocaleDateString('ko-KR') : '-'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">내원형태:</span>
+                      <span>{selectedPatientDetail?.visit_type || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">의뢰처:</span>
+                      <span>{selectedPatientDetail?.referral_source || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">보호자 이름:</span>
+                      <span>{selectedPatientDetail?.guardian_name || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">보호자 관계:</span>
+                      <span>{selectedPatientDetail?.guardian_relationship || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">보호자 연락처:</span>
+                      <span>{selectedPatientDetail?.guardian_phone || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">담당자:</span>
+                      <span>{selectedPatientDetail?.manager_name || '-'}</span>
+                    </div>
+                    <div className="flex flex-col md:col-span-2 lg:col-span-3">
+                      <span className="font-medium mb-2">메모1:</span>
+                      <p className="text-sm leading-relaxed bg-muted p-3 rounded">
+                        {selectedPatientDetail?.memo1 || '-'}
+                      </p>
+                    </div>
+                    <div className="flex flex-col md:col-span-2 lg:col-span-3">
+                      <span className="font-medium mb-2">메모2:</span>
+                      <p className="text-sm leading-relaxed bg-muted p-3 rounded">
+                        {selectedPatientDetail?.memo2 || '-'}
+                      </p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
-
-            {selectedPatientDetail?.crm_memo && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">CRM메모</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-muted p-4 rounded-lg">
-                    <pre className="whitespace-pre-wrap text-sm leading-relaxed">
-                      {selectedPatientDetail.crm_memo}
-                    </pre>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
         </DialogContent>
       </Dialog>
