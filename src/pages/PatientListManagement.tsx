@@ -408,9 +408,9 @@ export default function PatientListManagement() {
 
       if (error) throw error;
 
-      // Update patients list
+      // Update patients list with management_status to trigger background color update
       setPatients(prev => prev.map(p => 
-        p.id === selectedPatientDetail.id ? { ...p, [field]: value } : p
+        p.id === selectedPatientDetail.id ? { ...p, [field]: value, management_status: field === 'management_status' ? value : p.management_status } : p
       ));
 
       // Remove from editing fields
@@ -426,6 +426,53 @@ export default function PatientListManagement() {
       });
     } catch (error) {
       console.error('Error updating patient field:', error);
+      toast({
+        title: "오류",
+        description: "정보 저장에 실패했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveAllEditingFields = async () => {
+    if (!selectedPatientDetail || Object.keys(editingFields).length === 0) return;
+
+    // 관리자 권한 체크
+    if (userRole === 'admin') {
+      toast({
+        title: "권한 없음",
+        description: "관리자는 환자 정보를 수정할 수 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // 모든 편집된 필드를 한 번에 업데이트
+      const { error } = await supabase
+        .from('patients')
+        .update(editingFields)
+        .eq('id', selectedPatientDetail.id);
+
+      if (error) throw error;
+
+      // Update patients list including management_status
+      setPatients(prev => prev.map(p => 
+        p.id === selectedPatientDetail.id ? { ...p, ...editingFields } : p
+      ));
+
+      // Update selected patient detail
+      setSelectedPatientDetail(prev => prev ? { ...prev, ...editingFields } : null);
+
+      // Clear editing fields
+      setEditingFields({});
+
+      toast({
+        title: "성공",
+        description: "정보가 저장되었습니다.",
+      });
+    } catch (error) {
+      console.error('Error updating patient fields:', error);
       toast({
         title: "오류",
         description: "정보 저장에 실패했습니다.",
@@ -739,10 +786,11 @@ export default function PatientListManagement() {
               <TableBody>
                 {filteredPatients.map((patient) => {
                   const bgColor = getManagementStatusBgColor((patient as any).management_status);
+                  const isOut = isExcludedFromTracking((patient as any).management_status);
                   return (
                     <TableRow 
                       key={patient.id}
-                      className={`cursor-pointer hover:bg-muted/50 ${bgColor}`}
+                      className={`cursor-pointer hover:bg-muted/50 ${bgColor} ${isOut ? 'italic' : ''}`}
                       onClick={() => {
                         setSelectedPatientDetail(patient);
                         setViewMode('full');
@@ -1271,12 +1319,7 @@ export default function PatientListManagement() {
                 
                 <div className="flex justify-end gap-2 pt-4">
                   <Button 
-                    onClick={() => {
-                      // 모든 편집된 필드 저장
-                      Object.entries(editingFields).forEach(([field, value]) => {
-                        savePatientField(field, value);
-                      });
-                    }}
+                    onClick={saveAllEditingFields}
                     disabled={Object.keys(editingFields).length === 0 || userRole === 'admin'}
                   >
                     수정 저장
