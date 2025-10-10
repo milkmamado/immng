@@ -23,7 +23,6 @@ interface Patient {
   age?: number;
   gender?: string;
   address?: string;
-  first_visit_date?: string;
   last_visit_date?: string;
   inflow_status?: string;
   visit_type?: string;
@@ -806,10 +805,7 @@ export default function PatientListManagement() {
                       {patient.diagnosis_category || '-'}
                     </TableCell>
                     <TableCell>
-                      {patient.first_visit_date ? 
-                        new Date(patient.first_visit_date).toLocaleDateString('ko-KR') : 
-                        new Date(patient.created_at).toLocaleDateString('ko-KR')
-                      }
+                      {new Date(patient.created_at).toLocaleDateString('ko-KR')}
                     </TableCell>
                     <TableCell>{patient.insurance_type || '-'}</TableCell>
                     <TableCell className="max-w-32 truncate">
@@ -1086,16 +1082,6 @@ export default function PatientListManagement() {
                     </Select>
                   </div>
 
-                  {/* 초진일자 */}
-                  <div>
-                    <Label>초진일자</Label>
-                    <Input
-                      type="date"
-                      value={selectedPatientDetail?.first_visit_date || ''}
-                      onChange={(e) => updateEditingField('first_visit_date', e.target.value)}
-                    />
-                  </div>
-
                   {/* 내원형태 */}
                   <div>
                     <Label>내원형태</Label>
@@ -1297,11 +1283,8 @@ export default function PatientListManagement() {
                     <Label>유입일</Label>
                     <div className="p-2 bg-muted rounded-md h-10 flex items-center">
                       <span className="text-sm">
-                        {selectedPatientDetail?.first_visit_date ? 
-                          new Date(selectedPatientDetail.first_visit_date).toLocaleDateString('ko-KR') :
-                          (selectedPatientDetail?.created_at ? 
-                            new Date(selectedPatientDetail.created_at).toLocaleDateString('ko-KR') : '-')
-                        }
+                        {selectedPatientDetail?.created_at ? 
+                          new Date(selectedPatientDetail.created_at).toLocaleDateString('ko-KR') : '-'}
                       </span>
                     </div>
                   </div>
