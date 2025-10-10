@@ -5,9 +5,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Check, X, Trash2 } from "lucide-react";
 import { PatientBasicForm } from "@/components/PatientBasicForm";
 
 interface AdmissionCycle {
@@ -97,6 +100,10 @@ export function DailyStatusGrid({
       revenue: number;
     };
   } | null>(null);
+  const [treatmentPlans, setTreatmentPlans] = useState<any[]>([]);
+  const [newTreatmentDetail, setNewTreatmentDetail] = useState('');
+  const [newTreatmentAmount, setNewTreatmentAmount] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -261,6 +268,85 @@ export function DailyStatusGrid({
     const date = new Date(year, month - 1, day);
     const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
     return dayNames[date.getDay()];
+  };
+
+  // 치료 계획 가져오기
+  const fetchTreatmentPlans = async (patientId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('treatment_plans')
+        .select('*')
+        .eq('patient_id', patientId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTreatmentPlans(data || []);
+    } catch (error) {
+      console.error('Error fetching treatment plans:', error);
+    }
+  };
+
+  // 치료 계획 추가
+  const addTreatmentPlan = async () => {
+    if (!selectedPatientDetail || !newTreatmentDetail.trim() || !newTreatmentAmount.trim()) {
+      return;
+    }
+
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('로그인이 필요합니다.');
+
+      const { error } = await supabase
+        .from('treatment_plans')
+        .insert({
+          patient_id: selectedPatientDetail.id,
+          treatment_detail: newTreatmentDetail.trim(),
+          treatment_amount: parseFloat(newTreatmentAmount),
+          created_by: user.user.id
+        });
+
+      if (error) throw error;
+
+      setNewTreatmentDetail('');
+      setNewTreatmentAmount('');
+      setShowAddForm(false);
+      fetchTreatmentPlans(selectedPatientDetail.id);
+    } catch (error) {
+      console.error('Error adding treatment plan:', error);
+    }
+  };
+
+  // 수납 상태 토글
+  const togglePaymentStatus = async (treatmentPlan: any) => {
+    try {
+      const { error } = await supabase
+        .from('treatment_plans')
+        .update({
+          is_paid: !treatmentPlan.is_paid,
+          payment_date: !treatmentPlan.is_paid ? new Date().toISOString().split('T')[0] : null
+        })
+        .eq('id', treatmentPlan.id);
+
+      if (error) throw error;
+      fetchTreatmentPlans(selectedPatientDetail!.id);
+    } catch (error) {
+      console.error('Error toggling payment status:', error);
+    }
+  };
+
+  // 치료 계획 삭제
+  const deleteTreatmentPlan = async (planId: string) => {
+    try {
+      const { error } = await supabase
+        .from('treatment_plans')
+        .delete()
+        .eq('id', planId);
+
+      if (error) throw error;
+      fetchTreatmentPlans(selectedPatientDetail!.id);
+    } catch (error) {
+      console.error('Error deleting treatment plan:', error);
+    }
   };
 
   // 환자 통계 계산
@@ -600,6 +686,7 @@ export function DailyStatusGrid({
                           setSelectedPatientDetail(patient);
                           setEditingManagementStatus(patient.management_status || '관리 중');
                           calculatePatientStats(patient.id);
+                          fetchTreatmentPlans(patient.id);
                         }}
                       >
                         {patient.name}
@@ -751,8 +838,14 @@ export function DailyStatusGrid({
       </Dialog>
 
       {/* 환자 상세정보 다이얼로그 */}
-      <Dialog open={!!selectedPatientDetail} onOpenChange={() => setSelectedPatientDetail(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={!!selectedPatientDetail} onOpenChange={() => {
+        setSelectedPatientDetail(null);
+        setTreatmentPlans([]);
+        setShowAddForm(false);
+        setNewTreatmentDetail('');
+        setNewTreatmentAmount('');
+      }}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedPatientDetail?.name} - 환자 상세정보</DialogTitle>
           </DialogHeader>
@@ -764,6 +857,139 @@ export function DailyStatusGrid({
                 patient={selectedPatientDetail} 
                 onClose={() => setSelectedPatientDetail(null)} 
               />
+
+              {/* 치료 계획 관리 섹션 */}
+              <div className="border-t pt-6">
+                <h2 className="text-xl font-semibold mb-4 text-primary">치료 계획 관리</h2>
+                
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">치료 계획 목록</h3>
+                    {!showAddForm && (
+                      <Button 
+                        onClick={() => setShowAddForm(true)}
+                        size="sm"
+                        className="gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        새 치료 계획 추가
+                      </Button>
+                    )}
+                  </div>
+
+                  {showAddForm && (
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label>치료상세</Label>
+                              <Input
+                                value={newTreatmentDetail}
+                                onChange={(e) => setNewTreatmentDetail(e.target.value)}
+                                placeholder="치료상세를 입력하세요"
+                              />
+                            </div>
+                            <div>
+                              <Label>치료금액</Label>
+                              <Input
+                                type="number"
+                                value={newTreatmentAmount}
+                                onChange={(e) => setNewTreatmentAmount(e.target.value)}
+                                placeholder="금액을 입력하세요"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setShowAddForm(false);
+                                setNewTreatmentDetail('');
+                                setNewTreatmentAmount('');
+                              }}
+                            >
+                              취소
+                            </Button>
+                            <Button onClick={addTreatmentPlan}>
+                              추가
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>치료상세</TableHead>
+                          <TableHead>치료금액</TableHead>
+                          <TableHead>수납여부</TableHead>
+                          <TableHead>수납일</TableHead>
+                          <TableHead>등록일</TableHead>
+                          <TableHead>작업</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {treatmentPlans.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                              등록된 치료 계획이 없습니다.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          treatmentPlans.map((plan) => (
+                            <TableRow key={plan.id}>
+                              <TableCell>{plan.treatment_detail}</TableCell>
+                              <TableCell className="font-medium">
+                                {plan.treatment_amount.toLocaleString()}원
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Switch
+                                    checked={plan.is_paid}
+                                    onCheckedChange={() => togglePaymentStatus(plan)}
+                                  />
+                                  {plan.is_paid ? (
+                                    <Badge variant="default" className="gap-1">
+                                      <Check className="h-3 w-3" />
+                                      수납완료
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="secondary" className="gap-1">
+                                      <X className="h-3 w-3" />
+                                      미수납
+                                    </Badge>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {plan.payment_date
+                                  ? new Date(plan.payment_date).toLocaleDateString('ko-KR')
+                                  : '-'}
+                              </TableCell>
+                              <TableCell>
+                                {new Date(plan.created_at).toLocaleDateString('ko-KR')}
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteTreatmentPlan(plan.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </div>
 
               {/* 활동 통계 */}
               {patientStats && (
