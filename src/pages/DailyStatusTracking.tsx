@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { ko } from "date-fns/locale";
+import { calculateDaysSinceLastCheck, calculateAutoManagementStatus, shouldAutoUpdateStatus } from "@/utils/patientStatusUtils";
 
 interface AdmissionCycle {
   id: string;
@@ -167,37 +168,20 @@ export default function DailyStatusTracking() {
         }
       });
 
-      const today = new Date();
-      
       // 각 환자의 상태를 자동으로 업데이트
       for (const patient of patientsData || []) {
         const lastCheckDate = lastCheckMap.get(patient.id);
-        let daysSinceCheck = 0;
-
-        if (!lastCheckDate) {
-          const createdDate = new Date(patient.created_at);
-          daysSinceCheck = Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-        } else {
-          const lastDate = new Date(lastCheckDate);
-          daysSinceCheck = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-        }
-
-        // 최종 상태(사망, 상태악화, 치료종료)는 자동 업데이트하지 않음
-        const finalStatuses = ['사망', '상태악화', '치료종료'];
-        if (finalStatuses.includes(patient.management_status)) {
+        
+        // 자동 업데이트 가능 여부 확인 (최종 상태 제외)
+        if (!shouldAutoUpdateStatus(patient.management_status, false)) {
           continue;
         }
 
-        let newManagementStatus = patient.management_status || "관리 중";
+        // 마지막 체크로부터 경과 일수 계산
+        const daysSinceCheck = calculateDaysSinceLastCheck(lastCheckDate, patient.created_at);
         
-        // 자동 상태 업데이트 로직 (관리 중, 아웃위기, 아웃만)
-        if (daysSinceCheck >= 21) {
-          newManagementStatus = "아웃";
-        } else if (daysSinceCheck >= 14) {
-          newManagementStatus = "아웃위기";
-        } else {
-          newManagementStatus = "관리 중";
-        }
+        // 경과 일수에 따른 새 상태 계산
+        const newManagementStatus = calculateAutoManagementStatus(daysSinceCheck);
 
         // management_status가 변경되었으면 업데이트
         if (patient.management_status !== newManagementStatus) {
