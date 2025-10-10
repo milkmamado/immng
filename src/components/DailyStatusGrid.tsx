@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { PatientBasicForm } from "@/components/PatientBasicForm";
 
 interface AdmissionCycle {
   id: string;
@@ -751,59 +752,22 @@ export function DailyStatusGrid({
 
       {/* 환자 상세정보 다이얼로그 */}
       <Dialog open={!!selectedPatientDetail} onOpenChange={() => setSelectedPatientDetail(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl">환자 상세 정보</DialogTitle>
+            <DialogTitle>{selectedPatientDetail?.name} - 환자 상세정보</DialogTitle>
           </DialogHeader>
           
           {selectedPatientDetail && (
             <div className="space-y-6">
-              {/* 기본 정보 */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-muted-foreground">환자명</Label>
-                  <p className="font-medium">{selectedPatientDetail.name}</p>
-                 </div>
-                 <div>
-                   <Label className="text-muted-foreground">고객번호</Label>
-                   <p className="font-medium">{selectedPatientDetail.customer_number || '-'}</p>
-                 </div>
-                 <div>
-                   <Label className="text-muted-foreground">담당자</Label>
-                   <p className="font-medium">{selectedPatientDetail.manager_name || '-'}</p>
-                </div>
-              </div>
+              {/* 환자 기본정보 폼 */}
+              <PatientBasicForm 
+                patient={selectedPatientDetail} 
+                onClose={() => setSelectedPatientDetail(null)} 
+              />
 
-              {/* 진료 정보 */}
-              <div className="space-y-3">
-                <h3 className="font-semibold">진료 정보</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-muted-foreground">진단명</Label>
-                    <p className="font-medium">{selectedPatientDetail.diagnosis || '-'}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">상세 진단</Label>
-                    <p className="font-medium">{selectedPatientDetail.detailed_diagnosis || '-'}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">한방 주치의</Label>
-                    <p className="font-medium">{selectedPatientDetail.korean_doctor || '-'}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">양방 주치의</Label>
-                    <p className="font-medium">{selectedPatientDetail.western_doctor || '-'}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">이전 병원</Label>
-                    <p className="font-medium">{selectedPatientDetail.previous_hospital || '-'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* 통계 정보 */}
+              {/* 활동 통계 */}
               {patientStats && (
-                <div className="space-y-3">
+                <div className="space-y-3 pt-6 border-t">
                   <h3 className="font-semibold">활동 통계</h3>
                   <div className="grid grid-cols-2 gap-4">
                     {/* 당월 통계 */}
@@ -870,13 +834,6 @@ export function DailyStatusGrid({
                   </div>
                 </div>
               )}
-
-              {/* 저장 버튼 */}
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button variant="outline" onClick={() => setSelectedPatientDetail(null)}>
-                  닫기
-                </Button>
-              </div>
             </div>
           )}
         </DialogContent>
