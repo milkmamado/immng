@@ -247,6 +247,11 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         assigned_manager: user.id
       };
 
+      // 새 환자 등록 시 유입일(first_visit_date)을 현재 날짜로 자동 설정
+      if (!patient) {
+        patientData.first_visit_date = new Date().toISOString().split('T')[0];
+      }
+
       if (patient) {
         const { error } = await supabase
           .from('patients')
