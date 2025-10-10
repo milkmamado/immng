@@ -35,6 +35,10 @@ interface Patient {
   guardian_relationship?: string;
   guardian_phone?: string;
   manager_name?: string;
+  patient_or_guardian?: string;
+  diet_info?: string;
+  korean_doctor?: string;
+  western_doctor?: string;
   crm_memo?: string;
   memo1?: string;
   memo2?: string;
@@ -155,6 +159,8 @@ export default function FirstVisitManagement() {
       (patient.customer_number && patient.customer_number.toLowerCase().includes(search)) ||
       (patient.manager_name && patient.manager_name.toLowerCase().includes(search)) ||
       (patient.visit_type && patient.visit_type.toLowerCase().includes(search)) ||
+      (patient.korean_doctor && patient.korean_doctor.toLowerCase().includes(search)) ||
+      (patient.western_doctor && patient.western_doctor.toLowerCase().includes(search)) ||
       (patient.hospital_category && patient.hospital_category.toLowerCase().includes(search))
     );
   });
@@ -241,27 +247,13 @@ export default function FirstVisitManagement() {
                     <TableCell className="max-w-32 truncate">
                       {patient.diagnosis_detail || '-'}
                     </TableCell>
+                    <TableCell>{patient.patient_or_guardian || '-'}</TableCell>
                     <TableCell>{patient.hospital_category || '-'}</TableCell>
+                    <TableCell className="max-w-32 truncate">{patient.diet_info || '-'}</TableCell>
+                    <TableCell>{patient.korean_doctor || '-'}</TableCell>
                     <TableCell>{patient.manager_name || '-'}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        {patient.crm_memo ? (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedPatient(patient);
-                            }}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            상세보기
-                          </Button>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </div>
-                    </TableCell>
+                    <TableCell>{patient.western_doctor || '-'}</TableCell>
+                    <TableCell className="max-w-32 truncate">{patient.crm_memo || '-'}</TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <div className="flex gap-2">
                         <Button
@@ -421,6 +413,14 @@ export default function FirstVisitManagement() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="flex justify-between">
+                      <span className="font-medium">환자 or 보호자:</span>
+                      <span>{selectedPatientDetail?.patient_or_guardian || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">식이:</span>
+                      <span>{selectedPatientDetail?.diet_info || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
                       <span className="font-medium">유입상태:</span>
                       <Badge variant={getInflowStatusColor(selectedPatientDetail?.inflow_status)}>
                         {selectedPatientDetail?.inflow_status || '-'}
@@ -456,6 +456,14 @@ export default function FirstVisitManagement() {
                     <div className="flex justify-between">
                       <span className="font-medium">담당자:</span>
                       <span>{selectedPatientDetail?.manager_name || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">한방주치의:</span>
+                      <span>{selectedPatientDetail?.korean_doctor || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">양방주치의:</span>
+                      <span>{selectedPatientDetail?.western_doctor || '-'}</span>
                     </div>
                     <div className="flex flex-col md:col-span-2 lg:col-span-3">
                       <span className="font-medium mb-2">메모1:</span>

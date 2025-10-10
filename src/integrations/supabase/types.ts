@@ -527,6 +527,7 @@ export type Database = {
           memo2: string | null
           monthly_avg_days: number | null
           name: string
+          patient_or_guardian: string | null
           payment_amount: number | null
           phone: string | null
           referral_source: string | null
@@ -571,6 +572,7 @@ export type Database = {
           memo2?: string | null
           monthly_avg_days?: number | null
           name: string
+          patient_or_guardian?: string | null
           payment_amount?: number | null
           phone?: string | null
           referral_source?: string | null
@@ -615,6 +617,7 @@ export type Database = {
           memo2?: string | null
           monthly_avg_days?: number | null
           name?: string
+          patient_or_guardian?: string | null
           payment_amount?: number | null
           phone?: string | null
           referral_source?: string | null
