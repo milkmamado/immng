@@ -40,7 +40,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     patient_or_guardian: '환자', // 환자 or 보호자
     diet_info: '',              // 식이
     inflow_status: '유입',      // 유입/실패
-    first_visit_date: '',       // 초진일자
     visit_type: '',             // 입원/외래
     guardian_name: '',          // 보호자 이름
     guardian_relationship: '', // 보호자 관계
@@ -84,7 +83,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         patient_or_guardian: patient.patient_or_guardian || '환자',
         diet_info: patient.diet_info || '',
         inflow_status: patient.inflow_status || '유입',
-        first_visit_date: patient.first_visit_date || '',
         visit_type: patient.visit_type || '',
         guardian_name: patient.guardian_name || '',
         guardian_relationship: patient.guardian_relationship || '',
@@ -211,7 +209,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         patient_or_guardian: formData.patient_or_guardian || null,
         diet_info: formData.diet_info || null,
         inflow_status: formData.inflow_status,
-        first_visit_date: formData.first_visit_date || null,
         visit_type: formData.visit_type || null,
         guardian_name: formData.guardian_name || null,
         guardian_relationship: formData.guardian_relationship || null,
@@ -265,7 +262,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         patient_or_guardian: '환자',
         diet_info: '',
         inflow_status: '유입',
-        first_visit_date: '',
         visit_type: '',
         guardian_name: '',
         guardian_relationship: '',
@@ -527,18 +523,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
                 <SelectItem value="실패">실패</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          {/* 초진일자 */}
-          <div>
-            <Label htmlFor="first_visit_date">초진일자</Label>
-            <Input
-              id="first_visit_date"
-              name="first_visit_date"
-              type="date"
-              value={formData.first_visit_date}
-              onChange={handleInputChange}
-            />
           </div>
 
           {/* 입원/외래 */}
