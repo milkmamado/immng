@@ -47,11 +47,23 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     manager_name: '',           // 담당자(상담실장)
     korean_doctor: '',          // 한방주치의
     western_doctor: '',         // 양방주치의
+    
+    // 상세 정보 입력 필드
+    insurance_type: '',         // 실비보험유형
+    management_status: '관리 중', // 관리 상태
+    monthly_avg_days: '',       // 월평균 입원일수 (자동 계산)
+    payment_amount: '',         // 수납금액 (자동 계산)
+    hospital_treatment: '',     // 본병원 치료
+    examination_schedule: '',   // 본병원 검사일정
+    first_visit_date: '',       // 유입일
+    last_visit_date: '',        // 마지막내원일
   });
 
   const [loading, setLoading] = useState(false);
   const [diagnosisCategoryOptions, setDiagnosisCategoryOptions] = useState<Option[]>([]);
   const [hospitalCategoryOptions, setHospitalCategoryOptions] = useState<Option[]>([]);
+  const [insuranceTypeOptions, setInsuranceTypeOptions] = useState<Option[]>([]);
+  const [patientStatusOptions, setPatientStatusOptions] = useState<Option[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -89,7 +101,15 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         guardian_phone: patient.guardian_phone || '',
         manager_name: patient.manager_name || '',
         korean_doctor: patient.korean_doctor || '',
-        western_doctor: patient.western_doctor || ''
+        western_doctor: patient.western_doctor || '',
+        insurance_type: patient.insurance_type || '',
+        management_status: patient.management_status || '관리 중',
+        monthly_avg_days: patient.monthly_avg_days?.toString() || '',
+        payment_amount: patient.payment_amount?.toString() || '',
+        hospital_treatment: patient.hospital_treatment || '',
+        examination_schedule: patient.examination_schedule || '',
+        first_visit_date: patient.first_visit_date || '',
+        last_visit_date: patient.last_visit_date || ''
       });
       
       // manager_name이 없으면 현재 사용자 이름 가져오기
@@ -134,13 +154,17 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
   const fetchOptions = async () => {
     try {
       // 대분류만 가져오기 (parent_id가 null인 것)
-      const [diagnosisCategories, hospitalCategories] = await Promise.all([
+      const [diagnosisCategories, hospitalCategories, insuranceTypes, patientStatuses] = await Promise.all([
         supabase.from('diagnosis_options').select('*').is('parent_id', null).order('name'),
-        supabase.from('hospital_options').select('*').is('parent_id', null).order('name')
+        supabase.from('hospital_options').select('*').is('parent_id', null).order('name'),
+        supabase.from('insurance_type_options').select('*').order('name'),
+        supabase.from('patient_status_options').select('*').order('name')
       ]);
 
       if (diagnosisCategories.data) setDiagnosisCategoryOptions(diagnosisCategories.data);
       if (hospitalCategories.data) setHospitalCategoryOptions(hospitalCategories.data);
+      if (insuranceTypes.data) setInsuranceTypeOptions(insuranceTypes.data);
+      if (patientStatuses.data) setPatientStatusOptions(patientStatuses.data);
     } catch (error) {
       console.error('Error fetching options:', error);
     }
@@ -216,6 +240,11 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         manager_name: formData.manager_name || null,
         korean_doctor: formData.korean_doctor || null,
         western_doctor: formData.western_doctor || null,
+        insurance_type: formData.insurance_type || null,
+        management_status: formData.management_status || null,
+        hospital_treatment: formData.hospital_treatment || null,
+        examination_schedule: formData.examination_schedule || null,
+        first_visit_date: formData.first_visit_date || null,
         assigned_manager: user.id
       };
 
@@ -268,7 +297,15 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         guardian_phone: '',
         manager_name: '',
         korean_doctor: '',
-        western_doctor: ''
+        western_doctor: '',
+        insurance_type: '',
+        management_status: '관리 중',
+        monthly_avg_days: '',
+        payment_amount: '',
+        hospital_treatment: '',
+        examination_schedule: '',
+        first_visit_date: '',
+        last_visit_date: ''
       });
 
       onClose();
@@ -611,6 +648,136 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               value={formData.western_doctor}
               onChange={handleInputChange}
               placeholder="양방주치의"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 상세 정보 입력 섹션 */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 pb-2 border-b">
+          <h3 className="text-lg font-semibold">상세 정보 입력</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* 실비보험유형 */}
+          <div>
+            <Label htmlFor="insurance_type">실비보험유형</Label>
+            <Select name="insurance_type" value={formData.insurance_type} onValueChange={(value) => handleSelectChange('insurance_type', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="실비보험유형을 선택하세요" />
+              </SelectTrigger>
+              <SelectContent>
+                {insuranceTypeOptions.map((option) => (
+                  <SelectItem key={option.id} value={option.name}>
+                    {option.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* 관리 상태 */}
+          <div>
+            <Label htmlFor="management_status">관리 상태</Label>
+            <Select name="management_status" value={formData.management_status} onValueChange={(value) => handleSelectChange('management_status', value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {patientStatusOptions.map((option) => (
+                  <SelectItem key={option.id} value={option.name}>
+                    {option.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* 월평균 입원일수 */}
+          <div>
+            <Label htmlFor="monthly_avg_days">월평균 입원일수</Label>
+            <Input
+              id="monthly_avg_days"
+              name="monthly_avg_days"
+              value={formData.monthly_avg_days}
+              disabled
+              className="bg-muted"
+              placeholder="일별 환자 관리 현황에서 자동 계산"
+            />
+          </div>
+
+          {/* 월평균 외래일수 */}
+          <div>
+            <Label htmlFor="monthly_avg_outpatient_days">월평균 외래일수</Label>
+            <Input
+              id="monthly_avg_outpatient_days"
+              value="-"
+              disabled
+              className="bg-muted"
+              placeholder="일별 환자 관리 현황에서 자동 계산"
+            />
+          </div>
+
+          {/* 수납금액 */}
+          <div>
+            <Label htmlFor="payment_amount">수납금액</Label>
+            <Input
+              id="payment_amount"
+              name="payment_amount"
+              value={formData.payment_amount}
+              disabled
+              className="bg-muted"
+              placeholder="치료 계획 관리에서 자동 계산"
+            />
+          </div>
+
+          {/* 본병원 치료 */}
+          <div className="md:col-span-2 lg:col-span-3">
+            <Label htmlFor="hospital_treatment">본병원 치료</Label>
+            <Textarea
+              id="hospital_treatment"
+              name="hospital_treatment"
+              value={formData.hospital_treatment}
+              onChange={handleInputChange}
+              placeholder="본병원 치료 내용을 입력하세요"
+              rows={3}
+            />
+          </div>
+
+          {/* 본병원 검사일정 */}
+          <div className="md:col-span-2 lg:col-span-3">
+            <Label htmlFor="examination_schedule">본병원 검사일정</Label>
+            <Textarea
+              id="examination_schedule"
+              name="examination_schedule"
+              value={formData.examination_schedule}
+              onChange={handleInputChange}
+              placeholder="본병원 검사일정을 입력하세요"
+              rows={3}
+            />
+          </div>
+
+          {/* 유입일 */}
+          <div>
+            <Label htmlFor="first_visit_date">유입일</Label>
+            <Input
+              id="first_visit_date"
+              name="first_visit_date"
+              type="date"
+              value={formData.first_visit_date}
+              onChange={handleInputChange}
+            />
+          </div>
+
+          {/* 마지막내원일 */}
+          <div>
+            <Label htmlFor="last_visit_date">마지막내원일</Label>
+            <Input
+              id="last_visit_date"
+              name="last_visit_date"
+              type="date"
+              value={formData.last_visit_date}
+              onChange={handleInputChange}
             />
           </div>
         </div>

@@ -120,6 +120,7 @@ export default function DailyStatusTracking() {
           created_at, visit_motivation, address, crm_memo, patient_or_guardian,
           guardian_name, guardian_relationship, guardian_phone, diet_info, visit_type,
           inflow_status, insurance_type, hospital_treatment, examination_schedule,
+          payment_amount, monthly_avg_days, first_visit_date, last_visit_date,
           admission_cycles (
             id, admission_date, discharge_date, admission_type, status
           )
