@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { PatientBasicForm } from "@/components/PatientBasicForm";
+import { PatientLookupDialog } from "@/components/PatientLookupDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -37,7 +38,9 @@ interface Patient {
 export default function FirstVisitManagement() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
+  const [showLookupDialog, setShowLookupDialog] = useState(false);
+  const [showFullForm, setShowFullForm] = useState(false);
+  const [initialFormData, setInitialFormData] = useState<{ name: string; phone: string } | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
@@ -72,9 +75,16 @@ export default function FirstVisitManagement() {
     }
   };
 
+  const handleProceedToRegistration = (name: string, phone: string) => {
+    setInitialFormData({ name, phone });
+    setShowLookupDialog(false);
+    setShowFullForm(true);
+  };
+
   const handleClose = () => {
-    setShowForm(false);
-    fetchPatients(); // 새 환자 등록 후 리스트 새로고침
+    setShowFullForm(false);
+    setInitialFormData(null);
+    fetchPatients();
     toast({
       title: "등록 완료",
       description: "환자가 성공적으로 등록되었습니다.",
@@ -157,7 +167,7 @@ export default function FirstVisitManagement() {
           <h1 className="text-3xl font-bold">초진관리</h1>
         </div>
         {userRole === 'manager' && (
-          <Button onClick={() => setShowForm(true)} className="flex items-center gap-2">
+          <Button onClick={() => setShowLookupDialog(true)} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             새 환자 등록
           </Button>
@@ -292,13 +302,23 @@ export default function FirstVisitManagement() {
         </CardContent>
       </Card>
 
+      {/* 고객 정보 조회 다이얼로그 */}
+      <PatientLookupDialog
+        open={showLookupDialog}
+        onOpenChange={setShowLookupDialog}
+        onProceedToRegistration={handleProceedToRegistration}
+      />
+
       {/* 새 환자 등록 다이얼로그 */}
-      <Dialog open={showForm} onOpenChange={setShowForm}>
+      <Dialog open={showFullForm} onOpenChange={setShowFullForm}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>새 환자 등록</DialogTitle>
           </DialogHeader>
-          <PatientBasicForm onClose={handleClose} />
+          <PatientBasicForm 
+            onClose={handleClose} 
+            initialData={initialFormData}
+          />
         </DialogContent>
       </Dialog>
 

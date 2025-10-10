@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface PatientBasicFormProps {
   patient?: any;
   onClose: () => void;
+  initialData?: { name: string; phone: string } | null;
 }
 
 interface Option {
@@ -17,7 +18,7 @@ interface Option {
   name: string;
 }
 
-export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
+export function PatientBasicForm({ patient, onClose, initialData }: PatientBasicFormProps) {
   const [formData, setFormData] = useState({
     chart_number: '',           // 차트 번호
     inflow_status: '유입',      // 유입/실패
@@ -66,8 +67,15 @@ export function PatientBasicForm({ patient, onClose }: PatientBasicFormProps) {
         western_doctor: patient.western_doctor || '',
         counseling_content: patient.counseling_content || ''
       });
+    } else if (initialData) {
+      // 조회 다이얼로그에서 넘어온 초기 데이터 설정
+      setFormData(prev => ({
+        ...prev,
+        name: initialData.name,
+        phone: initialData.phone
+      }));
     }
-  }, [patient]);
+  }, [patient, initialData]);
 
   const fetchOptions = async () => {
     try {
