@@ -89,6 +89,26 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         korean_doctor: patient.korean_doctor || '',
         western_doctor: patient.western_doctor || ''
       });
+      
+      // 진단명 대분류가 있으면 중분류 옵션 가져오기
+      if (patient.diagnosis_category) {
+        const diagnosisCategory = diagnosisCategoryOptions.find(
+          opt => opt.name === patient.diagnosis_category
+        );
+        if (diagnosisCategory) {
+          fetchDiagnosisDetails(diagnosisCategory.id);
+        }
+      }
+      
+      // 이전병원 대분류가 있으면 중분류 옵션 가져오기
+      if (patient.hospital_category) {
+        const hospitalCategory = hospitalCategoryOptions.find(
+          opt => opt.name === patient.hospital_category
+        );
+        if (hospitalCategory) {
+          fetchHospitalBranches(hospitalCategory.id);
+        }
+      }
     } else if (initialData) {
       // 조회 다이얼로그에서 넘어온 초기 데이터 설정
       fetchCurrentUserName();
@@ -100,7 +120,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     } else {
       fetchCurrentUserName();
     }
-  }, [patient, initialData]);
+  }, [patient, initialData, diagnosisCategoryOptions, hospitalCategoryOptions]);
 
   const fetchCurrentUserName = async () => {
     try {
