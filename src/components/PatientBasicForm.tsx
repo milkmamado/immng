@@ -48,14 +48,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     manager_name: '',           // 담당자(상담실장)
     korean_doctor: '',          // 한방주치의
     western_doctor: '',         // 양방주치의
-    
-    // 상세 정보 입력 필드
-    insurance_type: '',         // 실비보험유형
-    monthly_avg_days: '',       // 월평균일수
-    payment_amount: '',         // 수납금액
-    hospital_treatment: '',     // 본병원 치료
-    examination_schedule: '',   // 본병원 검사일정
-    treatment_plan: '',         // 치료 계획관리
   });
 
   const [loading, setLoading] = useState(false);
@@ -99,13 +91,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         guardian_phone: patient.guardian_phone || '',
         manager_name: patient.manager_name || '',
         korean_doctor: patient.korean_doctor || '',
-        western_doctor: patient.western_doctor || '',
-        insurance_type: patient.insurance_type || '',
-        monthly_avg_days: patient.monthly_avg_days?.toString() || '',
-        payment_amount: patient.payment_amount?.toString() || '',
-        hospital_treatment: patient.hospital_treatment || '',
-        examination_schedule: patient.examination_schedule || '',
-        treatment_plan: patient.treatment_plan || ''
+        western_doctor: patient.western_doctor || ''
       });
     } else if (initialData) {
       // 조회 다이얼로그에서 넘어온 초기 데이터 설정
@@ -228,12 +214,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         manager_name: formData.manager_name || null,
         korean_doctor: formData.korean_doctor || null,
         western_doctor: formData.western_doctor || null,
-        insurance_type: formData.insurance_type || null,
-        monthly_avg_days: formData.monthly_avg_days ? parseInt(formData.monthly_avg_days) : null,
-        payment_amount: formData.payment_amount ? parseFloat(formData.payment_amount) : null,
-        hospital_treatment: formData.hospital_treatment || null,
-        examination_schedule: formData.examination_schedule || null,
-        treatment_plan: formData.treatment_plan || null,
         assigned_manager: user.id
       };
 
@@ -287,13 +267,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         guardian_phone: '',
         manager_name: '',
         korean_doctor: '',
-        western_doctor: '',
-        insurance_type: '',
-        monthly_avg_days: '',
-        payment_amount: '',
-        hospital_treatment: '',
-        examination_schedule: '',
-        treatment_plan: ''
+        western_doctor: ''
       });
 
       onClose();
@@ -648,92 +622,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               value={formData.western_doctor}
               onChange={handleInputChange}
               placeholder="양방주치의"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* 상세 정보 입력 섹션 */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b">
-          <h3 className="text-lg font-semibold">상세 정보 입력</h3>
-          <Badge variant="outline">수정입력</Badge>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* 실비보험유형 */}
-          <div>
-            <Label htmlFor="insurance_type">실비보험유형</Label>
-            <Input
-              id="insurance_type"
-              name="insurance_type"
-              value={formData.insurance_type}
-              onChange={handleInputChange}
-              placeholder="실비보험유형"
-            />
-          </div>
-
-          {/* 월평균일수 */}
-          <div>
-            <Label htmlFor="monthly_avg_days">월평균일수</Label>
-            <Input
-              id="monthly_avg_days"
-              name="monthly_avg_days"
-              type="number"
-              value={formData.monthly_avg_days}
-              onChange={handleInputChange}
-              placeholder="월평균일수"
-            />
-          </div>
-
-          {/* 수납금액 */}
-          <div>
-            <Label htmlFor="payment_amount">수납금액</Label>
-            <Input
-              id="payment_amount"
-              name="payment_amount"
-              type="number"
-              value={formData.payment_amount}
-              onChange={handleInputChange}
-              placeholder="수납금액 (원)"
-            />
-          </div>
-
-          {/* 본병원 치료 */}
-          <div className="md:col-span-2 lg:col-span-3">
-            <Label htmlFor="hospital_treatment">본병원 치료</Label>
-            <Textarea
-              id="hospital_treatment"
-              name="hospital_treatment"
-              value={formData.hospital_treatment}
-              onChange={handleInputChange}
-              placeholder="본병원 치료 내용"
-              rows={3}
-            />
-          </div>
-
-          {/* 본병원 검사일정 */}
-          <div className="md:col-span-2 lg:col-span-3">
-            <Label htmlFor="examination_schedule">본병원 검사일정</Label>
-            <Textarea
-              id="examination_schedule"
-              name="examination_schedule"
-              value={formData.examination_schedule}
-              onChange={handleInputChange}
-              placeholder="본병원 검사일정"
-              rows={3}
-            />
-          </div>
-
-          {/* 치료 계획관리 */}
-          <div className="md:col-span-2 lg:col-span-3">
-            <Label htmlFor="treatment_plan">치료 계획관리</Label>
-            <Textarea
-              id="treatment_plan"
-              name="treatment_plan"
-              value={formData.treatment_plan}
-              onChange={handleInputChange}
-              placeholder="치료 계획관리"
-              rows={3}
             />
           </div>
         </div>
