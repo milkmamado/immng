@@ -13,7 +13,6 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, Search, Plus, Check, X, Trash2 } from "lucide-react";
-import { PatientBasicForm } from "@/components/PatientBasicForm";
 
 interface Patient {
   id: string;
@@ -949,14 +948,429 @@ export default function PatientListManagement() {
             </div>
           ) : (
             <div className="mt-4 space-y-6">
-              {/* 환자 기본정보 폼 */}
-              <PatientBasicForm 
-                patient={selectedPatientDetail} 
-                onClose={() => {
-                  setSelectedPatientDetail(null);
-                  fetchPatients();
-                }} 
-              />
+              {/* API 자동입력 정보 섹션 */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <h3 className="text-lg font-semibold">API 자동입력 정보</h3>
+                  <Badge variant="outline">자동</Badge>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* 고객명 */}
+                  <div>
+                    <Label>고객명 *</Label>
+                    <Input
+                      value={selectedPatientDetail?.name || ''}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+
+                  {/* 고객번호 */}
+                  <div>
+                    <Label>고객번호</Label>
+                    <Input
+                      value={selectedPatientDetail?.customer_number || ''}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+
+                  {/* 주민번호 */}
+                  <div>
+                    <Label>주민번호</Label>
+                    <Input
+                      value={selectedPatientDetail?.resident_number_masked || ''}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+
+                  {/* 휴대폰번호 */}
+                  <div>
+                    <Label>휴대폰번호</Label>
+                    <Input
+                      value={selectedPatientDetail?.phone || ''}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+
+                  {/* 성별 */}
+                  <div>
+                    <Label>성별</Label>
+                    <Input
+                      value={selectedPatientDetail?.gender || ''}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+
+                  {/* 나이(만) */}
+                  <div>
+                    <Label>나이(만)</Label>
+                    <Input
+                      value={selectedPatientDetail?.age?.toString() || ''}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+
+                  {/* 내원동기 */}
+                  <div>
+                    <Label>내원동기</Label>
+                    <Input
+                      value={selectedPatientDetail?.visit_motivation || ''}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+
+                  {/* 진단명 대분류 */}
+                  <div>
+                    <Label>진단명 (대분류)</Label>
+                    <Input
+                      value={selectedPatientDetail?.diagnosis_category || ''}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+
+                  {/* 진단명 중분류 */}
+                  <div>
+                    <Label>진단명 (중분류)</Label>
+                    <Input
+                      value={selectedPatientDetail?.diagnosis_detail || ''}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+
+                  {/* 이전병원 대분류 */}
+                  <div>
+                    <Label>이전병원 (대분류)</Label>
+                    <Input
+                      value={selectedPatientDetail?.hospital_category || ''}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+
+                  {/* 이전병원 중분류 */}
+                  <div>
+                    <Label>이전병원 (중분류)</Label>
+                    <Input
+                      value={selectedPatientDetail?.hospital_branch || ''}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+
+                  {/* 주소 */}
+                  <div className="md:col-span-2 lg:col-span-3">
+                    <Label>주소</Label>
+                    <Input
+                      value={selectedPatientDetail?.address || ''}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+
+                  {/* CRM메모 */}
+                  <div className="md:col-span-2 lg:col-span-3">
+                    <Label>CRM메모</Label>
+                    <Textarea
+                      value={selectedPatientDetail?.crm_memo || ''}
+                      disabled
+                      className="bg-muted"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 추가 입력 정보 섹션 */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <h3 className="text-lg font-semibold">추가 입력 정보</h3>
+                  <Badge variant="outline">수동입력</Badge>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* 환자 or 보호자 */}
+                  <div>
+                    <Label>환자 or 보호자</Label>
+                    <Select
+                      value={selectedPatientDetail?.patient_or_guardian || '환자'}
+                      onValueChange={(value) => {
+                        updateEditingField('patient_or_guardian', value);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="z-[100] bg-background">
+                        <SelectItem value="환자">환자</SelectItem>
+                        <SelectItem value="보호자">보호자</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* 식이 */}
+                  <div>
+                    <Label>식이</Label>
+                    <Input
+                      value={selectedPatientDetail?.diet_info || ''}
+                      onChange={(e) => updateEditingField('diet_info', e.target.value)}
+                      placeholder="식이정보"
+                    />
+                  </div>
+
+                  {/* 유입상태 */}
+                  <div>
+                    <Label>유입상태 *</Label>
+                    <Select
+                      value={selectedPatientDetail?.inflow_status || '유입'}
+                      onValueChange={(value) => {
+                        updateEditingField('inflow_status', value);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="z-[100] bg-background">
+                        <SelectItem value="유입">유입</SelectItem>
+                        <SelectItem value="실패">실패</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* 내원형태 */}
+                  <div>
+                    <Label>내원형태</Label>
+                    <Select
+                      value={selectedPatientDetail?.visit_type || ''}
+                      onValueChange={(value) => {
+                        updateEditingField('visit_type', value);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="선택" />
+                      </SelectTrigger>
+                      <SelectContent className="z-[100] bg-background">
+                        <SelectItem value="입원">입원</SelectItem>
+                        <SelectItem value="외래">외래</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* 보호자 이름 */}
+                  <div>
+                    <Label>보호자 이름</Label>
+                    <Input
+                      value={selectedPatientDetail?.guardian_name || ''}
+                      onChange={(e) => updateEditingField('guardian_name', e.target.value)}
+                      placeholder="보호자 이름"
+                    />
+                  </div>
+
+                  {/* 보호자 관계 */}
+                  <div>
+                    <Label>보호자 관계</Label>
+                    <Input
+                      value={selectedPatientDetail?.guardian_relationship || ''}
+                      onChange={(e) => updateEditingField('guardian_relationship', e.target.value)}
+                      placeholder="보호자 관계"
+                    />
+                  </div>
+
+                  {/* 보호자 연락처 */}
+                  <div>
+                    <Label>보호자 연락처</Label>
+                    <Input
+                      value={selectedPatientDetail?.guardian_phone || ''}
+                      onChange={(e) => updateEditingField('guardian_phone', e.target.value)}
+                      placeholder="보호자 연락처"
+                    />
+                  </div>
+
+                  {/* 담당자(상담실장) */}
+                  <div>
+                    <Label>담당자(상담실장)</Label>
+                    <Input
+                      value={selectedPatientDetail?.manager_name || currentUserName}
+                      disabled
+                      className="bg-muted"
+                      placeholder="자동입력"
+                    />
+                  </div>
+
+                  {/* 한방주치의 */}
+                  <div>
+                    <Label>한방주치의</Label>
+                    <Input
+                      value={selectedPatientDetail?.korean_doctor || ''}
+                      onChange={(e) => updateEditingField('korean_doctor', e.target.value)}
+                      placeholder="한방주치의"
+                    />
+                  </div>
+
+                  {/* 양방주치의 */}
+                  <div>
+                    <Label>양방주치의</Label>
+                    <Input
+                      value={selectedPatientDetail?.western_doctor || ''}
+                      onChange={(e) => updateEditingField('western_doctor', e.target.value)}
+                      placeholder="양방주치의"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 상세 정보 입력 섹션 */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <h3 className="text-lg font-semibold">상세 정보 입력</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="insurance-type">실비보험유형</Label>
+                    <Select 
+                      value={selectedPatientDetail?.insurance_type || ''} 
+                      onValueChange={(value) => {
+                        updateEditingField('insurance_type', value);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="실비보험유형을 선택하세요" />
+                      </SelectTrigger>
+                      <SelectContent className="z-[100] bg-background">
+                        {insuranceTypeOptions.map(option => (
+                          <SelectItem key={option.id} value={option.name}>
+                            {option.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>관리 상태</Label>
+                    <Select 
+                      value={selectedPatientDetail?.management_status || '관리 중'} 
+                      onValueChange={(value) => {
+                        updateEditingField('management_status', value);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="관리 상태를 선택하세요" />
+                      </SelectTrigger>
+                      <SelectContent className="z-[100] bg-background">
+                        {patientStatusOptions.map(option => (
+                          <SelectItem key={option.id} value={option.name}>
+                            {option.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>월평균 입원일수</Label>
+                    <div className="p-2 bg-muted rounded-md h-10 flex items-center">
+                      <span className="text-sm">
+                        {selectedPatientDetail?.monthly_avg_inpatient_days 
+                          ? `${selectedPatientDetail.monthly_avg_inpatient_days}일` 
+                          : '-'
+                        }
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      일별 환자 관리 현황에서 자동 계산
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label>월평균 외래일수</Label>
+                    <div className="p-2 bg-muted rounded-md h-10 flex items-center">
+                      <span className="text-sm">
+                        {selectedPatientDetail?.monthly_avg_outpatient_days 
+                          ? `${selectedPatientDetail.monthly_avg_outpatient_days}일` 
+                          : '-'
+                        }
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      일별 환자 관리 현황에서 자동 계산
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label>수납금액</Label>
+                    <div className="p-2 bg-muted rounded-md h-10 flex items-center">
+                      <span className="text-sm font-semibold text-primary">
+                        {selectedPatientDetail?.payment_amount ? 
+                          `${selectedPatientDetail.payment_amount.toLocaleString()}원` : '-'
+                        }
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      치료 계획 관리에서 자동 계산
+                    </p>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Label htmlFor="hospital-treatment">본병원 치료</Label>
+                    <Textarea
+                      id="hospital-treatment"
+                      placeholder="본병원 치료 내용을 입력하세요"
+                      value={selectedPatientDetail?.hospital_treatment || ''}
+                      onChange={(e) => updateEditingField('hospital_treatment', e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Label htmlFor="examination-schedule">본병원 검사일정</Label>
+                    <Textarea
+                      id="examination-schedule"
+                      placeholder="본병원 검사일정을 입력하세요"
+                      value={selectedPatientDetail?.examination_schedule || ''}
+                      onChange={(e) => updateEditingField('examination_schedule', e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+
+                  {/* 일정 정보 */}
+                  <div>
+                    <Label>유입일</Label>
+                    <div className="p-2 bg-muted rounded-md h-10 flex items-center">
+                      <span className="text-sm">
+                        {selectedPatientDetail?.created_at ? 
+                          new Date(selectedPatientDetail.created_at).toLocaleDateString('ko-KR') : '-'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>마지막내원일</Label>
+                    <div className="p-2 bg-muted rounded-md h-10 flex items-center">
+                      <span className="text-sm">
+                        {selectedPatientDetail?.last_visit_date ? 
+                          new Date(selectedPatientDetail.last_visit_date).toLocaleDateString('ko-KR') : '-'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button 
+                    onClick={saveAllEditingFields}
+                    disabled={Object.keys(editingFields).length === 0 || userRole === 'admin'}
+                  >
+                    수정 저장
+                  </Button>
+                </div>
+              </div>
 
               {/* 치료 계획 관리 섹션 */}
               <div className="border-t pt-6">

@@ -5,13 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Plus, Check, X, Trash2 } from "lucide-react";
-import { PatientBasicForm } from "@/components/PatientBasicForm";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface AdmissionCycle {
   id: string;
@@ -25,32 +21,15 @@ interface Patient {
   id: string;
   name: string;
   customer_number?: string;
-  resident_number_masked?: string;
-  phone?: string;
-  gender?: string;
-  age?: number;
-  diagnosis_category?: string;
-  diagnosis_detail?: string;
+  diagnosis?: string;
+  detailed_diagnosis?: string;
   korean_doctor?: string;
   western_doctor?: string;
   manager_name?: string;
-  hospital_category?: string;
-  hospital_branch?: string;
+  previous_hospital?: string;
+  memo1?: string;
+  memo2?: string;
   management_status?: string;
-  created_at?: string;
-  visit_motivation?: string;
-  address?: string;
-  crm_memo?: string;
-  patient_or_guardian?: string;
-  guardian_name?: string;
-  guardian_relationship?: string;
-  guardian_phone?: string;
-  diet_info?: string;
-  visit_type?: string;
-  inflow_status?: string;
-  insurance_type?: string;
-  hospital_treatment?: string;
-  examination_schedule?: string;
   admission_cycles?: AdmissionCycle[];
 }
 
@@ -68,6 +47,7 @@ interface DailyStatusGridProps {
   yearMonth: string;
   daysInMonth: number;
   onStatusUpdate: (patientId: string, date: string, statusType: string, notes?: string) => Promise<void>;
+  onMemoUpdate: (patientId: string, memoType: 'memo1' | 'memo2', value: string) => Promise<void>;
   onManagementStatusUpdate: (patientId: string, status: string) => Promise<void>;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
@@ -79,6 +59,7 @@ export function DailyStatusGrid({
   yearMonth,
   daysInMonth,
   onStatusUpdate,
+  onMemoUpdate,
   onManagementStatusUpdate,
   onPreviousMonth,
   onNextMonth,
@@ -90,6 +71,12 @@ export function DailyStatusGrid({
   } | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+  const [memoCell, setMemoCell] = useState<{
+    patientId: string;
+    memoType: 'memo1' | 'memo2';
+    currentValue: string;
+  } | null>(null);
+  const [memoValue, setMemoValue] = useState<string>('');
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const [editingManagementStatus, setEditingManagementStatus] = useState<string>('');
   const [savedScrollPosition, setSavedScrollPosition] = useState<number>(0);
@@ -109,10 +96,6 @@ export function DailyStatusGrid({
       revenue: number;
     };
   } | null>(null);
-  const [treatmentPlans, setTreatmentPlans] = useState<any[]>([]);
-  const [newTreatmentDetail, setNewTreatmentDetail] = useState('');
-  const [newTreatmentAmount, setNewTreatmentAmount] = useState('');
-  const [showAddForm, setShowAddForm] = useState(false);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -259,90 +242,24 @@ export function DailyStatusGrid({
     setNotes('');
   };
 
+  const handleMemoDoubleClick = (patientId: string, memoType: 'memo1' | 'memo2', currentValue: string) => {
+    setMemoCell({ patientId, memoType, currentValue });
+    setMemoValue(currentValue);
+  };
+
+  const handleMemoSave = async () => {
+    if (!memoCell) return;
+    
+    await onMemoUpdate(memoCell.patientId, memoCell.memoType, memoValue);
+    setMemoCell(null);
+    setMemoValue('');
+  };
+
   const getDayOfWeek = (day: number) => {
     const [year, month] = yearMonth.split('-').map(Number);
     const date = new Date(year, month - 1, day);
     const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
     return dayNames[date.getDay()];
-  };
-
-  // 치료 계획 가져오기
-  const fetchTreatmentPlans = async (patientId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('treatment_plans')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setTreatmentPlans(data || []);
-    } catch (error) {
-      console.error('Error fetching treatment plans:', error);
-    }
-  };
-
-  // 치료 계획 추가
-  const addTreatmentPlan = async () => {
-    if (!selectedPatientDetail || !newTreatmentDetail.trim() || !newTreatmentAmount.trim()) {
-      return;
-    }
-
-    try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error('로그인이 필요합니다.');
-
-      const { error } = await supabase
-        .from('treatment_plans')
-        .insert({
-          patient_id: selectedPatientDetail.id,
-          treatment_detail: newTreatmentDetail.trim(),
-          treatment_amount: parseFloat(newTreatmentAmount),
-          created_by: user.user.id
-        });
-
-      if (error) throw error;
-
-      setNewTreatmentDetail('');
-      setNewTreatmentAmount('');
-      setShowAddForm(false);
-      fetchTreatmentPlans(selectedPatientDetail.id);
-    } catch (error) {
-      console.error('Error adding treatment plan:', error);
-    }
-  };
-
-  // 수납 상태 토글
-  const togglePaymentStatus = async (treatmentPlan: any) => {
-    try {
-      const { error } = await supabase
-        .from('treatment_plans')
-        .update({
-          is_paid: !treatmentPlan.is_paid,
-          payment_date: !treatmentPlan.is_paid ? new Date().toISOString().split('T')[0] : null
-        })
-        .eq('id', treatmentPlan.id);
-
-      if (error) throw error;
-      fetchTreatmentPlans(selectedPatientDetail!.id);
-    } catch (error) {
-      console.error('Error toggling payment status:', error);
-    }
-  };
-
-  // 치료 계획 삭제
-  const deleteTreatmentPlan = async (planId: string) => {
-    try {
-      const { error } = await supabase
-        .from('treatment_plans')
-        .delete()
-        .eq('id', planId);
-
-      if (error) throw error;
-      fetchTreatmentPlans(selectedPatientDetail!.id);
-    } catch (error) {
-      console.error('Error deleting treatment plan:', error);
-    }
   };
 
   // 환자 통계 계산
@@ -682,7 +599,6 @@ export function DailyStatusGrid({
                           setSelectedPatientDetail(patient);
                           setEditingManagementStatus(patient.management_status || '관리 중');
                           calculatePatientStats(patient.id);
-                          fetchTreatmentPlans(patient.id);
                         }}
                       >
                         {patient.name}
@@ -691,7 +607,7 @@ export function DailyStatusGrid({
                         담당: {patient.manager_name || '-'}
                       </div>
                       <div className="text-[10px] text-muted-foreground">
-                        진단: {patient.diagnosis_category || '-'}
+                        진단: {patient.diagnosis || '-'}
                       </div>
                       <div className="text-[10px]">
                         <Badge variant={
@@ -704,14 +620,17 @@ export function DailyStatusGrid({
                       </div>
                     </div>
                   </td>
-                  <td className="p-2 border text-xs">
-                    -
+                  <td 
+                    className="p-2 border text-xs cursor-pointer hover:bg-muted/50"
+                    onDoubleClick={() => handleMemoDoubleClick(patient.id, 'memo1', patient.memo1 || '')}
+                  >
+                    {patient.memo1 || '-'}
                   </td>
                   <td className="p-2 border text-xs">
                     {[patient.korean_doctor, patient.western_doctor].filter(Boolean).join(', ') || '-'}
                   </td>
                   <td className="p-2 border text-xs">
-                    {patient.hospital_category || '-'}
+                    {patient.previous_hospital || '-'}
                   </td>
                   {renderPatientRow(patient)}
                 </tr>
@@ -797,163 +716,94 @@ export function DailyStatusGrid({
         </DialogContent>
       </Dialog>
 
-      {/* 환자 상세정보 다이얼로그 */}
-      <Dialog open={!!selectedPatientDetail} onOpenChange={() => {
-        setSelectedPatientDetail(null);
-        setTreatmentPlans([]);
-        setShowAddForm(false);
-        setNewTreatmentDetail('');
-        setNewTreatmentAmount('');
-      }}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      {/* 메모 편집 다이얼로그 */}
+      <Dialog open={!!memoCell} onOpenChange={() => setMemoCell(null)}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>{selectedPatientDetail?.name} - 환자 상세정보</DialogTitle>
+            <DialogTitle>
+              메모 편집
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="memo">메모 내용</Label>
+              <Textarea
+                id="memo"
+                value={memoValue}
+                onChange={(e) => setMemoValue(e.target.value)}
+                placeholder="메모를 입력하세요..."
+                rows={4}
+              />
+            </div>
+            
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setMemoCell(null)}>
+                취소
+              </Button>
+              <Button onClick={handleMemoSave}>
+                저장
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 환자 상세정보 다이얼로그 */}
+      <Dialog open={!!selectedPatientDetail} onOpenChange={() => setSelectedPatientDetail(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">환자 상세 정보</DialogTitle>
           </DialogHeader>
           
           {selectedPatientDetail && (
             <div className="space-y-6">
-              {/* 환자 기본정보 폼 */}
-              <PatientBasicForm 
-                patient={selectedPatientDetail} 
-                onClose={() => setSelectedPatientDetail(null)} 
-              />
+              {/* 기본 정보 */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">환자명</Label>
+                  <p className="font-medium">{selectedPatientDetail.name}</p>
+                 </div>
+                 <div>
+                   <Label className="text-muted-foreground">고객번호</Label>
+                   <p className="font-medium">{selectedPatientDetail.customer_number || '-'}</p>
+                 </div>
+                 <div>
+                   <Label className="text-muted-foreground">담당자</Label>
+                   <p className="font-medium">{selectedPatientDetail.manager_name || '-'}</p>
+                </div>
+              </div>
 
-              {/* 치료 계획 관리 섹션 */}
-              <div className="border-t pt-6">
-                <h2 className="text-xl font-semibold mb-4 text-primary">치료 계획 관리</h2>
-                
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">치료 계획 목록</h3>
-                    {!showAddForm && (
-                      <Button 
-                        onClick={() => setShowAddForm(true)}
-                        size="sm"
-                        className="gap-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                        새 치료 계획 추가
-                      </Button>
-                    )}
+              {/* 진료 정보 */}
+              <div className="space-y-3">
+                <h3 className="font-semibold">진료 정보</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">진단명</Label>
+                    <p className="font-medium">{selectedPatientDetail.diagnosis || '-'}</p>
                   </div>
-
-                  {showAddForm && (
-                    <Card>
-                      <CardContent className="pt-6">
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label>치료상세</Label>
-                              <Input
-                                value={newTreatmentDetail}
-                                onChange={(e) => setNewTreatmentDetail(e.target.value)}
-                                placeholder="치료상세를 입력하세요"
-                              />
-                            </div>
-                            <div>
-                              <Label>치료금액</Label>
-                              <Input
-                                type="number"
-                                value={newTreatmentAmount}
-                                onChange={(e) => setNewTreatmentAmount(e.target.value)}
-                                placeholder="금액을 입력하세요"
-                              />
-                            </div>
-                          </div>
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              onClick={() => {
-                                setShowAddForm(false);
-                                setNewTreatmentDetail('');
-                                setNewTreatmentAmount('');
-                              }}
-                            >
-                              취소
-                            </Button>
-                            <Button onClick={addTreatmentPlan}>
-                              추가
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>치료상세</TableHead>
-                          <TableHead>치료금액</TableHead>
-                          <TableHead>수납여부</TableHead>
-                          <TableHead>수납일</TableHead>
-                          <TableHead>등록일</TableHead>
-                          <TableHead>작업</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {treatmentPlans.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                              등록된 치료 계획이 없습니다.
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          treatmentPlans.map((plan) => (
-                            <TableRow key={plan.id}>
-                              <TableCell>{plan.treatment_detail}</TableCell>
-                              <TableCell className="font-medium">
-                                {plan.treatment_amount.toLocaleString()}원
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <Switch
-                                    checked={plan.is_paid}
-                                    onCheckedChange={() => togglePaymentStatus(plan)}
-                                  />
-                                  {plan.is_paid ? (
-                                    <Badge variant="default" className="gap-1">
-                                      <Check className="h-3 w-3" />
-                                      수납완료
-                                    </Badge>
-                                  ) : (
-                                    <Badge variant="secondary" className="gap-1">
-                                      <X className="h-3 w-3" />
-                                      미수납
-                                    </Badge>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                {plan.payment_date
-                                  ? new Date(plan.payment_date).toLocaleDateString('ko-KR')
-                                  : '-'}
-                              </TableCell>
-                              <TableCell>
-                                {new Date(plan.created_at).toLocaleDateString('ko-KR')}
-                              </TableCell>
-                              <TableCell>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => deleteTreatmentPlan(plan.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
+                  <div>
+                    <Label className="text-muted-foreground">상세 진단</Label>
+                    <p className="font-medium">{selectedPatientDetail.detailed_diagnosis || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">한방 주치의</Label>
+                    <p className="font-medium">{selectedPatientDetail.korean_doctor || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">양방 주치의</Label>
+                    <p className="font-medium">{selectedPatientDetail.western_doctor || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">이전 병원</Label>
+                    <p className="font-medium">{selectedPatientDetail.previous_hospital || '-'}</p>
                   </div>
                 </div>
               </div>
 
-              {/* 활동 통계 */}
+              {/* 통계 정보 */}
               {patientStats && (
-                <div className="space-y-3 pt-6 border-t">
+                <div className="space-y-3">
                   <h3 className="font-semibold">활동 통계</h3>
                   <div className="grid grid-cols-2 gap-4">
                     {/* 당월 통계 */}
@@ -1020,6 +870,13 @@ export function DailyStatusGrid({
                   </div>
                 </div>
               )}
+
+              {/* 저장 버튼 */}
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                <Button variant="outline" onClick={() => setSelectedPatientDetail(null)}>
+                  닫기
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>

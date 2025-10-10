@@ -114,13 +114,9 @@ export default function DailyStatusTracking() {
       let patientsQuery = supabase
         .from('patients')
         .select(`
-          id, name, customer_number, resident_number_masked, phone, gender, age,
-          diagnosis_category, diagnosis_detail, korean_doctor, western_doctor, 
-          manager_name, hospital_category, hospital_branch, management_status, 
-          created_at, visit_motivation, address, crm_memo, patient_or_guardian,
-          guardian_name, guardian_relationship, guardian_phone, diet_info, visit_type,
-          inflow_status, insurance_type, hospital_treatment, examination_schedule,
-          payment_amount, monthly_avg_days, first_visit_date, last_visit_date,
+          id, name, customer_number, diagnosis_category, diagnosis_detail, 
+          korean_doctor, western_doctor, manager_name, hospital_category, hospital_branch,
+          management_status, created_at,
           admission_cycles (
             id, admission_date, discharge_date, admission_type, status
           )
@@ -250,6 +246,31 @@ export default function DailyStatusTracking() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMemoUpdate = async (patientId: string, memoType: 'memo1' | 'memo2', value: string) => {
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .update({ [memoType]: value })
+        .eq('id', patientId);
+
+      if (error) throw error;
+
+      toast({
+        title: "성공",
+        description: "메모가 저장되었습니다.",
+      });
+
+      fetchData(); // 데이터 새로고침
+    } catch (error) {
+      console.error('Error updating memo:', error);
+      toast({
+        title: "오류",
+        description: "메모 저장에 실패했습니다.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -511,6 +532,7 @@ export default function DailyStatusTracking() {
         yearMonth={selectedMonth}
         daysInMonth={getDaysInMonth(selectedMonth)}
         onStatusUpdate={handleStatusUpdate}
+        onMemoUpdate={handleMemoUpdate}
         onManagementStatusUpdate={handleManagementStatusUpdate}
         onPreviousMonth={handlePreviousMonth}
         onNextMonth={handleNextMonth}
