@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Search, Plus, Check, X } from "lucide-react";
+import { Users, Search, Plus, Check, X, Trash2 } from "lucide-react";
 
 interface Patient {
   id: string;
@@ -531,6 +531,59 @@ export default function PatientListManagement() {
     }
   };
 
+  const deleteTreatmentPlan = async (planId: string) => {
+    if (!selectedPatientDetail) return;
+
+    // 관리자 권한 체크
+    if (userRole === 'admin') {
+      toast({
+        title: "권한 없음",
+        description: "관리자는 치료계획을 삭제할 수 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // 삭제할 계획 찾기
+      const planToDelete = treatmentPlans.find(tp => tp.id === planId);
+      if (!planToDelete) return;
+
+      // 치료계획 삭제
+      const { error } = await supabase
+        .from('treatment_plans')
+        .delete()
+        .eq('id', planId);
+
+      if (error) throw error;
+
+      // 환자의 총 수납금액 재계산 (삭제된 계획 제외하고 is_paid=true인 것만)
+      const paidAmount = treatmentPlans
+        .filter(tp => tp.id !== planId && tp.is_paid)
+        .reduce((sum, tp) => sum + tp.treatment_amount, 0);
+
+      await supabase
+        .from('patients')
+        .update({ payment_amount: paidAmount })
+        .eq('id', selectedPatientDetail.id);
+
+      fetchTreatmentPlans(selectedPatientDetail.id);
+      fetchPatients();
+      
+      toast({
+        title: "삭제 완료",
+        description: "치료계획이 삭제되었습니다.",
+      });
+    } catch (error) {
+      console.error('Error deleting treatment plan:', error);
+      toast({
+        title: "오류",
+        description: "치료계획 삭제에 실패했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getTotalPaymentStats = () => {
     const totalAmount = treatmentPlans.reduce((sum, tp) => sum + tp.treatment_amount, 0);
     const paidAmount = treatmentPlans.filter(tp => tp.is_paid).reduce((sum, tp) => sum + tp.treatment_amount, 0);
@@ -726,6 +779,14 @@ export default function PatientListManagement() {
                     <Badge variant={plan.is_paid ? "default" : "outline"}>
                       {plan.is_paid ? "수납완료" : "미수납"}
                     </Badge>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => deleteTreatmentPlan(plan.id)}
+                      className="ml-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
