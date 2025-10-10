@@ -42,15 +42,12 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     inflow_status: '유입',      // 유입/실패
     first_visit_date: '',       // 초진일자
     visit_type: '',             // 입원/외래
-    referral_source: '',        // 의뢰처
     guardian_name: '',          // 보호자 이름
     guardian_relationship: '', // 보호자 관계
     guardian_phone: '',         // 보호자 연락처
     manager_name: '',           // 담당자(상담실장)
     korean_doctor: '',          // 한방주치의
     western_doctor: '',         // 양방주치의
-    memo1: '',                  // 메모1
-    memo2: '',                  // 메모2
   });
 
   const [loading, setLoading] = useState(false);
@@ -85,15 +82,12 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         inflow_status: patient.inflow_status || '유입',
         first_visit_date: patient.first_visit_date || '',
         visit_type: patient.visit_type || '',
-        referral_source: patient.referral_source || '',
         guardian_name: patient.guardian_name || '',
         guardian_relationship: patient.guardian_relationship || '',
         guardian_phone: patient.guardian_phone || '',
         manager_name: patient.manager_name || '',
         korean_doctor: patient.korean_doctor || '',
-        western_doctor: patient.western_doctor || '',
-        memo1: patient.memo1 || '',
-        memo2: patient.memo2 || ''
+        western_doctor: patient.western_doctor || ''
       });
     } else if (initialData) {
       // 조회 다이얼로그에서 넘어온 초기 데이터 설정
@@ -258,15 +252,12 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         inflow_status: formData.inflow_status,
         first_visit_date: formData.first_visit_date || null,
         visit_type: formData.visit_type || null,
-        referral_source: formData.referral_source || null,
         guardian_name: formData.guardian_name || null,
         guardian_relationship: formData.guardian_relationship || null,
         guardian_phone: formData.guardian_phone || null,
         manager_name: formData.manager_name || null,
         korean_doctor: formData.korean_doctor || null,
         western_doctor: formData.western_doctor || null,
-        memo1: formData.memo1 || null,
-        memo2: formData.memo2 || null,
         assigned_manager: user.id
       };
 
@@ -315,15 +306,12 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         inflow_status: '유입',
         first_visit_date: '',
         visit_type: '',
-        referral_source: '',
         guardian_name: '',
         guardian_relationship: '',
         guardian_phone: '',
         manager_name: '',
         korean_doctor: '',
-        western_doctor: '',
-        memo1: '',
-        memo2: ''
+        western_doctor: ''
       });
 
       onClose();
@@ -639,18 +627,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
             </Select>
           </div>
 
-          {/* 의뢰처 */}
-          <div>
-            <Label htmlFor="referral_source">의뢰처</Label>
-            <Input
-              id="referral_source"
-              name="referral_source"
-              value={formData.referral_source}
-              onChange={handleInputChange}
-              placeholder="의뢰처"
-            />
-          </div>
-
           {/* 보호자 이름 */}
           <div>
             <Label htmlFor="guardian_name">보호자 이름</Label>
@@ -723,32 +699,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               value={formData.western_doctor}
               onChange={handleInputChange}
               placeholder="양방주치의"
-            />
-          </div>
-
-          {/* 메모1 */}
-          <div className="md:col-span-2 lg:grid-cols-3">
-            <Label htmlFor="memo1">메모1</Label>
-            <Textarea
-              id="memo1"
-              name="memo1"
-              value={formData.memo1}
-              onChange={handleInputChange}
-              placeholder="메모1"
-              rows={2}
-            />
-          </div>
-
-          {/* 메모2 */}
-          <div className="md:col-span-2 lg:col-span-3">
-            <Label htmlFor="memo2">메모2</Label>
-            <Textarea
-              id="memo2"
-              name="memo2"
-              value={formData.memo2}
-              onChange={handleInputChange}
-              placeholder="메모2"
-              rows={2}
             />
           </div>
         </div>
