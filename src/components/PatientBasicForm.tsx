@@ -244,7 +244,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         management_status: formData.management_status || null,
         hospital_treatment: formData.hospital_treatment || null,
         examination_schedule: formData.examination_schedule || null,
-        first_visit_date: formData.first_visit_date || null,
         assigned_manager: user.id
       };
 
@@ -763,9 +762,10 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
             <Input
               id="first_visit_date"
               name="first_visit_date"
-              type="date"
-              value={formData.first_visit_date}
-              onChange={handleInputChange}
+              value={formData.first_visit_date ? new Date(formData.first_visit_date).toLocaleDateString('ko-KR') : '-'}
+              disabled
+              className="bg-muted"
+              placeholder="환자 등록일"
             />
           </div>
 
@@ -775,9 +775,10 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
             <Input
               id="last_visit_date"
               name="last_visit_date"
-              type="date"
-              value={formData.last_visit_date}
-              onChange={handleInputChange}
+              value={formData.last_visit_date ? new Date(formData.last_visit_date).toLocaleDateString('ko-KR') : '-'}
+              disabled
+              className="bg-muted"
+              placeholder="일별 환자 관리 현황에서 자동 계산"
             />
           </div>
         </div>
