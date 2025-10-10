@@ -25,15 +25,32 @@ interface Patient {
   id: string;
   name: string;
   customer_number?: string;
-  diagnosis?: string;
-  detailed_diagnosis?: string;
+  resident_number_masked?: string;
+  phone?: string;
+  gender?: string;
+  age?: number;
+  diagnosis_category?: string;
+  diagnosis_detail?: string;
   korean_doctor?: string;
   western_doctor?: string;
   manager_name?: string;
-  previous_hospital?: string;
-  memo1?: string;
-  memo2?: string;
+  hospital_category?: string;
+  hospital_branch?: string;
   management_status?: string;
+  created_at?: string;
+  visit_motivation?: string;
+  address?: string;
+  crm_memo?: string;
+  patient_or_guardian?: string;
+  guardian_name?: string;
+  guardian_relationship?: string;
+  guardian_phone?: string;
+  diet_info?: string;
+  visit_type?: string;
+  inflow_status?: string;
+  insurance_type?: string;
+  hospital_treatment?: string;
+  examination_schedule?: string;
   admission_cycles?: AdmissionCycle[];
 }
 
@@ -51,7 +68,6 @@ interface DailyStatusGridProps {
   yearMonth: string;
   daysInMonth: number;
   onStatusUpdate: (patientId: string, date: string, statusType: string, notes?: string) => Promise<void>;
-  onMemoUpdate: (patientId: string, memoType: 'memo1' | 'memo2', value: string) => Promise<void>;
   onManagementStatusUpdate: (patientId: string, status: string) => Promise<void>;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
@@ -63,7 +79,6 @@ export function DailyStatusGrid({
   yearMonth,
   daysInMonth,
   onStatusUpdate,
-  onMemoUpdate,
   onManagementStatusUpdate,
   onPreviousMonth,
   onNextMonth,
@@ -75,12 +90,6 @@ export function DailyStatusGrid({
   } | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
-  const [memoCell, setMemoCell] = useState<{
-    patientId: string;
-    memoType: 'memo1' | 'memo2';
-    currentValue: string;
-  } | null>(null);
-  const [memoValue, setMemoValue] = useState<string>('');
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const [editingManagementStatus, setEditingManagementStatus] = useState<string>('');
   const [savedScrollPosition, setSavedScrollPosition] = useState<number>(0);
@@ -248,19 +257,6 @@ export function DailyStatusGrid({
     setSelectedCell(null);
     setSelectedStatus('');
     setNotes('');
-  };
-
-  const handleMemoDoubleClick = (patientId: string, memoType: 'memo1' | 'memo2', currentValue: string) => {
-    setMemoCell({ patientId, memoType, currentValue });
-    setMemoValue(currentValue);
-  };
-
-  const handleMemoSave = async () => {
-    if (!memoCell) return;
-    
-    await onMemoUpdate(memoCell.patientId, memoCell.memoType, memoValue);
-    setMemoCell(null);
-    setMemoValue('');
   };
 
   const getDayOfWeek = (day: number) => {
@@ -695,7 +691,7 @@ export function DailyStatusGrid({
                         담당: {patient.manager_name || '-'}
                       </div>
                       <div className="text-[10px] text-muted-foreground">
-                        진단: {patient.diagnosis || '-'}
+                        진단: {patient.diagnosis_category || '-'}
                       </div>
                       <div className="text-[10px]">
                         <Badge variant={
@@ -708,17 +704,14 @@ export function DailyStatusGrid({
                       </div>
                     </div>
                   </td>
-                  <td 
-                    className="p-2 border text-xs cursor-pointer hover:bg-muted/50"
-                    onDoubleClick={() => handleMemoDoubleClick(patient.id, 'memo1', patient.memo1 || '')}
-                  >
-                    {patient.memo1 || '-'}
+                  <td className="p-2 border text-xs">
+                    -
                   </td>
                   <td className="p-2 border text-xs">
                     {[patient.korean_doctor, patient.western_doctor].filter(Boolean).join(', ') || '-'}
                   </td>
                   <td className="p-2 border text-xs">
-                    {patient.previous_hospital || '-'}
+                    {patient.hospital_category || '-'}
                   </td>
                   {renderPatientRow(patient)}
                 </tr>
@@ -799,39 +792,6 @@ export function DailyStatusGrid({
                   저장
                 </Button>
               </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 메모 편집 다이얼로그 */}
-      <Dialog open={!!memoCell} onOpenChange={() => setMemoCell(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              메모 편집
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="memo">메모 내용</Label>
-              <Textarea
-                id="memo"
-                value={memoValue}
-                onChange={(e) => setMemoValue(e.target.value)}
-                placeholder="메모를 입력하세요..."
-                rows={4}
-              />
-            </div>
-            
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setMemoCell(null)}>
-                취소
-              </Button>
-              <Button onClick={handleMemoSave}>
-                저장
-              </Button>
             </div>
           </div>
         </DialogContent>
