@@ -23,10 +23,11 @@ interface Patient {
   inflow_status?: string;
   visit_type?: string;
   visit_motivation?: string;
-  diagnosis?: string;
-  detailed_diagnosis?: string;
+  diagnosis_category?: string;
+  diagnosis_detail?: string;
   counselor?: string;
-  previous_hospital?: string;
+  hospital_category?: string;
+  hospital_branch?: string;
   diet_info?: string;
   korean_doctor?: string;
   manager_name?: string;
@@ -151,7 +152,7 @@ export default function FirstVisitManagement() {
       (patient.western_doctor && patient.western_doctor.toLowerCase().includes(search)) ||
       (patient.korean_doctor && patient.korean_doctor.toLowerCase().includes(search)) ||
       (patient.visit_type && patient.visit_type.toLowerCase().includes(search)) ||
-      (patient.previous_hospital && patient.previous_hospital.toLowerCase().includes(search))
+      (patient.hospital_category && patient.hospital_category.toLowerCase().includes(search))
     );
   });
 
@@ -233,12 +234,12 @@ export default function FirstVisitManagement() {
                       {patient.visit_motivation || '-'}
                     </TableCell>
                     <TableCell className="font-medium">{patient.name}</TableCell>
-                    <TableCell>{patient.diagnosis || '-'}</TableCell>
+                    <TableCell>{patient.diagnosis_category || '-'}</TableCell>
                     <TableCell className="max-w-32 truncate">
-                      {patient.detailed_diagnosis || '-'}
+                      {patient.diagnosis_detail || '-'}
                     </TableCell>
                     <TableCell>{patient.counselor || '-'}</TableCell>
-                    <TableCell>{patient.previous_hospital || '-'}</TableCell>
+                    <TableCell>{patient.hospital_category || '-'}</TableCell>
                     <TableCell>{patient.diet_info || '-'}</TableCell>
                     <TableCell>{patient.korean_doctor || '-'}</TableCell>
                     <TableCell>{patient.manager_name || '-'}</TableCell>
@@ -396,12 +397,12 @@ export default function FirstVisitManagement() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="font-medium">진단명:</span>
-                    <span>{selectedPatientDetail?.diagnosis || '-'}</span>
+                    <span className="font-medium">진단명 (대분류):</span>
+                    <span>{selectedPatientDetail?.diagnosis_category || '-'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="font-medium">세부진단명:</span>
-                    <span>{selectedPatientDetail?.detailed_diagnosis || '-'}</span>
+                    <span className="font-medium">진단명 (중분류):</span>
+                    <span>{selectedPatientDetail?.diagnosis_detail || '-'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">한방주치의:</span>
@@ -428,8 +429,12 @@ export default function FirstVisitManagement() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="font-medium">이전병원:</span>
-                    <span>{selectedPatientDetail?.previous_hospital || '-'}</span>
+                    <span className="font-medium">이전병원 (대분류):</span>
+                    <span>{selectedPatientDetail?.hospital_category || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">이전병원 (중분류):</span>
+                    <span>{selectedPatientDetail?.hospital_branch || '-'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">식이:</span>

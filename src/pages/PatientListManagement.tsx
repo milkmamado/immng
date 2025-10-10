@@ -27,10 +27,11 @@ interface Patient {
   inflow_status?: string;
   visit_type?: string;
   visit_motivation?: string;
-  diagnosis?: string;
-  detailed_diagnosis?: string;
+  diagnosis_category?: string;
+  diagnosis_detail?: string;
   counselor?: string;
-  previous_hospital?: string;
+  hospital_category?: string;
+  hospital_branch?: string;
   diet_info?: string;
   manager_name?: string;
   korean_doctor?: string;

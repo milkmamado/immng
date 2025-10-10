@@ -49,9 +49,9 @@ export default function MarketingStatistics() {
       // 진단명별 방문유형 통계
       const { data: diagnosisData, error: diagnosisError } = await supabase
         .from('patients')
-        .select('detailed_diagnosis, visit_type')
+        .select('diagnosis_detail, visit_type')
         .gte('first_visit_date', monthsAgo.toISOString().split('T')[0])
-        .not('detailed_diagnosis', 'is', null)
+        .not('diagnosis_detail', 'is', null)
         .not('visit_type', 'is', null);
 
       if (diagnosisError) throw diagnosisError;
@@ -61,7 +61,7 @@ export default function MarketingStatistics() {
       const diagnosisTotals = new Map<string, number>();
       
       diagnosisData?.forEach(patient => {
-        const diagnosis = patient.detailed_diagnosis || '미분류';
+        const diagnosis = patient.diagnosis_detail || '미분류';
         const visitType = patient.visit_type || '미분류';
         
         if (!diagnosisMap.has(diagnosis)) {
@@ -92,15 +92,15 @@ export default function MarketingStatistics() {
       // 이전병원 통계
       const { data: hospitalData, error: hospitalError } = await supabase
         .from('patients')
-        .select('previous_hospital')
+        .select('hospital_category')
         .gte('first_visit_date', monthsAgo.toISOString().split('T')[0])
-        .not('previous_hospital', 'is', null);
+        .not('hospital_category', 'is', null);
 
       if (hospitalError) throw hospitalError;
 
       const hospitalMap = new Map<string, number>();
       hospitalData?.forEach(patient => {
-        const hospital = patient.previous_hospital || '미기재';
+        const hospital = patient.hospital_category || '미기재';
         hospitalMap.set(hospital, (hospitalMap.get(hospital) || 0) + 1);
       });
 

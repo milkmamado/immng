@@ -19,8 +19,8 @@ interface Patient {
   phone?: string;
   age?: number;
   gender?: string;
-  detailed_diagnosis?: string;
-  diagnosis?: string;
+  diagnosis_detail?: string;
+  diagnosis_category?: string;
   manager_name?: string;
   inflow_status?: string;
   created_at: string;
@@ -32,7 +32,8 @@ interface Patient {
   counselor?: string;
   korean_doctor?: string;
   western_doctor?: string;
-  previous_hospital?: string;
+  hospital_category?: string;
+  hospital_branch?: string;
   diet_info?: string;
   visit_motivation?: string;
   crm_memo?: string;

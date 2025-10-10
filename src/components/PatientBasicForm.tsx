@@ -29,8 +29,10 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     gender: '',                 // 성별 (API)
     age: '',                    // 나이(만) (API)
     visit_motivation: '',       // 내원동기 (API)
-    diagnosis: '',              // 진단명 (API)
-    previous_hospital: '',      // 이전병원코드 (API)
+    diagnosis_category: '',     // 진단명 대분류 (API)
+    diagnosis_detail: '',       // 진단명 중분류 (API)
+    hospital_category: '',      // 이전병원 대분류 (API)
+    hospital_branch: '',        // 이전병원 중분류 (API)
     address: '',                // 주소 (API)
     crm_memo: '',               // CRM메모 (API)
     
@@ -48,7 +50,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     
     // 기타 필드 (기존 유지)
     birth_date: '',
-    detailed_diagnosis: '',
     counselor: '',
     diet_info: '',
     korean_doctor: '',
@@ -56,8 +57,10 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
   });
 
   const [loading, setLoading] = useState(false);
-  const [diagnosisOptions, setDiagnosisOptions] = useState<Option[]>([]);
-  const [hospitalOptions, setHospitalOptions] = useState<Option[]>([]);
+  const [diagnosisCategoryOptions, setDiagnosisCategoryOptions] = useState<Option[]>([]);
+  const [diagnosisDetailOptions, setDiagnosisDetailOptions] = useState<Option[]>([]);
+  const [hospitalCategoryOptions, setHospitalCategoryOptions] = useState<Option[]>([]);
+  const [hospitalBranchOptions, setHospitalBranchOptions] = useState<Option[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -74,8 +77,10 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         gender: patient.gender || '',
         age: patient.age?.toString() || '',
         visit_motivation: patient.visit_motivation || '',
-        diagnosis: patient.diagnosis || '',
-        previous_hospital: patient.previous_hospital || '',
+        diagnosis_category: patient.diagnosis_category || '',
+        diagnosis_detail: patient.diagnosis_detail || '',
+        hospital_category: patient.hospital_category || '',
+        hospital_branch: patient.hospital_branch || '',
         address: patient.address || '',
         crm_memo: patient.crm_memo || '',
         inflow_status: patient.inflow_status || '유입',
@@ -89,7 +94,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         memo1: patient.memo1 || '',
         memo2: patient.memo2 || '',
         birth_date: patient.birth_date || '',
-        detailed_diagnosis: patient.detailed_diagnosis || '',
         counselor: patient.counselor || '',
         diet_info: patient.diet_info || '',
         korean_doctor: patient.korean_doctor || '',
@@ -107,15 +111,46 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
 
   const fetchOptions = async () => {
     try {
-      const [diagnosis, hospital] = await Promise.all([
-        (supabase as any).from('diagnosis_options').select('*').order('name'),
-        (supabase as any).from('hospital_options').select('*').order('name')
+      // 대분류만 가져오기 (parent_id가 null인 것)
+      const [diagnosisCategories, hospitalCategories] = await Promise.all([
+        supabase.from('diagnosis_options').select('*').is('parent_id', null).order('name'),
+        supabase.from('hospital_options').select('*').is('parent_id', null).order('name')
       ]);
 
-      if (diagnosis.data) setDiagnosisOptions(diagnosis.data);
-      if (hospital.data) setHospitalOptions(hospital.data);
+      if (diagnosisCategories.data) setDiagnosisCategoryOptions(diagnosisCategories.data);
+      if (hospitalCategories.data) setHospitalCategoryOptions(hospitalCategories.data);
     } catch (error) {
       console.error('Error fetching options:', error);
+    }
+  };
+
+  // 진단명 대분류 선택 시 중분류 가져오기
+  const fetchDiagnosisDetails = async (categoryId: string) => {
+    try {
+      const { data } = await supabase
+        .from('diagnosis_options')
+        .select('*')
+        .eq('parent_id', categoryId)
+        .order('name');
+      
+      if (data) setDiagnosisDetailOptions(data);
+    } catch (error) {
+      console.error('Error fetching diagnosis details:', error);
+    }
+  };
+
+  // 병원 대분류 선택 시 중분류 가져오기
+  const fetchHospitalBranches = async (categoryId: string) => {
+    try {
+      const { data } = await supabase
+        .from('hospital_options')
+        .select('*')
+        .eq('parent_id', categoryId)
+        .order('name');
+      
+      if (data) setHospitalBranchOptions(data);
+    } catch (error) {
+      console.error('Error fetching hospital branches:', error);
     }
   };
 
@@ -150,11 +185,29 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     }));
   };
 
-  const handleSelectChange = (name: string, value: string) => {
+  const handleSelectChange = async (name: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+
+    // 진단명 대분류 선택 시 중분류 옵션 가져오기
+    if (name === 'diagnosis_category') {
+      const selectedOption = diagnosisCategoryOptions.find(opt => opt.name === value);
+      if (selectedOption) {
+        await fetchDiagnosisDetails(selectedOption.id);
+        setFormData(prev => ({ ...prev, diagnosis_detail: '' })); // 중분류 초기화
+      }
+    }
+
+    // 병원 대분류 선택 시 중분류 옵션 가져오기
+    if (name === 'hospital_category') {
+      const selectedOption = hospitalCategoryOptions.find(opt => opt.name === value);
+      if (selectedOption) {
+        await fetchHospitalBranches(selectedOption.id);
+        setFormData(prev => ({ ...prev, hospital_branch: '' })); // 중분류 초기화
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -173,8 +226,10 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         gender: formData.gender || null,
         age: formData.age ? parseInt(formData.age) : null,
         visit_motivation: formData.visit_motivation || null,
-        diagnosis: formData.diagnosis || null,
-        previous_hospital: formData.previous_hospital || null,
+        diagnosis_category: formData.diagnosis_category || null,
+        diagnosis_detail: formData.diagnosis_detail || null,
+        hospital_category: formData.hospital_category || null,
+        hospital_branch: formData.hospital_branch || null,
         address: formData.address || null,
         crm_memo: formData.crm_memo || null,
         inflow_status: formData.inflow_status,
@@ -188,7 +243,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         memo1: formData.memo1 || null,
         memo2: formData.memo2 || null,
         birth_date: formData.birth_date || null,
-        detailed_diagnosis: formData.detailed_diagnosis || null,
         counselor: formData.counselor || null,
         diet_info: formData.diet_info || null,
         korean_doctor: formData.korean_doctor || null,
@@ -240,8 +294,10 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         gender: '',
         age: '',
         visit_motivation: '',
-        diagnosis: '',
-        previous_hospital: '',
+        diagnosis_category: '',
+        diagnosis_detail: '',
+        hospital_category: '',
+        hospital_branch: '',
         address: '',
         crm_memo: '',
         inflow_status: '유입',
@@ -255,7 +311,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         memo1: '',
         memo2: '',
         birth_date: '',
-        detailed_diagnosis: '',
         counselor: '',
         diet_info: '',
         korean_doctor: '',
@@ -387,19 +442,19 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
             />
           </div>
 
-          {/* 진단명 */}
+          {/* 진단명 대분류 */}
           <div>
-            <Label htmlFor="diagnosis">진단명</Label>
+            <Label htmlFor="diagnosis_category">진단명 (대분류)</Label>
             <Select 
-              value={formData.diagnosis} 
-              onValueChange={(value) => handleSelectChange('diagnosis', value)}
+              value={formData.diagnosis_category} 
+              onValueChange={(value) => handleSelectChange('diagnosis_category', value)}
               disabled
             >
               <SelectTrigger className="bg-muted">
                 <SelectValue placeholder="API에서 자동 입력" />
               </SelectTrigger>
               <SelectContent className="z-[100] bg-background">
-                {diagnosisOptions.map(option => (
+                {diagnosisCategoryOptions.map(option => (
                   <SelectItem key={option.id} value={option.name}>
                     {option.name}
                   </SelectItem>
@@ -408,19 +463,61 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
             </Select>
           </div>
 
-          {/* 이전병원코드 */}
+          {/* 진단명 중분류 */}
           <div>
-            <Label htmlFor="previous_hospital">이전병원코드</Label>
+            <Label htmlFor="diagnosis_detail">진단명 (중분류)</Label>
             <Select 
-              value={formData.previous_hospital} 
-              onValueChange={(value) => handleSelectChange('previous_hospital', value)}
+              value={formData.diagnosis_detail} 
+              onValueChange={(value) => handleSelectChange('diagnosis_detail', value)}
+              disabled={!formData.diagnosis_category}
+            >
+              <SelectTrigger className={!formData.diagnosis_category ? "bg-muted" : ""}>
+                <SelectValue placeholder={formData.diagnosis_category ? "API에서 자동 입력" : "대분류를 먼저 선택하세요"} />
+              </SelectTrigger>
+              <SelectContent className="z-[100] bg-background">
+                {diagnosisDetailOptions.map(option => (
+                  <SelectItem key={option.id} value={option.name}>
+                    {option.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* 이전병원 대분류 */}
+          <div>
+            <Label htmlFor="hospital_category">이전병원 (대분류)</Label>
+            <Select 
+              value={formData.hospital_category} 
+              onValueChange={(value) => handleSelectChange('hospital_category', value)}
               disabled
             >
               <SelectTrigger className="bg-muted">
                 <SelectValue placeholder="API에서 자동 입력" />
               </SelectTrigger>
               <SelectContent className="z-[100] bg-background">
-                {hospitalOptions.map(option => (
+                {hospitalCategoryOptions.map(option => (
+                  <SelectItem key={option.id} value={option.name}>
+                    {option.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* 이전병원 중분류 */}
+          <div>
+            <Label htmlFor="hospital_branch">이전병원 (중분류)</Label>
+            <Select 
+              value={formData.hospital_branch} 
+              onValueChange={(value) => handleSelectChange('hospital_branch', value)}
+              disabled={!formData.hospital_category}
+            >
+              <SelectTrigger className={!formData.hospital_category ? "bg-muted" : ""}>
+                <SelectValue placeholder={formData.hospital_category ? "API에서 자동 입력" : "대분류를 먼저 선택하세요"} />
+              </SelectTrigger>
+              <SelectContent className="z-[100] bg-background">
+                {hospitalBranchOptions.map(option => (
                   <SelectItem key={option.id} value={option.name}>
                     {option.name}
                   </SelectItem>
@@ -577,18 +674,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               type="date"
               value={formData.birth_date}
               onChange={handleInputChange}
-            />
-          </div>
-
-          {/* 세부진단명 */}
-          <div className="md:col-span-2 lg:col-span-3">
-            <Label htmlFor="detailed_diagnosis">세부진단명</Label>
-            <Input
-              id="detailed_diagnosis"
-              name="detailed_diagnosis"
-              value={formData.detailed_diagnosis}
-              onChange={handleInputChange}
-              placeholder="세부진단명"
             />
           </div>
 

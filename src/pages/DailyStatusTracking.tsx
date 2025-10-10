@@ -23,12 +23,13 @@ interface Patient {
   id: string;
   name: string;
   patient_number: string;
-  diagnosis?: string;
-  detailed_diagnosis?: string;
+  diagnosis_category?: string;
+  diagnosis_detail?: string;
   korean_doctor?: string;
   western_doctor?: string;
   manager_name?: string;
-  previous_hospital?: string;
+  hospital_category?: string;
+  hospital_branch?: string;
   memo1?: string;
   memo2?: string;
   management_status?: string;
@@ -102,7 +103,7 @@ export default function DailyStatusTracking() {
         (patient.manager_name && patient.manager_name.toLowerCase().includes(search)) ||
         (patient.western_doctor && patient.western_doctor.toLowerCase().includes(search)) ||
         (patient.korean_doctor && patient.korean_doctor.toLowerCase().includes(search)) ||
-        (patient.previous_hospital && patient.previous_hospital.toLowerCase().includes(search))
+        (patient.hospital_category && patient.hospital_category.toLowerCase().includes(search))
       );
       setFilteredPatients(filtered);
     }
@@ -115,8 +116,8 @@ export default function DailyStatusTracking() {
       let patientsQuery = supabase
         .from('patients')
         .select(`
-          id, name, patient_number, diagnosis, detailed_diagnosis, 
-          korean_doctor, western_doctor, manager_name, previous_hospital, 
+          id, name, patient_number, diagnosis_category, diagnosis_detail, 
+          korean_doctor, western_doctor, manager_name, hospital_category, hospital_branch,
           memo1, memo2, management_status, created_at,
           admission_cycles (
             id, admission_date, discharge_date, admission_type, status

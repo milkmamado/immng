@@ -122,20 +122,31 @@ export type Database = {
           created_by: string | null
           id: string
           name: string
+          parent_id: string | null
         }
         Insert: {
           created_at?: string
           created_by?: string | null
           id?: string
           name: string
+          parent_id?: string | null
         }
         Update: {
           created_at?: string
           created_by?: string | null
           id?: string
           name?: string
+          parent_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "diagnosis_options_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "diagnosis_options"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hospital_options: {
         Row: {
@@ -143,20 +154,31 @@ export type Database = {
           created_by: string | null
           id: string
           name: string
+          parent_id: string | null
         }
         Insert: {
           created_at?: string
           created_by?: string | null
           id?: string
           name: string
+          parent_id?: string | null
         }
         Update: {
           created_at?: string
           created_by?: string | null
           id?: string
           name?: string
+          parent_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "hospital_options_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "hospital_options"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       insurance_type_options: {
         Row: {
@@ -481,8 +503,8 @@ export type Database = {
           created_at: string
           crm_memo: string | null
           customer_number: string | null
-          detailed_diagnosis: string | null
-          diagnosis: string | null
+          diagnosis_category: string | null
+          diagnosis_detail: string | null
           diet_info: string | null
           discharge_date: string | null
           emergency_contact: string | null
@@ -492,6 +514,8 @@ export type Database = {
           guardian_name: string | null
           guardian_phone: string | null
           guardian_relationship: string | null
+          hospital_branch: string | null
+          hospital_category: string | null
           hospital_treatment: string | null
           id: string
           inflow_status: string | null
@@ -507,7 +531,6 @@ export type Database = {
           patient_number: string
           payment_amount: number | null
           phone: string | null
-          previous_hospital: string | null
           referral_source: string | null
           resident_number_masked: string | null
           treatment_plan: string | null
@@ -526,8 +549,8 @@ export type Database = {
           created_at?: string
           crm_memo?: string | null
           customer_number?: string | null
-          detailed_diagnosis?: string | null
-          diagnosis?: string | null
+          diagnosis_category?: string | null
+          diagnosis_detail?: string | null
           diet_info?: string | null
           discharge_date?: string | null
           emergency_contact?: string | null
@@ -537,6 +560,8 @@ export type Database = {
           guardian_name?: string | null
           guardian_phone?: string | null
           guardian_relationship?: string | null
+          hospital_branch?: string | null
+          hospital_category?: string | null
           hospital_treatment?: string | null
           id?: string
           inflow_status?: string | null
@@ -552,7 +577,6 @@ export type Database = {
           patient_number: string
           payment_amount?: number | null
           phone?: string | null
-          previous_hospital?: string | null
           referral_source?: string | null
           resident_number_masked?: string | null
           treatment_plan?: string | null
@@ -571,8 +595,8 @@ export type Database = {
           created_at?: string
           crm_memo?: string | null
           customer_number?: string | null
-          detailed_diagnosis?: string | null
-          diagnosis?: string | null
+          diagnosis_category?: string | null
+          diagnosis_detail?: string | null
           diet_info?: string | null
           discharge_date?: string | null
           emergency_contact?: string | null
@@ -582,6 +606,8 @@ export type Database = {
           guardian_name?: string | null
           guardian_phone?: string | null
           guardian_relationship?: string | null
+          hospital_branch?: string | null
+          hospital_category?: string | null
           hospital_treatment?: string | null
           id?: string
           inflow_status?: string | null
@@ -597,7 +623,6 @@ export type Database = {
           patient_number?: string
           payment_amount?: number | null
           phone?: string | null
-          previous_hospital?: string | null
           referral_source?: string | null
           resident_number_masked?: string | null
           treatment_plan?: string | null
