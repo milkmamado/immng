@@ -970,68 +970,114 @@ export default function PatientListManagement() {
                   </CardContent>
                 </Card>
 
-                {/* 편집 가능한 추가 정보 */}
-                <Card>
+                {/* 상세 정보 입력 섹션 */}
+                <Card className="md:col-span-2">
                   <CardHeader>
-                    <CardTitle className="text-lg">추가 정보 (편집 가능)</CardTitle>
+                    <CardTitle className="text-lg">상세 정보 입력</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label htmlFor="insurance-type">실비보험유형</Label>
-                      <Select 
-                        value={selectedPatientDetail?.insurance_type || ''} 
-                        onValueChange={(value) => {
-                          updateEditingField('insurance_type', value);
-                          savePatientField('insurance_type', value);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="실비보험유형을 선택하세요" />
-                        </SelectTrigger>
-                        <SelectContent className="z-[100] bg-background">
-                          {insuranceTypeOptions.map(option => (
-                            <SelectItem key={option.id} value={option.name}>
-                              {option.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>월평균 입원일수</Label>
-                      <div className="p-2 bg-muted rounded-md">
-                        <span className="text-sm">
-                          {selectedPatientDetail?.monthly_avg_inpatient_days 
-                            ? `${selectedPatientDetail.monthly_avg_inpatient_days}일` 
-                            : '-'
-                          }
-                        </span>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="insurance-type">실비보험유형</Label>
+                        <Select 
+                          value={selectedPatientDetail?.insurance_type || ''} 
+                          onValueChange={(value) => {
+                            updateEditingField('insurance_type', value);
+                            savePatientField('insurance_type', value);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="실비보험유형을 선택하세요" />
+                          </SelectTrigger>
+                          <SelectContent className="z-[100] bg-background">
+                            {insuranceTypeOptions.map(option => (
+                              <SelectItem key={option.id} value={option.name}>
+                                {option.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        일별 환자 관리 현황에서 자동 계산됩니다
-                      </p>
-                    </div>
-                    <div>
-                      <Label>월평균 외래일수</Label>
-                      <div className="p-2 bg-muted rounded-md">
-                        <span className="text-sm">
-                          {selectedPatientDetail?.monthly_avg_outpatient_days 
-                            ? `${selectedPatientDetail.monthly_avg_outpatient_days}일` 
-                            : '-'
-                          }
-                        </span>
+
+                      <div>
+                        <Label>월평균 입원일수</Label>
+                        <div className="p-2 bg-muted rounded-md h-10 flex items-center">
+                          <span className="text-sm">
+                            {selectedPatientDetail?.monthly_avg_inpatient_days 
+                              ? `${selectedPatientDetail.monthly_avg_inpatient_days}일` 
+                              : '-'
+                            }
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          일별 환자 관리 현황에서 자동 계산
+                        </p>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        일별 환자 관리 현황에서 자동 계산됩니다
-                      </p>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium">수납급액:</span>
-                      <span className="font-semibold text-primary">
-                        {selectedPatientDetail?.payment_amount ? 
-                          `${selectedPatientDetail.payment_amount.toLocaleString()}원` : '-'
-                        }
-                      </span>
+
+                      <div>
+                        <Label>월평균 외래일수</Label>
+                        <div className="p-2 bg-muted rounded-md h-10 flex items-center">
+                          <span className="text-sm">
+                            {selectedPatientDetail?.monthly_avg_outpatient_days 
+                              ? `${selectedPatientDetail.monthly_avg_outpatient_days}일` 
+                              : '-'
+                            }
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          일별 환자 관리 현황에서 자동 계산
+                        </p>
+                      </div>
+
+                      <div>
+                        <Label>수납금액</Label>
+                        <div className="p-2 bg-muted rounded-md h-10 flex items-center">
+                          <span className="text-sm font-semibold text-primary">
+                            {selectedPatientDetail?.payment_amount ? 
+                              `${selectedPatientDetail.payment_amount.toLocaleString()}원` : '-'
+                            }
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          치료 계획 관리에서 자동 계산
+                        </p>
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <Label htmlFor="hospital-treatment">본병원 치료</Label>
+                        <Textarea
+                          id="hospital-treatment"
+                          placeholder="본병원 치료 내용을 입력하세요"
+                          value={selectedPatientDetail?.hospital_treatment || ''}
+                          onChange={(e) => updateEditingField('hospital_treatment', e.target.value)}
+                          onBlur={(e) => savePatientField('hospital_treatment', e.target.value)}
+                          rows={3}
+                        />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <Label htmlFor="examination-schedule">본병원 검사일정</Label>
+                        <Textarea
+                          id="examination-schedule"
+                          placeholder="본병원 검사일정을 입력하세요"
+                          value={selectedPatientDetail?.examination_schedule || ''}
+                          onChange={(e) => updateEditingField('examination_schedule', e.target.value)}
+                          onBlur={(e) => savePatientField('examination_schedule', e.target.value)}
+                          rows={3}
+                        />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <Label htmlFor="treatment-plan">치료 계획</Label>
+                        <Textarea
+                          id="treatment-plan"
+                          placeholder="치료 계획을 입력하세요"
+                          value={selectedPatientDetail?.treatment_plan || ''}
+                          onChange={(e) => updateEditingField('treatment_plan', e.target.value)}
+                          onBlur={(e) => savePatientField('treatment_plan', e.target.value)}
+                          rows={4}
+                        />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -1076,45 +1122,6 @@ export default function PatientListManagement() {
                 </Card>
               </div>
 
-              {/* 편집 가능한 본병원 치료 정보 */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">본병원 치료 (편집 가능)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div>
-                    <Label htmlFor="hospital-treatment">본병원 치료</Label>
-                    <Textarea
-                      id="hospital-treatment"
-                      placeholder="본병원 치료 내용을 입력하세요"
-                      value={selectedPatientDetail?.hospital_treatment || ''}
-                      onChange={(e) => updateEditingField('hospital_treatment', e.target.value)}
-                      onBlur={(e) => savePatientField('hospital_treatment', e.target.value)}
-                      rows={4}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* 편집 가능한 검사 일정 */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">본병원 검사일정 (편집 가능)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div>
-                    <Label htmlFor="examination-schedule">본병원 검사일정</Label>
-                    <Textarea
-                      id="examination-schedule"
-                      placeholder="본병원 검사일정을 입력하세요"
-                      value={selectedPatientDetail?.examination_schedule || ''}
-                      onChange={(e) => updateEditingField('examination_schedule', e.target.value)}
-                      onBlur={(e) => savePatientField('examination_schedule', e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
 
               {/* CRM메모 */}
               {selectedPatientDetail?.crm_memo && (
