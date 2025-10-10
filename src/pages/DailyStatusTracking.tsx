@@ -52,6 +52,7 @@ interface Patient {
   hospital_treatment?: string;
   examination_schedule?: string;
   payment_amount?: number;
+  memo1?: string;
 }
 
 interface DailyStatus {

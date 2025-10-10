@@ -39,6 +39,7 @@ interface Patient {
   korean_doctor?: string;
   western_doctor?: string;
   crm_memo?: string;
+  memo1?: string;
   created_at: string;
 }
 
