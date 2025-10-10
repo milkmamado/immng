@@ -49,6 +49,7 @@ interface Patient {
   guardian_name?: string;
   guardian_relationship?: string;
   guardian_phone?: string;
+  management_status?: string;
   created_at: string;
 }
 
@@ -86,6 +87,7 @@ export default function PatientListManagement() {
   const [loadingTreatments, setLoadingTreatments] = useState(false);
   const [viewMode, setViewMode] = useState<'full' | 'treatment-only'>('full');
   const [editingFields, setEditingFields] = useState<Record<string, any>>({});
+  const [currentUserName, setCurrentUserName] = useState<string>('');
   
   // 옵션 데이터 state
   const [diagnosisOptions, setDiagnosisOptions] = useState<Option[]>([]);
@@ -100,6 +102,7 @@ export default function PatientListManagement() {
   useEffect(() => {
     fetchPatients();
     fetchOptions();
+    fetchCurrentUserName();
   }, []);
 
   useEffect(() => {
@@ -263,6 +266,25 @@ export default function PatientListManagement() {
       if (patientStatus.data) setPatientStatusOptions(patientStatus.data);
     } catch (error) {
       console.error('Error fetching options:', error);
+    }
+  };
+
+  const fetchCurrentUserName = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile) {
+          setCurrentUserName(profile.name);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user name:', error);
     }
   };
 
@@ -1086,7 +1108,7 @@ export default function PatientListManagement() {
                   <div>
                     <Label>담당자(상담실장)</Label>
                     <Input
-                      value={selectedPatientDetail?.manager_name || ''}
+                      value={selectedPatientDetail?.manager_name || currentUserName}
                       disabled
                       className="bg-muted"
                       placeholder="자동입력"
@@ -1137,6 +1159,28 @@ export default function PatientListManagement() {
                       </SelectTrigger>
                       <SelectContent className="z-[100] bg-background">
                         {insuranceTypeOptions.map(option => (
+                          <SelectItem key={option.id} value={option.name}>
+                            {option.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>관리 상태</Label>
+                    <Select 
+                      value={selectedPatientDetail?.management_status || '관리 중'} 
+                      onValueChange={(value) => {
+                        updateEditingField('management_status', value);
+                        savePatientField('management_status', value);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="관리 상태를 선택하세요" />
+                      </SelectTrigger>
+                      <SelectContent className="z-[100] bg-background">
+                        {patientStatusOptions.map(option => (
                           <SelectItem key={option.id} value={option.name}>
                             {option.name}
                           </SelectItem>
