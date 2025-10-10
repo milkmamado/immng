@@ -32,6 +32,30 @@ interface Patient {
   memo2?: string;
   management_status?: string;
   admission_cycles?: AdmissionCycle[];
+  resident_number_masked?: string;
+  phone?: string;
+  gender?: string;
+  age?: number;
+  visit_motivation?: string;
+  address?: string;
+  crm_memo?: string;
+  last_visit_date?: string;
+  diagnosis_category?: string;
+  diagnosis_detail?: string;
+  hospital_category?: string;
+  hospital_branch?: string;
+  diet_info?: string;
+  patient_or_guardian?: string;
+  inflow_status?: string;
+  visit_type?: string;
+  guardian_name?: string;
+  guardian_relationship?: string;
+  guardian_phone?: string;
+  insurance_type?: string;
+  hospital_treatment?: string;
+  examination_schedule?: string;
+  payment_amount?: number;
+  created_at?: string;
 }
 
 interface DailyStatus {

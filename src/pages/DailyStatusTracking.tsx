@@ -33,6 +33,25 @@ interface Patient {
   management_status?: string;
   created_at?: string;
   admission_cycles?: AdmissionCycle[];
+  resident_number_masked?: string;
+  phone?: string;
+  gender?: string;
+  age?: number;
+  visit_motivation?: string;
+  address?: string;
+  crm_memo?: string;
+  last_visit_date?: string;
+  diet_info?: string;
+  patient_or_guardian?: string;
+  inflow_status?: string;
+  visit_type?: string;
+  guardian_name?: string;
+  guardian_relationship?: string;
+  guardian_phone?: string;
+  insurance_type?: string;
+  hospital_treatment?: string;
+  examination_schedule?: string;
+  payment_amount?: number;
 }
 
 interface DailyStatus {
@@ -116,7 +135,11 @@ export default function DailyStatusTracking() {
         .select(`
           id, name, customer_number, diagnosis_category, diagnosis_detail, 
           korean_doctor, western_doctor, manager_name, hospital_category, hospital_branch,
-          management_status, created_at,
+          management_status, created_at, resident_number_masked, phone, gender, age,
+          visit_motivation, address, crm_memo, last_visit_date, diet_info,
+          patient_or_guardian, inflow_status, visit_type, guardian_name,
+          guardian_relationship, guardian_phone, insurance_type, hospital_treatment,
+          examination_schedule, payment_amount,
           admission_cycles (
             id, admission_date, discharge_date, admission_type, status
           )
