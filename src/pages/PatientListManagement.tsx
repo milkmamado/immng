@@ -692,7 +692,7 @@ export default function PatientListManagement() {
             <Table className="min-w-[1600px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>차트번호</TableHead>
+                  <TableHead>고객번호</TableHead>
                   <TableHead>외래/입원구분</TableHead>
                   <TableHead>담당실장</TableHead>
                   <TableHead>환자명</TableHead>
