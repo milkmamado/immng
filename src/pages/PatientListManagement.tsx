@@ -172,12 +172,13 @@ export default function PatientListManagement() {
             daysSinceCheck = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
           }
 
-          // 최종 상태(사망, 상태악화, 치료종료)는 자동 업데이트하지 않음
-          const finalStatuses = ['사망', '상태악화', '치료종료'];
+          // 최종 상태(사망, 상태악화, 치료종료, 아웃, 아웃위기)는 자동 업데이트하지 않음
+          // 사용자가 수동으로 설정한 상태는 유지되어야 함
+          const finalStatuses = ['사망', '상태악화', '치료종료', '아웃', '아웃위기'];
           let newManagementStatus = patient.management_status || "관리 중";
           
           if (!finalStatuses.includes(patient.management_status)) {
-            // 자동 상태 업데이트 로직 (관리 중, 아웃위기, 아웃만)
+            // 자동 상태 업데이트 로직 (관리 중만 자동 업데이트)
             if (daysSinceCheck >= 21) {
               newManagementStatus = "아웃";
             } else if (daysSinceCheck >= 14) {
