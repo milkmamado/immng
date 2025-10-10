@@ -523,6 +523,7 @@ export type Database = {
           last_visit_date: string | null
           management_status: string | null
           manager_name: string | null
+          memo1: string | null
           monthly_avg_days: number | null
           name: string
           patient_or_guardian: string | null
@@ -565,6 +566,7 @@ export type Database = {
           last_visit_date?: string | null
           management_status?: string | null
           manager_name?: string | null
+          memo1?: string | null
           monthly_avg_days?: number | null
           name: string
           patient_or_guardian?: string | null
@@ -607,6 +609,7 @@ export type Database = {
           last_visit_date?: string | null
           management_status?: string | null
           manager_name?: string | null
+          memo1?: string | null
           monthly_avg_days?: number | null
           name?: string
           patient_or_guardian?: string | null
