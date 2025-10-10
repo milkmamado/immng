@@ -546,7 +546,7 @@ export default function RiskManagement() {
                     <div>
                       <span className="font-medium">진단:</span>{" "}
                       <span className="text-muted-foreground">
-                        {patient.detailed_diagnosis || "-"}
+                        {patient.diagnosis_detail || "-"}
                       </span>
                     </div>
                     <div>
@@ -692,11 +692,11 @@ export default function RiskManagement() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex justify-between">
                       <span className="font-medium">진단명:</span>
-                      <span>{selectedPatientDetail.diagnosis || '-'}</span>
+                      <span>{selectedPatientDetail.diagnosis_category || '-'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">세부진단명:</span>
-                      <span>{selectedPatientDetail.detailed_diagnosis || '-'}</span>
+                      <span>{selectedPatientDetail.diagnosis_detail || '-'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">한방주치의:</span>
@@ -731,7 +731,7 @@ export default function RiskManagement() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex justify-between">
                       <span className="font-medium">이전병원:</span>
-                      <span>{selectedPatientDetail.previous_hospital || '-'}</span>
+                      <span>{selectedPatientDetail.hospital_category || '-'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">식이:</span>

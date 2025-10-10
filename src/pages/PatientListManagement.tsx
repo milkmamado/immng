@@ -106,7 +106,7 @@ export default function PatientListManagement() {
       (patient.western_doctor && patient.western_doctor.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (patient.korean_doctor && patient.korean_doctor.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (patient.visit_type && patient.visit_type.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (patient.previous_hospital && patient.previous_hospital.toLowerCase().includes(searchTerm.toLowerCase()))
+      (patient.hospital_category && patient.hospital_category.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     setFilteredPatients(filtered);
   }, [patients, searchTerm]);
@@ -727,7 +727,7 @@ export default function PatientListManagement() {
                     <TableCell>{patient.manager_name || '-'}</TableCell>
                     <TableCell className="font-medium">{patient.name}</TableCell>
                     <TableCell className="max-w-32 truncate">
-                      {patient.diagnosis || '-'}
+                      {patient.diagnosis_category || '-'}
                     </TableCell>
                     <TableCell>
                       {patient.first_visit_date ? 
@@ -875,10 +875,10 @@ export default function PatientListManagement() {
                     <div className="space-y-2">
                       <Label>진단명</Label>
                       <Select 
-                        value={selectedPatientDetail?.diagnosis || ''} 
+                        value={selectedPatientDetail?.diagnosis_category || ''} 
                         onValueChange={(value) => {
-                          updateEditingField('diagnosis', value);
-                          savePatientField('diagnosis', value);
+                          updateEditingField('diagnosis_category', value);
+                          savePatientField('diagnosis_category', value);
                         }}
                       >
                         <SelectTrigger className="w-full">
@@ -895,7 +895,7 @@ export default function PatientListManagement() {
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">세부진단명:</span>
-                      <span>{selectedPatientDetail?.detailed_diagnosis || '-'}</span>
+                      <span>{selectedPatientDetail?.diagnosis_detail || '-'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">한방주치의:</span>
@@ -946,10 +946,10 @@ export default function PatientListManagement() {
                     <div className="space-y-2">
                       <Label>이전병원</Label>
                       <Select 
-                        value={selectedPatientDetail?.previous_hospital || ''} 
+                        value={selectedPatientDetail?.hospital_category || ''} 
                         onValueChange={(value) => {
-                          updateEditingField('previous_hospital', value);
-                          savePatientField('previous_hospital', value);
+                          updateEditingField('hospital_category', value);
+                          savePatientField('hospital_category', value);
                         }}
                       >
                         <SelectTrigger className="w-full">
