@@ -1242,6 +1242,31 @@ export default function PatientListManagement() {
                       rows={3}
                     />
                   </div>
+
+                  {/* 일정 정보 */}
+                  <div>
+                    <Label>유입일</Label>
+                    <div className="p-2 bg-muted rounded-md h-10 flex items-center">
+                      <span className="text-sm">
+                        {selectedPatientDetail?.first_visit_date ? 
+                          new Date(selectedPatientDetail.first_visit_date).toLocaleDateString('ko-KR') :
+                          (selectedPatientDetail?.created_at ? 
+                            new Date(selectedPatientDetail.created_at).toLocaleDateString('ko-KR') : '-')
+                        }
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>마지막내원일</Label>
+                    <div className="p-2 bg-muted rounded-md h-10 flex items-center">
+                      <span className="text-sm">
+                        {selectedPatientDetail?.last_visit_date ? 
+                          new Date(selectedPatientDetail.last_visit_date).toLocaleDateString('ko-KR') : '-'
+                        }
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="flex justify-end gap-2 pt-4">
