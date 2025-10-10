@@ -62,53 +62,60 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
   }, []);
 
   useEffect(() => {
+    const loadPatientData = async () => {
+      if (patient && diagnosisCategoryOptions.length > 0 && hospitalCategoryOptions.length > 0) {
+        // 진단명 대분류가 있으면 중분류 옵션 먼저 가져오기
+        if (patient.diagnosis_category) {
+          const diagnosisCategory = diagnosisCategoryOptions.find(
+            opt => opt.name === patient.diagnosis_category
+          );
+          if (diagnosisCategory) {
+            await fetchDiagnosisDetails(diagnosisCategory.id);
+          }
+        }
+        
+        // 이전병원 대분류가 있으면 중분류 옵션 가져오기
+        if (patient.hospital_category) {
+          const hospitalCategory = hospitalCategoryOptions.find(
+            opt => opt.name === patient.hospital_category
+          );
+          if (hospitalCategory) {
+            await fetchHospitalBranches(hospitalCategory.id);
+          }
+        }
+
+        // 옵션을 모두 가져온 후 환자 데이터 설정
+        setFormData({
+          name: patient.name || '',
+          customer_number: patient.customer_number || '',
+          resident_number_masked: patient.resident_number_masked || '',
+          phone: patient.phone || '',
+          gender: patient.gender || '',
+          age: patient.age?.toString() || '',
+          visit_motivation: patient.visit_motivation || '',
+          diagnosis_category: patient.diagnosis_category || '',
+          diagnosis_detail: patient.diagnosis_detail || '',
+          hospital_category: patient.hospital_category || '',
+          hospital_branch: patient.hospital_branch || '',
+          address: patient.address || '',
+          crm_memo: patient.crm_memo || '',
+          patient_or_guardian: patient.patient_or_guardian || '환자',
+          diet_info: patient.diet_info || '',
+          inflow_status: patient.inflow_status || '유입',
+          first_visit_date: patient.first_visit_date || '',
+          visit_type: patient.visit_type || '',
+          guardian_name: patient.guardian_name || '',
+          guardian_relationship: patient.guardian_relationship || '',
+          guardian_phone: patient.guardian_phone || '',
+          manager_name: patient.manager_name || '',
+          korean_doctor: patient.korean_doctor || '',
+          western_doctor: patient.western_doctor || ''
+        });
+      }
+    };
+
     if (patient) {
-      setFormData({
-        name: patient.name || '',
-        customer_number: patient.customer_number || '',
-        resident_number_masked: patient.resident_number_masked || '',
-        phone: patient.phone || '',
-        gender: patient.gender || '',
-        age: patient.age?.toString() || '',
-        visit_motivation: patient.visit_motivation || '',
-        diagnosis_category: patient.diagnosis_category || '',
-        diagnosis_detail: patient.diagnosis_detail || '',
-        hospital_category: patient.hospital_category || '',
-        hospital_branch: patient.hospital_branch || '',
-        address: patient.address || '',
-        crm_memo: patient.crm_memo || '',
-        patient_or_guardian: patient.patient_or_guardian || '환자',
-        diet_info: patient.diet_info || '',
-        inflow_status: patient.inflow_status || '유입',
-        first_visit_date: patient.first_visit_date || '',
-        visit_type: patient.visit_type || '',
-        guardian_name: patient.guardian_name || '',
-        guardian_relationship: patient.guardian_relationship || '',
-        guardian_phone: patient.guardian_phone || '',
-        manager_name: patient.manager_name || '',
-        korean_doctor: patient.korean_doctor || '',
-        western_doctor: patient.western_doctor || ''
-      });
-      
-      // 진단명 대분류가 있으면 중분류 옵션 가져오기
-      if (patient.diagnosis_category) {
-        const diagnosisCategory = diagnosisCategoryOptions.find(
-          opt => opt.name === patient.diagnosis_category
-        );
-        if (diagnosisCategory) {
-          fetchDiagnosisDetails(diagnosisCategory.id);
-        }
-      }
-      
-      // 이전병원 대분류가 있으면 중분류 옵션 가져오기
-      if (patient.hospital_category) {
-        const hospitalCategory = hospitalCategoryOptions.find(
-          opt => opt.name === patient.hospital_category
-        );
-        if (hospitalCategory) {
-          fetchHospitalBranches(hospitalCategory.id);
-        }
-      }
+      loadPatientData();
     } else if (initialData) {
       // 조회 다이얼로그에서 넘어온 초기 데이터 설정
       fetchCurrentUserName();
