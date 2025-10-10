@@ -37,6 +37,8 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     crm_memo: '',               // CRM메모 (API)
     
     // 수동 입력 필드
+    patient_or_guardian: '환자', // 환자 or 보호자
+    diet_info: '',              // 식이
     inflow_status: '유입',      // 유입/실패
     first_visit_date: '',       // 초진일자
     visit_type: '',             // 입원/외래
@@ -45,6 +47,8 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     guardian_relationship: '', // 보호자 관계
     guardian_phone: '',         // 보호자 연락처
     manager_name: '',           // 담당자(상담실장)
+    korean_doctor: '',          // 한방주치의
+    western_doctor: '',         // 양방주치의
     memo1: '',                  // 메모1
     memo2: '',                  // 메모2
   });
@@ -76,6 +80,8 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         hospital_branch: patient.hospital_branch || '',
         address: patient.address || '',
         crm_memo: patient.crm_memo || '',
+        patient_or_guardian: patient.patient_or_guardian || '환자',
+        diet_info: patient.diet_info || '',
         inflow_status: patient.inflow_status || '유입',
         first_visit_date: patient.first_visit_date || '',
         visit_type: patient.visit_type || '',
@@ -84,18 +90,45 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         guardian_relationship: patient.guardian_relationship || '',
         guardian_phone: patient.guardian_phone || '',
         manager_name: patient.manager_name || '',
+        korean_doctor: patient.korean_doctor || '',
+        western_doctor: patient.western_doctor || '',
         memo1: patient.memo1 || '',
         memo2: patient.memo2 || ''
       });
     } else if (initialData) {
       // 조회 다이얼로그에서 넘어온 초기 데이터 설정
+      fetchCurrentUserName();
       setFormData(prev => ({
         ...prev,
         name: initialData.name,
         phone: initialData.phone
       }));
+    } else {
+      fetchCurrentUserName();
     }
   }, [patient, initialData]);
+
+  const fetchCurrentUserName = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile) {
+          setFormData(prev => ({
+            ...prev,
+            manager_name: profile.name
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user name:', error);
+    }
+  };
 
   const fetchOptions = async () => {
     try {
@@ -220,6 +253,8 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         hospital_branch: formData.hospital_branch || null,
         address: formData.address || null,
         crm_memo: formData.crm_memo || null,
+        patient_or_guardian: formData.patient_or_guardian || null,
+        diet_info: formData.diet_info || null,
         inflow_status: formData.inflow_status,
         first_visit_date: formData.first_visit_date || null,
         visit_type: formData.visit_type || null,
@@ -228,6 +263,8 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         guardian_relationship: formData.guardian_relationship || null,
         guardian_phone: formData.guardian_phone || null,
         manager_name: formData.manager_name || null,
+        korean_doctor: formData.korean_doctor || null,
+        western_doctor: formData.western_doctor || null,
         memo1: formData.memo1 || null,
         memo2: formData.memo2 || null,
         assigned_manager: user.id
@@ -273,6 +310,8 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         hospital_branch: '',
         address: '',
         crm_memo: '',
+        patient_or_guardian: '환자',
+        diet_info: '',
         inflow_status: '유입',
         first_visit_date: '',
         visit_type: '',
@@ -281,6 +320,8 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         guardian_relationship: '',
         guardian_phone: '',
         manager_name: '',
+        korean_doctor: '',
+        western_doctor: '',
         memo1: '',
         memo2: ''
       });
@@ -532,6 +573,32 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
           <Badge variant="outline">수동입력</Badge>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* 환자 or 보호자 */}
+          <div>
+            <Label htmlFor="patient_or_guardian">환자 or 보호자</Label>
+            <Select name="patient_or_guardian" value={formData.patient_or_guardian} onValueChange={(value) => handleSelectChange('patient_or_guardian', value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="환자">환자</SelectItem>
+                <SelectItem value="보호자">보호자</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* 식이 */}
+          <div>
+            <Label htmlFor="diet_info">식이</Label>
+            <Input
+              id="diet_info"
+              name="diet_info"
+              value={formData.diet_info}
+              onChange={handleInputChange}
+              placeholder="식이정보"
+            />
+          </div>
+
           {/* 유입/실패 */}
           <div>
             <Label htmlFor="inflow_status">유입상태 *</Label>
@@ -629,7 +696,33 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               name="manager_name"
               value={formData.manager_name}
               onChange={handleInputChange}
-              placeholder="담당자"
+              placeholder="자동입력"
+              disabled
+              className="bg-muted"
+            />
+          </div>
+
+          {/* 한방주치의 */}
+          <div>
+            <Label htmlFor="korean_doctor">한방주치의</Label>
+            <Input
+              id="korean_doctor"
+              name="korean_doctor"
+              value={formData.korean_doctor}
+              onChange={handleInputChange}
+              placeholder="한방주치의"
+            />
+          </div>
+
+          {/* 양방주치의 */}
+          <div>
+            <Label htmlFor="western_doctor">양방주치의</Label>
+            <Input
+              id="western_doctor"
+              name="western_doctor"
+              value={formData.western_doctor}
+              onChange={handleInputChange}
+              placeholder="양방주치의"
             />
           </div>
 
