@@ -30,8 +30,6 @@ interface Patient {
   manager_name?: string;
   hospital_category?: string;
   hospital_branch?: string;
-  memo1?: string;
-  memo2?: string;
   management_status?: string;
   created_at?: string;
   admission_cycles?: AdmissionCycle[];
@@ -118,7 +116,7 @@ export default function DailyStatusTracking() {
         .select(`
           id, name, customer_number, diagnosis_category, diagnosis_detail, 
           korean_doctor, western_doctor, manager_name, hospital_category, hospital_branch,
-          memo1, memo2, management_status, created_at,
+          management_status, created_at,
           admission_cycles (
             id, admission_date, discharge_date, admission_type, status
           )

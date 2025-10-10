@@ -345,9 +345,9 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               value={formData.name}
               onChange={handleInputChange}
               required
-              placeholder="고객명"
-              disabled={!!initialData}
-              className={initialData ? "bg-muted" : ""}
+              placeholder="API에서 자동 입력"
+              disabled
+              className="bg-muted"
             />
           </div>
 
@@ -389,8 +389,8 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               value={formData.phone}
               onChange={handleInputChange}
               placeholder="API에서 자동 입력"
-              disabled={!!initialData}
-              className={initialData ? "bg-muted" : ""}
+              disabled
+              className="bg-muted"
               maxLength={13}
             />
           </div>
@@ -425,15 +425,14 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
           </div>
 
           {/* 내원동기 */}
-          <div className="md:col-span-2 lg:col-span-3">
+          <div>
             <Label htmlFor="visit_motivation">내원동기</Label>
-            <Textarea
+            <Input
               id="visit_motivation"
               name="visit_motivation"
               value={formData.visit_motivation}
               onChange={handleInputChange}
-              placeholder="API에서 자동 입력"
-              rows={2}
+              placeholder="API에서 자동 입력 (블로그, 힐링미, 홈페이지 등)"
               disabled
               className="bg-muted"
             />
@@ -524,7 +523,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
           </div>
 
           {/* 주소 */}
-          <div className="md:col-span-2 lg:col-span-1">
+          <div className="md:col-span-2 lg:col-span-3">
             <Label htmlFor="address">주소</Label>
             <Input
               id="address"
