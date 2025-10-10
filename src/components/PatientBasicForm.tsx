@@ -61,8 +61,9 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     fetchOptions();
   }, []);
 
+  // 환자 데이터가 변경될 때 중분류 옵션 로드
   useEffect(() => {
-    const loadPatientData = async () => {
+    const loadSubCategories = async () => {
       if (patient && diagnosisCategoryOptions.length > 0 && hospitalCategoryOptions.length > 0) {
         // 진단명 대분류가 있으면 중분류 옵션 먼저 가져오기
         if (patient.diagnosis_category) {
@@ -83,39 +84,51 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
             await fetchHospitalBranches(hospitalCategory.id);
           }
         }
-
-        // 옵션을 모두 가져온 후 환자 데이터 설정
-        setFormData({
-          name: patient.name || '',
-          customer_number: patient.customer_number || '',
-          resident_number_masked: patient.resident_number_masked || '',
-          phone: patient.phone || '',
-          gender: patient.gender || '',
-          age: patient.age?.toString() || '',
-          visit_motivation: patient.visit_motivation || '',
-          diagnosis_category: patient.diagnosis_category || '',
-          diagnosis_detail: patient.diagnosis_detail || '',
-          hospital_category: patient.hospital_category || '',
-          hospital_branch: patient.hospital_branch || '',
-          address: patient.address || '',
-          crm_memo: patient.crm_memo || '',
-          patient_or_guardian: patient.patient_or_guardian || '환자',
-          diet_info: patient.diet_info || '',
-          inflow_status: patient.inflow_status || '유입',
-          first_visit_date: patient.first_visit_date || '',
-          visit_type: patient.visit_type || '',
-          guardian_name: patient.guardian_name || '',
-          guardian_relationship: patient.guardian_relationship || '',
-          guardian_phone: patient.guardian_phone || '',
-          manager_name: patient.manager_name || '',
-          korean_doctor: patient.korean_doctor || '',
-          western_doctor: patient.western_doctor || ''
-        });
       }
     };
 
     if (patient) {
-      loadPatientData();
+      loadSubCategories();
+    }
+  }, [patient, diagnosisCategoryOptions, hospitalCategoryOptions]);
+
+  // 중분류 옵션이 로드된 후 환자 데이터 설정
+  useEffect(() => {
+    if (patient && diagnosisCategoryOptions.length > 0 && hospitalCategoryOptions.length > 0) {
+      // 중분류가 있는 경우, 해당 옵션이 로드될 때까지 기다림
+      const diagnosisDetailNeeded = patient.diagnosis_detail && patient.diagnosis_category;
+      const hospitalBranchNeeded = patient.hospital_branch && patient.hospital_category;
+      
+      // 중분류가 필요한 경우, 옵션이 로드되었는지 확인
+      if (diagnosisDetailNeeded && diagnosisDetailOptions.length === 0) return;
+      if (hospitalBranchNeeded && hospitalBranchOptions.length === 0) return;
+
+      setFormData({
+        name: patient.name || '',
+        customer_number: patient.customer_number || '',
+        resident_number_masked: patient.resident_number_masked || '',
+        phone: patient.phone || '',
+        gender: patient.gender || '',
+        age: patient.age?.toString() || '',
+        visit_motivation: patient.visit_motivation || '',
+        diagnosis_category: patient.diagnosis_category || '',
+        diagnosis_detail: patient.diagnosis_detail || '',
+        hospital_category: patient.hospital_category || '',
+        hospital_branch: patient.hospital_branch || '',
+        address: patient.address || '',
+        crm_memo: patient.crm_memo || '',
+        patient_or_guardian: patient.patient_or_guardian || '환자',
+        diet_info: patient.diet_info || '',
+        inflow_status: patient.inflow_status || '유입',
+        first_visit_date: patient.first_visit_date || '',
+        visit_type: patient.visit_type || '',
+        guardian_name: patient.guardian_name || '',
+        guardian_relationship: patient.guardian_relationship || '',
+        guardian_phone: patient.guardian_phone || '',
+        manager_name: patient.manager_name || '',
+        korean_doctor: patient.korean_doctor || '',
+        western_doctor: patient.western_doctor || ''
+      });
     } else if (initialData) {
       // 조회 다이얼로그에서 넘어온 초기 데이터 설정
       fetchCurrentUserName();
@@ -124,10 +137,10 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         name: initialData.name,
         phone: initialData.phone
       }));
-    } else {
+    } else if (!patient) {
       fetchCurrentUserName();
     }
-  }, [patient, initialData, diagnosisCategoryOptions, hospitalCategoryOptions]);
+  }, [patient, initialData, diagnosisCategoryOptions, hospitalCategoryOptions, diagnosisDetailOptions, hospitalBranchOptions]);
 
   const fetchCurrentUserName = async () => {
     try {
