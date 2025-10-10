@@ -487,11 +487,11 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
             <Select 
               value={formData.diagnosis_detail} 
               onValueChange={(value) => handleSelectChange('diagnosis_detail', value)}
-              disabled={!formData.diagnosis_category}
+              disabled
             >
-              <SelectTrigger className={!formData.diagnosis_category ? "bg-muted" : ""}>
+              <SelectTrigger className="bg-muted">
                 <SelectValue>
-                  {formData.diagnosis_detail || (formData.diagnosis_category ? "API에서 자동 입력" : "대분류를 먼저 선택하세요")}
+                  {formData.diagnosis_detail || "API에서 자동 입력"}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="z-[100] bg-background">
@@ -533,11 +533,11 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
             <Select 
               value={formData.hospital_branch} 
               onValueChange={(value) => handleSelectChange('hospital_branch', value)}
-              disabled={!formData.hospital_category}
+              disabled
             >
-              <SelectTrigger className={!formData.hospital_category ? "bg-muted" : ""}>
+              <SelectTrigger className="bg-muted">
                 <SelectValue>
-                  {formData.hospital_branch || (formData.hospital_category ? "API에서 자동 입력" : "대분류를 먼저 선택하세요")}
+                  {formData.hospital_branch || "API에서 자동 입력"}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="z-[100] bg-background">
