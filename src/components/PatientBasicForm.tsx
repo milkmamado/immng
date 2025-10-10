@@ -564,6 +564,19 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
           <Badge variant="outline">수동입력</Badge>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* 환자번호 - 수정 시에만 표시 */}
+          {patient && (
+            <div>
+              <Label htmlFor="patient_number">환자번호</Label>
+              <Input
+                id="patient_number"
+                value={patient.patient_number}
+                disabled
+                className="bg-muted"
+              />
+            </div>
+          )}
+
           {/* 유입/실패 */}
           <div>
             <Label htmlFor="inflow_status">유입상태 *</Label>
