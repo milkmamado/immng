@@ -996,7 +996,6 @@ export default function PatientListManagement() {
                       value={selectedPatientDetail?.patient_or_guardian || '환자'}
                       onValueChange={(value) => {
                         updateEditingField('patient_or_guardian', value);
-                        savePatientField('patient_or_guardian', value);
                       }}
                     >
                       <SelectTrigger>
@@ -1015,7 +1014,6 @@ export default function PatientListManagement() {
                     <Input
                       value={selectedPatientDetail?.diet_info || ''}
                       onChange={(e) => updateEditingField('diet_info', e.target.value)}
-                      onBlur={(e) => savePatientField('diet_info', e.target.value)}
                       placeholder="식이정보"
                     />
                   </div>
@@ -1027,7 +1025,6 @@ export default function PatientListManagement() {
                       value={selectedPatientDetail?.inflow_status || '유입'}
                       onValueChange={(value) => {
                         updateEditingField('inflow_status', value);
-                        savePatientField('inflow_status', value);
                       }}
                     >
                       <SelectTrigger>
@@ -1047,7 +1044,6 @@ export default function PatientListManagement() {
                       type="date"
                       value={selectedPatientDetail?.first_visit_date || ''}
                       onChange={(e) => updateEditingField('first_visit_date', e.target.value)}
-                      onBlur={(e) => savePatientField('first_visit_date', e.target.value)}
                     />
                   </div>
 
@@ -1058,7 +1054,6 @@ export default function PatientListManagement() {
                       value={selectedPatientDetail?.visit_type || ''}
                       onValueChange={(value) => {
                         updateEditingField('visit_type', value);
-                        savePatientField('visit_type', value);
                       }}
                     >
                       <SelectTrigger>
@@ -1077,7 +1072,6 @@ export default function PatientListManagement() {
                     <Input
                       value={selectedPatientDetail?.guardian_name || ''}
                       onChange={(e) => updateEditingField('guardian_name', e.target.value)}
-                      onBlur={(e) => savePatientField('guardian_name', e.target.value)}
                       placeholder="보호자 이름"
                     />
                   </div>
@@ -1088,7 +1082,6 @@ export default function PatientListManagement() {
                     <Input
                       value={selectedPatientDetail?.guardian_relationship || ''}
                       onChange={(e) => updateEditingField('guardian_relationship', e.target.value)}
-                      onBlur={(e) => savePatientField('guardian_relationship', e.target.value)}
                       placeholder="보호자 관계"
                     />
                   </div>
@@ -1099,7 +1092,6 @@ export default function PatientListManagement() {
                     <Input
                       value={selectedPatientDetail?.guardian_phone || ''}
                       onChange={(e) => updateEditingField('guardian_phone', e.target.value)}
-                      onBlur={(e) => savePatientField('guardian_phone', e.target.value)}
                       placeholder="보호자 연락처"
                     />
                   </div>
@@ -1121,7 +1113,6 @@ export default function PatientListManagement() {
                     <Input
                       value={selectedPatientDetail?.korean_doctor || ''}
                       onChange={(e) => updateEditingField('korean_doctor', e.target.value)}
-                      onBlur={(e) => savePatientField('korean_doctor', e.target.value)}
                       placeholder="한방주치의"
                     />
                   </div>
@@ -1132,7 +1123,6 @@ export default function PatientListManagement() {
                     <Input
                       value={selectedPatientDetail?.western_doctor || ''}
                       onChange={(e) => updateEditingField('western_doctor', e.target.value)}
-                      onBlur={(e) => savePatientField('western_doctor', e.target.value)}
                       placeholder="양방주치의"
                     />
                   </div>
@@ -1151,7 +1141,6 @@ export default function PatientListManagement() {
                       value={selectedPatientDetail?.insurance_type || ''} 
                       onValueChange={(value) => {
                         updateEditingField('insurance_type', value);
-                        savePatientField('insurance_type', value);
                       }}
                     >
                       <SelectTrigger>
@@ -1173,7 +1162,6 @@ export default function PatientListManagement() {
                       value={selectedPatientDetail?.management_status || '관리 중'} 
                       onValueChange={(value) => {
                         updateEditingField('management_status', value);
-                        savePatientField('management_status', value);
                       }}
                     >
                       <SelectTrigger>
@@ -1240,7 +1228,6 @@ export default function PatientListManagement() {
                       placeholder="본병원 치료 내용을 입력하세요"
                       value={selectedPatientDetail?.hospital_treatment || ''}
                       onChange={(e) => updateEditingField('hospital_treatment', e.target.value)}
-                      onBlur={(e) => savePatientField('hospital_treatment', e.target.value)}
                       rows={3}
                     />
                   </div>
@@ -1252,22 +1239,23 @@ export default function PatientListManagement() {
                       placeholder="본병원 검사일정을 입력하세요"
                       value={selectedPatientDetail?.examination_schedule || ''}
                       onChange={(e) => updateEditingField('examination_schedule', e.target.value)}
-                      onBlur={(e) => savePatientField('examination_schedule', e.target.value)}
                       rows={3}
                     />
                   </div>
-
-                  <div className="md:col-span-2">
-                    <Label htmlFor="treatment-plan">치료 계획</Label>
-                    <Textarea
-                      id="treatment-plan"
-                      placeholder="치료 계획을 입력하세요"
-                      value={selectedPatientDetail?.treatment_plan || ''}
-                      onChange={(e) => updateEditingField('treatment_plan', e.target.value)}
-                      onBlur={(e) => savePatientField('treatment_plan', e.target.value)}
-                      rows={4}
-                    />
-                  </div>
+                </div>
+                
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button 
+                    onClick={() => {
+                      // 모든 편집된 필드 저장
+                      Object.entries(editingFields).forEach(([field, value]) => {
+                        savePatientField(field, value);
+                      });
+                    }}
+                    disabled={Object.keys(editingFields).length === 0 || userRole === 'admin'}
+                  >
+                    수정 저장
+                  </Button>
                 </div>
               </div>
 
