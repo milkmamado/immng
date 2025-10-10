@@ -20,6 +20,9 @@ interface Patient {
   customer_number?: string;
   birth_date?: string;
   phone?: string;
+  gender?: string;
+  age?: number;
+  address?: string;
   inflow_status?: string;
   visit_type?: string;
   visit_motivation?: string;
@@ -370,6 +373,16 @@ export default function FirstVisitManagement() {
                   <div className="flex justify-between">
                     <span className="font-medium">연락처:</span>
                     <span>{selectedPatientDetail?.phone || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">성별/나이:</span>
+                    <span>
+                      {selectedPatientDetail?.gender || '-'} / {selectedPatientDetail?.age ? `${selectedPatientDetail.age}세` : '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">주소:</span>
+                    <span>{selectedPatientDetail?.address || '-'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">등록일:</span>
