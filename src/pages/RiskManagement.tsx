@@ -160,31 +160,43 @@ export default function RiskManagement() {
           daysSinceCheck = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
         }
 
-        // 자동 상태 업데이트 로직
-        if (daysSinceCheck >= 21) {
-          newManagementStatus = "아웃";
-        } else if (daysSinceCheck >= 14) {
-          newManagementStatus = "아웃위기";
+        // 최종 상태(사망, 상태악화, 치료종료)는 자동 업데이트하지 않음
+        // 사용자가 수동으로 설정한 아웃/아웃위기도 유지
+        const finalStatuses = ['사망', '상태악화', '치료종료'];
+        const manuallySetStatuses = ['아웃', '아웃위기'];
+        
+        // 최종 상태가 아니고, 수동 설정 상태도 아닌 경우만 자동 업데이트
+        if (!finalStatuses.includes(patient.management_status) && 
+            !manuallySetStatuses.includes(patient.management_status)) {
+          // 자동 상태 업데이트 로직 (관리 중만 자동 업데이트)
+          if (daysSinceCheck >= 21) {
+            newManagementStatus = "아웃";
+          } else if (daysSinceCheck >= 14) {
+            newManagementStatus = "아웃위기";
+          } else {
+            newManagementStatus = "관리 중";
+          }
+
+          // management_status가 변경되었으면 업데이트
+          if (patient.management_status !== newManagementStatus) {
+            await supabase
+              .from("patients")
+              .update({ management_status: newManagementStatus })
+              .eq("id", patient.id);
+          }
         } else {
-          newManagementStatus = "관리 중";
+          // 수동 설정된 상태 유지
+          newManagementStatus = patient.management_status;
         }
 
-        // management_status가 변경되었으면 업데이트
-        if (patient.management_status !== newManagementStatus) {
-          await supabase
-            .from("patients")
-            .update({ management_status: newManagementStatus })
-            .eq("id", patient.id);
-        }
-
-        // 14일 이상인 환자만 리스크 환자로 추가
-        if (daysSinceCheck >= 14) {
+        // 14일 이상이거나 수동으로 아웃/아웃위기로 설정된 환자만 리스크 환자로 추가
+        if (daysSinceCheck >= 14 || manuallySetStatuses.includes(patient.management_status)) {
           riskyPatients.push({
             ...patient,
             management_status: newManagementStatus,
             last_status_date: lastCheckDate,
             days_since_last_check: daysSinceCheck,
-            risk_level: daysSinceCheck >= 21 ? "아웃" : "아웃위기"
+            risk_level: newManagementStatus === "아웃" ? "아웃" : "아웃위기"
           });
         }
       }
