@@ -18,7 +18,7 @@ interface Patient {
   id: string;
   name: string;
   patient_number: string;
-  chart_number?: string;
+  customer_number?: string;
   phone?: string;
   age?: number;
   gender?: string;
@@ -42,7 +42,7 @@ interface Patient {
   monthly_avg_inpatient_days?: number;
   monthly_avg_outpatient_days?: number;
   payment_amount?: number;
-  counseling_content?: string;
+  crm_memo?: string;
   created_at: string;
 }
 
@@ -721,7 +721,7 @@ export default function PatientListManagement() {
                         fetchTreatmentPlans(patient.id);
                       }}
                     >
-                    <TableCell className="font-mono">{patient.chart_number || '-'}</TableCell>
+                    <TableCell className="font-mono">{patient.customer_number || '-'}</TableCell>
                     <TableCell>{patient.visit_type || '-'}</TableCell>
                     <TableCell>{patient.manager_name || '-'}</TableCell>
                     <TableCell className="font-medium">{patient.name}</TableCell>
@@ -827,8 +827,8 @@ export default function PatientListManagement() {
                       <span>{selectedPatientDetail?.name || '-'}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="font-medium">차트번호:</span>
-                      <span>{selectedPatientDetail?.chart_number || '-'}</span>
+                      <span className="font-medium">고객번호:</span>
+                      <span>{selectedPatientDetail?.customer_number || '-'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">환자번호:</span>
@@ -1116,16 +1116,16 @@ export default function PatientListManagement() {
                 </CardContent>
               </Card>
 
-              {/* 상담내용 */}
-              {selectedPatientDetail?.counseling_content && (
+              {/* CRM메모 */}
+              {selectedPatientDetail?.crm_memo && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">상담내용</CardTitle>
+                    <CardTitle className="text-lg">CRM메모</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="bg-muted p-4 rounded-lg">
                       <pre className="whitespace-pre-wrap text-sm leading-relaxed">
-                        {selectedPatientDetail.counseling_content}
+                        {selectedPatientDetail.crm_memo}
                       </pre>
                     </div>
                   </CardContent>

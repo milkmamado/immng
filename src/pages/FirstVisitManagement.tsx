@@ -17,7 +17,7 @@ interface Patient {
   id: string;
   name: string;
   patient_number: string;
-  chart_number?: string;
+  customer_number?: string;
   birth_date?: string;
   phone?: string;
   inflow_status?: string;
@@ -31,7 +31,7 @@ interface Patient {
   korean_doctor?: string;
   manager_name?: string;
   western_doctor?: string;
-  counseling_content?: string;
+  crm_memo?: string;
   created_at: string;
 }
 
@@ -194,7 +194,7 @@ export default function FirstVisitManagement() {
             <Table className="min-w-[1400px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>차트번호</TableHead>
+                  <TableHead>고객번호</TableHead>
                   <TableHead>등록일</TableHead>
                   <TableHead>유입/실패</TableHead>
                   <TableHead>입원/외래</TableHead>
@@ -208,7 +208,7 @@ export default function FirstVisitManagement() {
                   <TableHead>한방주치의</TableHead>
                   <TableHead>담당자(상담실장)</TableHead>
                   <TableHead>양방주치의</TableHead>
-                  <TableHead>상담내용</TableHead>
+                  <TableHead>CRM메모</TableHead>
                   <TableHead>작업</TableHead>
                 </TableRow>
               </TableHeader>
@@ -219,7 +219,7 @@ export default function FirstVisitManagement() {
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => setSelectedPatientDetail(patient)}
                   >
-                    <TableCell>{patient.chart_number || '-'}</TableCell>
+                    <TableCell>{patient.customer_number || '-'}</TableCell>
                     <TableCell>
                       {new Date(patient.created_at).toLocaleDateString('ko-KR')}
                     </TableCell>
@@ -245,7 +245,7 @@ export default function FirstVisitManagement() {
                     <TableCell>{patient.western_doctor || '-'}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        {patient.counseling_content ? (
+                        {patient.crm_memo ? (
                           <Button 
                             variant="outline" 
                             size="sm"
@@ -326,12 +326,12 @@ export default function FirstVisitManagement() {
       <Dialog open={!!selectedPatient} onOpenChange={() => setSelectedPatient(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{selectedPatient?.name} - 상담내용</DialogTitle>
+            <DialogTitle>{selectedPatient?.name} - CRM메모</DialogTitle>
           </DialogHeader>
           <div className="mt-4">
             <div className="bg-muted p-4 rounded-lg">
               <pre className="whitespace-pre-wrap text-sm">
-                {selectedPatient?.counseling_content || "상담내용이 없습니다."}
+                {selectedPatient?.crm_memo || "CRM메모가 없습니다."}
               </pre>
             </div>
           </div>
@@ -356,8 +356,8 @@ export default function FirstVisitManagement() {
                     <span>{selectedPatientDetail?.name || '-'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="font-medium">차트번호:</span>
-                    <span>{selectedPatientDetail?.chart_number || '-'}</span>
+                    <span className="font-medium">고객번호:</span>
+                    <span>{selectedPatientDetail?.customer_number || '-'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">생년월일:</span>
@@ -450,15 +450,15 @@ export default function FirstVisitManagement() {
               </Card>
             </div>
 
-            {selectedPatientDetail?.counseling_content && (
+            {selectedPatientDetail?.crm_memo && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">상담내용</CardTitle>
+                  <CardTitle className="text-lg">CRM메모</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="bg-muted p-4 rounded-lg">
                     <pre className="whitespace-pre-wrap text-sm leading-relaxed">
-                      {selectedPatientDetail.counseling_content}
+                      {selectedPatientDetail.crm_memo}
                     </pre>
                   </div>
                 </CardContent>

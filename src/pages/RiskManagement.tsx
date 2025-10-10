@@ -27,7 +27,7 @@ interface Patient {
   last_status_date?: string;
   days_since_last_check: number;
   risk_level: "아웃" | "아웃위기";
-  chart_number?: string;
+  customer_number?: string;
   visit_type?: string;
   counselor?: string;
   korean_doctor?: string;
@@ -35,7 +35,7 @@ interface Patient {
   previous_hospital?: string;
   diet_info?: string;
   visit_motivation?: string;
-  counseling_content?: string;
+  crm_memo?: string;
   management_status?: string;
 }
 
@@ -647,8 +647,8 @@ export default function RiskManagement() {
                       <span>{selectedPatientDetail.patient_number}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="font-medium">차트번호:</span>
-                      <span>{selectedPatientDetail.chart_number || '-'}</span>
+                      <span className="font-medium">고객번호:</span>
+                      <span>{selectedPatientDetail.customer_number || '-'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">나이/성별:</span>
@@ -744,9 +744,9 @@ export default function RiskManagement() {
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <span className="font-medium">상담내용:</span>
+                    <span className="font-medium">CRM메모:</span>
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                      {selectedPatientDetail.counseling_content || '-'}
+                      {selectedPatientDetail.crm_memo || '-'}
                     </p>
                   </div>
                 </CardContent>

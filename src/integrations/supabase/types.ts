@@ -477,10 +477,10 @@ export type Database = {
           age: number | null
           assigned_manager: string
           birth_date: string | null
-          chart_number: string | null
-          counseling_content: string | null
           counselor: string | null
           created_at: string
+          crm_memo: string | null
+          customer_number: string | null
           detailed_diagnosis: string | null
           diagnosis: string | null
           diet_info: string | null
@@ -522,10 +522,10 @@ export type Database = {
           age?: number | null
           assigned_manager: string
           birth_date?: string | null
-          chart_number?: string | null
-          counseling_content?: string | null
           counselor?: string | null
           created_at?: string
+          crm_memo?: string | null
+          customer_number?: string | null
           detailed_diagnosis?: string | null
           diagnosis?: string | null
           diet_info?: string | null
@@ -567,10 +567,10 @@ export type Database = {
           age?: number | null
           assigned_manager?: string
           birth_date?: string | null
-          chart_number?: string | null
-          counseling_content?: string | null
           counselor?: string | null
           created_at?: string
+          crm_memo?: string | null
+          customer_number?: string | null
           detailed_diagnosis?: string | null
           diagnosis?: string | null
           diet_info?: string | null
