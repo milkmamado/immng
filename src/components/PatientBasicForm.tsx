@@ -52,9 +52,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
 
   const [loading, setLoading] = useState(false);
   const [diagnosisCategoryOptions, setDiagnosisCategoryOptions] = useState<Option[]>([]);
-  const [diagnosisDetailOptions, setDiagnosisDetailOptions] = useState<Option[]>([]);
   const [hospitalCategoryOptions, setHospitalCategoryOptions] = useState<Option[]>([]);
-  const [hospitalBranchOptions, setHospitalBranchOptions] = useState<Option[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -63,84 +61,49 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
 
   // 환자 데이터 로드 및 설정
   useEffect(() => {
-    const loadPatientData = async () => {
-      if (!patient) {
-        if (initialData) {
-          // 조회 다이얼로그에서 넘어온 초기 데이터 설정
-          fetchCurrentUserName();
-          setFormData(prev => ({
-            ...prev,
-            name: initialData.name,
-            phone: initialData.phone
-          }));
-        } else {
-          fetchCurrentUserName();
-        }
-        return;
-      }
-
+    if (patient) {
       // 대분류 옵션이 로드될 때까지 대기
       if (diagnosisCategoryOptions.length === 0 || hospitalCategoryOptions.length === 0) {
         return;
       }
 
-      // 중분류 옵션 로드
-      let diagnosisDetailsLoaded = false;
-      let hospitalBranchesLoaded = false;
-
-      if (patient.diagnosis_category) {
-        const diagnosisCategory = diagnosisCategoryOptions.find(
-          opt => opt.name === patient.diagnosis_category
-        );
-        if (diagnosisCategory) {
-          await fetchDiagnosisDetails(diagnosisCategory.id);
-          diagnosisDetailsLoaded = true;
-        }
-      }
-
-      if (patient.hospital_category) {
-        const hospitalCategory = hospitalCategoryOptions.find(
-          opt => opt.name === patient.hospital_category
-        );
-        if (hospitalCategory) {
-          await fetchHospitalBranches(hospitalCategory.id);
-          hospitalBranchesLoaded = true;
-        }
-      }
-
-      // 중분류 옵션 로드를 기다린 후 formData 설정
-      // 약간의 딜레이를 주어 state 업데이트가 완료되도록 함
-      setTimeout(() => {
-        setFormData({
-          name: patient.name || '',
-          customer_number: patient.customer_number || '',
-          resident_number_masked: patient.resident_number_masked || '',
-          phone: patient.phone || '',
-          gender: patient.gender || '',
-          age: patient.age?.toString() || '',
-          visit_motivation: patient.visit_motivation || '',
-          diagnosis_category: patient.diagnosis_category || '',
-          diagnosis_detail: patient.diagnosis_detail || '',
-          hospital_category: patient.hospital_category || '',
-          hospital_branch: patient.hospital_branch || '',
-          address: patient.address || '',
-          crm_memo: patient.crm_memo || '',
-          patient_or_guardian: patient.patient_or_guardian || '환자',
-          diet_info: patient.diet_info || '',
-          inflow_status: patient.inflow_status || '유입',
-          first_visit_date: patient.first_visit_date || '',
-          visit_type: patient.visit_type || '',
-          guardian_name: patient.guardian_name || '',
-          guardian_relationship: patient.guardian_relationship || '',
-          guardian_phone: patient.guardian_phone || '',
-          manager_name: patient.manager_name || '',
-          korean_doctor: patient.korean_doctor || '',
-          western_doctor: patient.western_doctor || ''
-        });
-      }, 100);
-    };
-
-    loadPatientData();
+      setFormData({
+        name: patient.name || '',
+        customer_number: patient.customer_number || '',
+        resident_number_masked: patient.resident_number_masked || '',
+        phone: patient.phone || '',
+        gender: patient.gender || '',
+        age: patient.age?.toString() || '',
+        visit_motivation: patient.visit_motivation || '',
+        diagnosis_category: patient.diagnosis_category || '',
+        diagnosis_detail: patient.diagnosis_detail || '',
+        hospital_category: patient.hospital_category || '',
+        hospital_branch: patient.hospital_branch || '',
+        address: patient.address || '',
+        crm_memo: patient.crm_memo || '',
+        patient_or_guardian: patient.patient_or_guardian || '환자',
+        diet_info: patient.diet_info || '',
+        inflow_status: patient.inflow_status || '유입',
+        first_visit_date: patient.first_visit_date || '',
+        visit_type: patient.visit_type || '',
+        guardian_name: patient.guardian_name || '',
+        guardian_relationship: patient.guardian_relationship || '',
+        guardian_phone: patient.guardian_phone || '',
+        manager_name: patient.manager_name || '',
+        korean_doctor: patient.korean_doctor || '',
+        western_doctor: patient.western_doctor || ''
+      });
+    } else if (initialData) {
+      // 조회 다이얼로그에서 넘어온 초기 데이터 설정
+      fetchCurrentUserName();
+      setFormData(prev => ({
+        ...prev,
+        name: initialData.name,
+        phone: initialData.phone
+      }));
+    } else {
+      fetchCurrentUserName();
+    }
   }, [patient, initialData, diagnosisCategoryOptions, hospitalCategoryOptions]);
 
   const fetchCurrentUserName = async () => {
@@ -180,36 +143,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     }
   };
 
-  // 진단명 대분류 선택 시 중분류 가져오기
-  const fetchDiagnosisDetails = async (categoryId: string) => {
-    try {
-      const { data } = await supabase
-        .from('diagnosis_options')
-        .select('*')
-        .eq('parent_id', categoryId)
-        .order('name');
-      
-      if (data) setDiagnosisDetailOptions(data);
-    } catch (error) {
-      console.error('Error fetching diagnosis details:', error);
-    }
-  };
-
-  // 병원 대분류 선택 시 중분류 가져오기
-  const fetchHospitalBranches = async (categoryId: string) => {
-    try {
-      const { data } = await supabase
-        .from('hospital_options')
-        .select('*')
-        .eq('parent_id', categoryId)
-        .order('name');
-      
-      if (data) setHospitalBranchOptions(data);
-    } catch (error) {
-      console.error('Error fetching hospital branches:', error);
-    }
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
@@ -246,24 +179,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
       ...prev,
       [name]: value
     }));
-
-    // 진단명 대분류 선택 시 중분류 옵션 가져오기
-    if (name === 'diagnosis_category') {
-      const selectedOption = diagnosisCategoryOptions.find(opt => opt.name === value);
-      if (selectedOption) {
-        await fetchDiagnosisDetails(selectedOption.id);
-        setFormData(prev => ({ ...prev, diagnosis_detail: '' })); // 중분류 초기화
-      }
-    }
-
-    // 병원 대분류 선택 시 중분류 옵션 가져오기
-    if (name === 'hospital_category') {
-      const selectedOption = hospitalCategoryOptions.find(opt => opt.name === value);
-      if (selectedOption) {
-        await fetchHospitalBranches(selectedOption.id);
-        setFormData(prev => ({ ...prev, hospital_branch: '' })); // 중분류 초기화
-      }
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -482,93 +397,53 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
           {/* 진단명 대분류 */}
           <div>
             <Label htmlFor="diagnosis_category">진단명 (대분류)</Label>
-            <Select 
-              value={formData.diagnosis_category} 
-              onValueChange={(value) => handleSelectChange('diagnosis_category', value)}
+            <Input
+              id="diagnosis_category"
+              name="diagnosis_category"
+              value={formData.diagnosis_category}
+              placeholder="API에서 자동 입력"
               disabled
-            >
-              <SelectTrigger className="bg-muted">
-                <SelectValue>
-                  {formData.diagnosis_category || "API에서 자동 입력"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="z-[100] bg-background">
-                {diagnosisCategoryOptions.map(option => (
-                  <SelectItem key={option.id} value={option.name}>
-                    {option.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              className="bg-muted"
+            />
           </div>
 
           {/* 진단명 중분류 */}
           <div>
             <Label htmlFor="diagnosis_detail">진단명 (중분류)</Label>
-            <Select 
-              value={formData.diagnosis_detail} 
-              onValueChange={(value) => handleSelectChange('diagnosis_detail', value)}
+            <Input
+              id="diagnosis_detail"
+              name="diagnosis_detail"
+              value={formData.diagnosis_detail}
+              placeholder="API에서 자동 입력"
               disabled
-            >
-              <SelectTrigger className="bg-muted">
-                <SelectValue>
-                  {formData.diagnosis_detail || "API에서 자동 입력"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="z-[100] bg-background">
-                {diagnosisDetailOptions.map(option => (
-                  <SelectItem key={option.id} value={option.name}>
-                    {option.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              className="bg-muted"
+            />
           </div>
 
           {/* 이전병원 대분류 */}
           <div>
             <Label htmlFor="hospital_category">이전병원 (대분류)</Label>
-            <Select 
-              value={formData.hospital_category} 
-              onValueChange={(value) => handleSelectChange('hospital_category', value)}
+            <Input
+              id="hospital_category"
+              name="hospital_category"
+              value={formData.hospital_category}
+              placeholder="API에서 자동 입력"
               disabled
-            >
-              <SelectTrigger className="bg-muted">
-                <SelectValue>
-                  {formData.hospital_category || "API에서 자동 입력"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="z-[100] bg-background">
-                {hospitalCategoryOptions.map(option => (
-                  <SelectItem key={option.id} value={option.name}>
-                    {option.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              className="bg-muted"
+            />
           </div>
 
           {/* 이전병원 중분류 */}
           <div>
             <Label htmlFor="hospital_branch">이전병원 (중분류)</Label>
-            <Select 
-              value={formData.hospital_branch} 
-              onValueChange={(value) => handleSelectChange('hospital_branch', value)}
+            <Input
+              id="hospital_branch"
+              name="hospital_branch"
+              value={formData.hospital_branch}
+              placeholder="API에서 자동 입력"
               disabled
-            >
-              <SelectTrigger className="bg-muted">
-                <SelectValue>
-                  {formData.hospital_branch || "API에서 자동 입력"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="z-[100] bg-background">
-                {hospitalBranchOptions.map(option => (
-                  <SelectItem key={option.id} value={option.name}>
-                    {option.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              className="bg-muted"
+            />
           </div>
 
           {/* 주소 */}
