@@ -141,13 +141,13 @@ export function PatientLookupDialog({
     };
     localStorage.setItem('crm_search_data', JSON.stringify(searchData));
     
-    // CRM 창 열기
-    const crmWindow = window.open('http://192.168.1.101/html/MEDI20/main.html', 'CRM_Window', 'width=1200,height=800');
+    // 현재 탭에서 CRM 페이지로 이동 (일반 탭, 북마크 바 보임)
+    const crmWindow = window.open('http://192.168.1.101/html/MEDI20/main.html', '_blank');
     
     if (crmWindow) {
       toast({
-        title: "CRM 창이 열렸습니다",
-        description: "북마크 바에서 'CRM 연동' 북마크릿을 클릭하세요.",
+        title: "CRM 페이지가 열렸습니다",
+        description: "확장 프로그램 아이콘을 클릭하여 환자 정보를 가져오세요.",
         duration: 5000,
       });
     } else {
