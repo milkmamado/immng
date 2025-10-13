@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "CRM 환자 정보 연동",
+  "version": "1.0.0",
+  "description": "한국도움기술 CRM에서 환자 정보를 자동으로 추출하여 환자 관리 시스템으로 전송합니다.",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://192.168.1.101/*",
+    "https://c1b1e147-d88f-49c7-a031-a4345f1f4a69.lovableproject.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://192.168.1.101/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

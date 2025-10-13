@@ -71,27 +71,53 @@ export default function FirstVisitManagement() {
       }
     };
 
-    // localStorage에서 CRM 데이터 확인 (북마크릿이 새 창을 연 경우)
+    // URL 파라미터에서 crm=import 확인
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('crm') === 'import') {
-      const storedData = localStorage.getItem('crm_patient_data');
-      if (storedData) {
-        try {
-          const data = JSON.parse(storedData);
-          handleProceedToRegistration(data);
-          setShowLookupDialog(false);
-          localStorage.removeItem('crm_patient_data');
-          toast({
-            title: "CRM 데이터 가져오기 성공",
-            description: `${data.name} 환자 정보를 불러왔습니다.`,
-          });
-          
-          // URL 파라미터 제거
-          window.history.replaceState({}, '', '/first-visit');
-        } catch (e) {
-          console.error('Failed to parse CRM data:', e);
+      // localStorage에서 CRM 데이터 확인 (북마크릿 또는 Chrome 확장 프로그램)
+      const checkStorage = async () => {
+        // 먼저 localStorage 확인 (북마크릿용)
+        const localData = localStorage.getItem('crm_patient_data');
+        if (localData) {
+          try {
+            const data = JSON.parse(localData);
+            handleProceedToRegistration(data);
+            setShowLookupDialog(false);
+            localStorage.removeItem('crm_patient_data');
+            toast({
+              title: "CRM 데이터 가져오기 성공",
+              description: `${data.name} 환자 정보를 불러왔습니다.`,
+            });
+            window.history.replaceState({}, '', '/first-visit');
+            return;
+          } catch (e) {
+            console.error('Failed to parse localStorage CRM data:', e);
+          }
         }
-      }
+
+        // Chrome 확장 프로그램의 storage 확인
+        const chromeAPI = (window as any).chrome;
+        if (chromeAPI?.storage?.local) {
+          try {
+            chromeAPI.storage.local.get(['patientData'], (result: any) => {
+              if (result.patientData) {
+                handleProceedToRegistration(result.patientData);
+                setShowLookupDialog(false);
+                chromeAPI.storage.local.remove('patientData');
+                toast({
+                  title: "CRM 데이터 가져오기 성공",
+                  description: `${result.patientData.name} 환자 정보를 불러왔습니다.`,
+                });
+                window.history.replaceState({}, '', '/first-visit');
+              }
+            });
+          } catch (e) {
+            console.error('Failed to access chrome.storage:', e);
+          }
+        }
+      };
+
+      checkStorage();
     }
 
     window.addEventListener('message', handleMessage);
