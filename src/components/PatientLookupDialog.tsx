@@ -133,16 +133,18 @@ export function PatientLookupDialog({
       return;
     }
 
-    // CRM 검색 조건을 localStorage에 저장
+    // 검색 데이터를 URL 파라미터로 인코딩
     const searchData = {
       name: name || "",
       phone: phone || "",
-      timestamp: Date.now()
+      appUrl: window.location.origin + '/first-visit'
     };
-    localStorage.setItem('crm_search_data', JSON.stringify(searchData));
     
-    // 현재 탭에서 CRM 페이지로 이동 (일반 탭, 북마크 바 보임)
-    const crmWindow = window.open('http://192.168.1.101/html/MEDI20/main.html', '_blank');
+    // Base64로 인코딩하여 URL에 포함
+    const encodedData = btoa(encodeURIComponent(JSON.stringify(searchData)));
+    
+    // CRM 페이지를 열면서 hash에 데이터 전달
+    const crmWindow = window.open(`http://192.168.1.101/html/MEDI20/main.html#crm_data=${encodedData}`, '_blank');
     
     if (crmWindow) {
       toast({
