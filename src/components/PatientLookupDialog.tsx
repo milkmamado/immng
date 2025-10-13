@@ -67,7 +67,7 @@ export function PatientLookupDialog({
       toast({
         title: "CRM 페이지가 열렸습니다",
         description: "북마크바의 'CRM 연동' 북마크를 클릭하세요.",
-        duration: 5000,
+        duration: 1000,
       });
     } else {
       toast({

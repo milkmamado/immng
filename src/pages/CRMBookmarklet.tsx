@@ -18,6 +18,7 @@ export default function CRMBookmarklet() {
     toast({
       title: "복사 완료",
       description: "북마크릿 코드가 클립보드에 복사되었습니다.",
+      duration: 1000,
     });
     setTimeout(() => setCopied(false), 3000);
   };
@@ -37,6 +38,7 @@ export default function CRMBookmarklet() {
         toast({
           title: "CRM 데이터 가져오기 성공",
           description: `${data.name} 환자 정보를 불러왔습니다.`,
+          duration: 1000,
         });
       }
     }

@@ -231,6 +231,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         toast({
           title: "수정 완료",
           description: "환자 정보가 성공적으로 수정되었습니다.",
+          duration: 1000,
         });
       } else {
         const { error } = await supabase
@@ -242,6 +243,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         toast({
           title: "등록 완료",
           description: "새 환자가 성공적으로 등록되었습니다.",
+          duration: 1000,
         });
       }
 
@@ -279,6 +281,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         title: "오류",
         description: "환자 정보 저장에 실패했습니다.",
         variant: "destructive",
+        duration: 1000,
       });
     } finally {
       setLoading(false);

@@ -67,6 +67,7 @@ export default function FirstVisitManagement() {
         toast({
           title: "CRM 데이터 가져오기 성공",
           description: `${event.data.data.name} 환자 정보를 불러왔습니다.`,
+          duration: 1000,
         });
       }
     };
@@ -87,6 +88,7 @@ export default function FirstVisitManagement() {
             toast({
               title: "CRM 데이터 가져오기 성공",
               description: `${data.name} 환자 정보를 불러왔습니다.`,
+              duration: 1000,
             });
             window.history.replaceState({}, '', '/first-visit');
             return;
@@ -107,6 +109,7 @@ export default function FirstVisitManagement() {
                 toast({
                   title: "CRM 데이터 가져오기 성공",
                   description: `${result.patientData.name} 환자 정보를 불러왔습니다.`,
+                  duration: 1000,
                 });
                 window.history.replaceState({}, '', '/first-visit');
               }
@@ -161,6 +164,7 @@ export default function FirstVisitManagement() {
     toast({
       title: "등록 완료",
       description: "환자가 성공적으로 등록되었습니다.",
+      duration: 1000,
     });
   };
 
@@ -178,6 +182,7 @@ export default function FirstVisitManagement() {
       toast({
         title: "삭제 완료",
         description: "환자가 성공적으로 삭제되었습니다.",
+        duration: 1000,
       });
       
       fetchPatients(); // 목록 새로고침
