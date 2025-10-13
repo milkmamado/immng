@@ -124,24 +124,39 @@ export function PatientLookupDialog({
   };
 
   const handleLookup = async () => {
-    if (!name.trim() || !phone.trim()) {
+    if (!name.trim() && !phone.trim()) {
       toast({
         title: "입력 오류",
-        description: "고객명과 휴대폰 번호를 모두 입력해주세요.",
+        description: "고객명 또는 휴대폰 번호를 입력해주세요.",
         variant: "destructive",
       });
       return;
     }
 
-    setIsLookingUp(true);
+    // CRM 검색 조건을 localStorage에 저장
+    const searchData = {
+      name: name || "",
+      phone: phone || "",
+      timestamp: Date.now()
+    };
+    localStorage.setItem('crm_search_data', JSON.stringify(searchData));
     
-    setTimeout(() => {
+    // CRM 창 열기
+    const crmWindow = window.open('http://192.168.1.101/html/MEDI20/main.html', 'CRM_Window', 'width=1200,height=800');
+    
+    if (crmWindow) {
       toast({
-        title: "API 연동 대기 중",
-        description: "한국도움기술 API 연동 후 고객 정보를 조회할 수 있습니다.",
+        title: "CRM 창이 열렸습니다",
+        description: "북마크 바에서 'CRM 연동' 북마크릿을 클릭하세요.",
+        duration: 5000,
       });
-      setIsLookingUp(false);
-    }, 1000);
+    } else {
+      toast({
+        title: "팝업 차단",
+        description: "팝업 차단을 해제하고 다시 시도해주세요.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleManualRegistration = () => {

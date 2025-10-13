@@ -11,45 +11,52 @@ export default function CRMBookmarklet() {
 
   // 북마크릿 JavaScript 코드
   const bookmarkletCode = `javascript:(function(){
-    try {
-      const getValue = (id) => {
-        const el = document.querySelector('#' + id);
-        return el?.value?.trim() || '';
-      };
-      const getSelectedText = (id) => {
-        const select = document.querySelector('#' + id);
-        if (!select) return '';
-        const option = select.options[select.selectedIndex];
-        return option?.text?.trim() || '';
-      };
-      const data = {
-        name: getValue('pagetabs_3013_4_bs_clnt_nm'),
-        customer_number: getValue('pagetabs_3013_4_bs_clnt_no'),
-        resident_number_masked: getValue('pagetabs_3013_4_bs_rrn'),
-        phone: getValue('pagetabs_3013_4_bs_hp_telno'),
-        gender: getValue('pagetabs_3013_4_bs_sex'),
-        age: getValue('pagetabs_3013_4_bs_spec_age'),
-        visit_motivation: getSelectedText('pagetabs_3013_4_cmhs_motv_cd'),
-        diagnosis_category: getSelectedText('pagetabs_3013_4_dgns_cd'),
-        diagnosis_detail: getSelectedText('pagetabs_3013_4_dgns_detl_cd'),
-        hospital_category: getSelectedText('pagetabs_3013_4_org_hspt_cd'),
-        address: (getValue('pagetabs_3013_4_bs_up_addr1') + ' ' + getValue('pagetabs_3013_4_bs_ref_addr1')).trim(),
-        crm_memo: getValue('pagetabs_3013_4_cms_call_memo')
-      };
-      if (!data.name) {
-        alert('환자 정보를 찾을 수 없습니다.\\n\\n1. 전화번호로 환자를 조회하세요\\n2. 환자명을 더블클릭하여 상세정보를 표시하세요\\n3. 다시 북마크릿을 클릭하세요');
-        return;
-      }
-      localStorage.setItem('crm_patient_data', JSON.stringify(data));
-      const appUrl = window.location.origin.includes('lovable') 
-        ? window.location.origin 
-        : 'https://c1b1e147-d88f-49c7-a031-a4345f1f4a69.lovableproject.com';
-      window.open(appUrl + '/first-visit?crm=import', '_blank');
-      alert('환자 정보가 추출되었습니다!\\n\\n' + data.name + ' 환자\\n\\n새 창에서 등록을 진행하세요.');
-    } catch(e) {
-      alert('오류 발생: ' + e.message);
+    var appUrl='https://c1b1e147-d88f-49c7-a031-a4345f1f4a69.lovableproject.com/first-visit';
+    var searchData=localStorage.getItem('crm_search_data');
+    if(searchData){
+      var data=JSON.parse(searchData);
+      var nameInput=document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_srch_clnt_nm');
+      var phoneInput=document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_srch_hp_telno');
+      var searchBtn=document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_btn_srch01');
+      var branchSelect=document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_srch_bnch_cd');
+      if(branchSelect)branchSelect.value='';
+      if(nameInput)nameInput.value=data.name||'';
+      if(phoneInput)phoneInput.value=data.phone||'';
+      if(searchBtn)searchBtn.click();
+      localStorage.removeItem('crm_search_data');
+      alert('검색이 실행되었습니다. 환자를 더블클릭하세요.');
     }
-  })();`;
+    document.addEventListener('dblclick',function(e){
+      setTimeout(function(){
+        var getValue=function(id){var el=document.querySelector('#'+id);return el?el.value:'';};
+        var getSelectedText=function(id){var select=document.querySelector('#'+id);if(!select)return '';var option=select.options[select.selectedIndex];return option?option.text:'';};
+        var data={
+          name:getValue('pagetabs_3013_4_bs_clnt_nm'),
+          customer_number:getValue('pagetabs_3013_4_bs_clnt_no'),
+          resident_number_masked:getValue('pagetabs_3013_4_bs_rrn'),
+          phone:getValue('pagetabs_3013_4_bs_hp_telno'),
+          gender:getValue('pagetabs_3013_4_bs_sex'),
+          age:getValue('pagetabs_3013_4_bs_spec_age'),
+          address:(getValue('pagetabs_3013_4_bs_up_addr1')+' '+getValue('pagetabs_3013_4_bs_ref_addr1')).trim(),
+          visit_motivation:getSelectedText('pagetabs_3013_4_cmhs_motv_cd'),
+          diagnosis_category:getSelectedText('pagetabs_3013_4_dgns_cd'),
+          diagnosis_detail:getSelectedText('pagetabs_3013_4_dgns_detl_cd'),
+          hospital_category:getSelectedText('pagetabs_3013_4_org_hspt_cd'),
+          crm_memo:getValue('pagetabs_3013_4_cms_call_memo')
+        };
+        if(data.name){
+          if(window.opener&&!window.opener.closed){
+            window.opener.postMessage({type:'crm-patient-data',data:data},'*');
+            alert('환자 정보가 전송되었습니다.\\n원래 창에서 확인하세요.');
+            window.close();
+          }else{
+            localStorage.setItem('crm_patient_data',JSON.stringify(data));
+            window.open(appUrl+'?crm=import','_blank');
+          }
+        }
+      },500);
+    });
+  })();`.replace(/\s+/g, ' ');
 
   const handleCopyBookmarklet = () => {
     navigator.clipboard.writeText(bookmarkletCode);

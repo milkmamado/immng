@@ -59,15 +59,44 @@ export default function FirstVisitManagement() {
   useEffect(() => {
     fetchPatients();
 
-    // CRM 북마크릿으로부터 데이터 받기
-    const handleCrmImport = (event: CustomEvent) => {
-      const data = event.detail;
-      handleProceedToRegistration(data);
+    // postMessage로 CRM 데이터 수신 (window.opener에서 전송)
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'crm-patient-data' && event.data?.data) {
+        handleProceedToRegistration(event.data.data);
+        setShowLookupDialog(false);
+        toast({
+          title: "CRM 데이터 가져오기 성공",
+          description: `${event.data.data.name} 환자 정보를 불러왔습니다.`,
+        });
+      }
     };
 
-    window.addEventListener('crm-import', handleCrmImport as EventListener);
+    // localStorage에서 CRM 데이터 확인 (북마크릿이 새 창을 연 경우)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('crm') === 'import') {
+      const storedData = localStorage.getItem('crm_patient_data');
+      if (storedData) {
+        try {
+          const data = JSON.parse(storedData);
+          handleProceedToRegistration(data);
+          setShowLookupDialog(false);
+          localStorage.removeItem('crm_patient_data');
+          toast({
+            title: "CRM 데이터 가져오기 성공",
+            description: `${data.name} 환자 정보를 불러왔습니다.`,
+          });
+          
+          // URL 파라미터 제거
+          window.history.replaceState({}, '', '/first-visit');
+        } catch (e) {
+          console.error('Failed to parse CRM data:', e);
+        }
+      }
+    }
+
+    window.addEventListener('message', handleMessage);
     return () => {
-      window.removeEventListener('crm-import', handleCrmImport as EventListener);
+      window.removeEventListener('message', handleMessage);
     };
   }, []);
 
