@@ -10,53 +10,7 @@ export default function CRMBookmarklet() {
   const { toast } = useToast();
 
   // 북마크릿 JavaScript 코드
-  const bookmarkletCode = `javascript:(function(){
-    var appUrl='https://c1b1e147-d88f-49c7-a031-a4345f1f4a69.lovableproject.com/first-visit';
-    var searchData=localStorage.getItem('crm_search_data');
-    if(searchData){
-      var data=JSON.parse(searchData);
-      var nameInput=document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_srch_clnt_nm');
-      var phoneInput=document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_srch_hp_telno');
-      var searchBtn=document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_btn_srch01');
-      var branchSelect=document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_srch_bnch_cd');
-      if(branchSelect)branchSelect.value='';
-      if(nameInput)nameInput.value=data.name||'';
-      if(phoneInput)phoneInput.value=data.phone||'';
-      if(searchBtn)searchBtn.click();
-      localStorage.removeItem('crm_search_data');
-      alert('검색이 실행되었습니다. 환자를 더블클릭하세요.');
-    }
-    document.addEventListener('dblclick',function(e){
-      setTimeout(function(){
-        var getValue=function(id){var el=document.querySelector('#'+id);return el?el.value:'';};
-        var getSelectedText=function(id){var select=document.querySelector('#'+id);if(!select)return '';var option=select.options[select.selectedIndex];return option?option.text:'';};
-        var data={
-          name:getValue('pagetabs_3013_4_bs_clnt_nm'),
-          customer_number:getValue('pagetabs_3013_4_bs_clnt_no'),
-          resident_number_masked:getValue('pagetabs_3013_4_bs_rrn'),
-          phone:getValue('pagetabs_3013_4_bs_hp_telno'),
-          gender:getValue('pagetabs_3013_4_bs_sex'),
-          age:getValue('pagetabs_3013_4_bs_spec_age'),
-          address:(getValue('pagetabs_3013_4_bs_up_addr1')+' '+getValue('pagetabs_3013_4_bs_ref_addr1')).trim(),
-          visit_motivation:getSelectedText('pagetabs_3013_4_cmhs_motv_cd'),
-          diagnosis_category:getSelectedText('pagetabs_3013_4_dgns_cd'),
-          diagnosis_detail:getSelectedText('pagetabs_3013_4_dgns_detl_cd'),
-          hospital_category:getSelectedText('pagetabs_3013_4_org_hspt_cd'),
-          crm_memo:getValue('pagetabs_3013_4_cms_call_memo')
-        };
-        if(data.name){
-          if(window.opener&&!window.opener.closed){
-            window.opener.postMessage({type:'crm-patient-data',data:data},'*');
-            alert('환자 정보가 전송되었습니다.\\n원래 창에서 확인하세요.');
-            window.close();
-          }else{
-            localStorage.setItem('crm_patient_data',JSON.stringify(data));
-            window.open(appUrl+'?crm=import','_blank');
-          }
-        }
-      },500);
-    });
-  })();`.replace(/\s+/g, ' ');
+  const bookmarkletCode = `javascript:(function(){var appUrl='https://c1b1e147-d88f-49c7-a031-a4345f1f4a69.lovableproject.com/first-visit';var searchData=localStorage.getItem('crm_search_data');if(searchData){var data=JSON.parse(searchData);var nameInput=document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_srch_clnt_nm');var phoneInput=document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_srch_hp_telno');var searchBtn=document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_btn_srch01');var branchSelect=document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_srch_bnch_cd');if(branchSelect)branchSelect.value='';if(nameInput)nameInput.value=data.name||'';if(phoneInput)phoneInput.value=data.phone||'';if(searchBtn)searchBtn.click();localStorage.removeItem('crm_search_data');alert('검색이 실행되었습니다. 환자를 더블클릭하세요.');}document.addEventListener('dblclick',function(e){setTimeout(function(){var getValue=function(id){var el=document.querySelector('#'+id);return el?el.value:'';};var getSelectedText=function(id){var select=document.querySelector('#'+id);if(!select)return'';var option=select.options[select.selectedIndex];return option?option.text:'';};var data={name:getValue('pagetabs_3013_4_bs_clnt_nm'),customer_number:getValue('pagetabs_3013_4_bs_clnt_no'),resident_number_masked:getValue('pagetabs_3013_4_bs_rrn'),phone:getValue('pagetabs_3013_4_bs_hp_telno'),gender:getValue('pagetabs_3013_4_bs_sex'),age:getValue('pagetabs_3013_4_bs_spec_age'),address:(getValue('pagetabs_3013_4_bs_up_addr1')+' '+getValue('pagetabs_3013_4_bs_ref_addr1')).trim(),visit_motivation:getSelectedText('pagetabs_3013_4_cmhs_motv_cd'),diagnosis_category:getSelectedText('pagetabs_3013_4_dgns_cd'),diagnosis_detail:getSelectedText('pagetabs_3013_4_dgns_detl_cd'),hospital_category:getSelectedText('pagetabs_3013_4_org_hspt_cd'),crm_memo:getValue('pagetabs_3013_4_cms_call_memo')};if(data.name){if(window.opener&&!window.opener.closed){window.opener.postMessage({type:'crm-patient-data',data:data},'*');alert('환자 정보가 전송되었습니다.\\n원래 창에서 확인하세요.');window.close();}else{localStorage.setItem('crm_patient_data',JSON.stringify(data));window.open(appUrl+'?crm=import','_blank');}}},500);});})();`;
 
   const handleCopyBookmarklet = () => {
     navigator.clipboard.writeText(bookmarkletCode);
@@ -107,29 +61,27 @@ export default function CRMBookmarklet() {
           <CardTitle>북마크릿 설치 방법</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          <Alert className="bg-yellow-50 border-yellow-200">
+            <AlertDescription className="text-yellow-800">
+              <strong>⚠️ 중요:</strong> 북마크릿은 <strong>북마크바에 드래그</strong>하거나 
+              <strong>북마크 추가 시 URL에 붙여넣기</strong> 해야 합니다. 
+              일반 링크처럼 클릭하면 작동하지 않습니다!
+            </AlertDescription>
+          </Alert>
+
           <div className="space-y-4">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold">
                 1
               </div>
-              <div>
-                <h3 className="font-semibold mb-2">북마크릿 코드 복사</h3>
+              <div className="flex-1">
+                <h3 className="font-semibold mb-2">북마크바 표시하기</h3>
                 <p className="text-sm text-muted-foreground mb-3">
-                  아래 버튼을 클릭하여 북마크릿 코드를 복사하세요.
+                  먼저 북마크바가 보이도록 설정하세요.
                 </p>
-                <Button onClick={handleCopyBookmarklet} className="gap-2">
-                  {copied ? (
-                    <>
-                      <CheckCircle className="h-4 w-4" />
-                      복사됨!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-4 w-4" />
-                      북마크릿 코드 복사
-                    </>
-                  )}
-                </Button>
+                <div className="bg-muted p-3 rounded text-sm">
+                  <strong>단축키:</strong> Ctrl + Shift + B (Windows) 또는 ⌘ + Shift + B (Mac)
+                </div>
               </div>
             </div>
 
@@ -137,16 +89,37 @@ export default function CRMBookmarklet() {
               <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold">
                 2
               </div>
-              <div>
-                <h3 className="font-semibold mb-2">브라우저 북마크 추가</h3>
-                <div className="text-sm text-muted-foreground space-y-2">
-                  <p><strong>Chrome/Edge:</strong></p>
-                  <ul className="list-disc list-inside ml-4 space-y-1">
-                    <li>Ctrl+D (또는 ⌘+D) 눌러서 북마크 추가</li>
-                    <li>이름: "CRM 데이터 가져오기"</li>
-                    <li>URL 필드에 복사한 코드 붙여넣기</li>
-                    <li>저장</li>
-                  </ul>
+              <div className="flex-1">
+                <h3 className="font-semibold mb-2">북마크 생성</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  아래 방법 중 하나를 선택하세요:
+                </p>
+                
+                <div className="space-y-3">
+                  <div className="border rounded p-3 bg-blue-50">
+                    <strong className="text-blue-900">방법 A: 새 북마크 만들기 (추천)</strong>
+                    <ol className="list-decimal list-inside ml-2 mt-2 text-sm space-y-1">
+                      <li>아무 페이지에서 Ctrl+D (또는 ⌘+D) 눌러 북마크 추가</li>
+                      <li>이름: <code className="bg-blue-100 px-1">CRM 연동</code></li>
+                      <li>아래 버튼 클릭하여 코드 복사</li>
+                      <li>URL 필드에 복사한 코드 <strong>전체</strong> 붙여넣기</li>
+                      <li>저장</li>
+                    </ol>
+                  </div>
+
+                  <Button onClick={handleCopyBookmarklet} className="w-full gap-2" size="lg">
+                    {copied ? (
+                      <>
+                        <CheckCircle className="h-5 w-5" />
+                        복사됨!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-5 w-5" />
+                        북마크릿 코드 복사
+                      </>
+                    )}
+                  </Button>
                 </div>
               </div>
             </div>
@@ -158,12 +131,23 @@ export default function CRMBookmarklet() {
               <div>
                 <h3 className="font-semibold mb-2">북마크릿 사용 방법</h3>
                 <div className="text-sm text-muted-foreground space-y-2">
-                  <ol className="list-decimal list-inside space-y-1">
-                    <li>CRM (http://192.168.1.101/html/MEDI20/main.html)에 로그인</li>
-                    <li>전화번호로 환자 조회</li>
-                    <li>환자명을 <strong>더블클릭</strong>하여 상세정보 표시</li>
-                    <li>브라우저 북마크바에서 <strong>"CRM 데이터 가져오기"</strong> 북마크 클릭</li>
-                    <li>새 창이 열리면서 환자 정보가 자동으로 입력됨</li>
+                  <ol className="list-decimal list-inside space-y-2">
+                    <li>
+                      <strong>초진관리 → 새 환자 등록 → 조회</strong> 클릭
+                      <div className="ml-6 text-xs text-gray-500">→ CRM 페이지가 새 탭으로 열립니다</div>
+                    </li>
+                    <li>
+                      <strong>북마크바의 "CRM 연동" 북마크 클릭</strong>
+                      <div className="ml-6 text-xs text-gray-500">→ 자동으로 검색 실행됩니다</div>
+                    </li>
+                    <li>
+                      <strong>환자명 더블클릭</strong> (상세정보 표시)
+                      <div className="ml-6 text-xs text-gray-500">→ 다시 "CRM 연동" 북마크 클릭은 <strong>필요 없습니다!</strong></div>
+                      <div className="ml-6 text-xs text-gray-500">→ 더블클릭만 하면 자동으로 정보 추출됩니다</div>
+                    </li>
+                    <li>
+                      환자 관리 시스템에서 확인 및 등록
+                    </li>
                   </ol>
                 </div>
               </div>
@@ -175,7 +159,7 @@ export default function CRMBookmarklet() {
               <FileCode className="h-4 w-4" />
               북마크릿 코드 미리보기
             </h4>
-            <div className="bg-background p-3 rounded border font-mono text-xs overflow-x-auto">
+            <div className="bg-background p-3 rounded border font-mono text-xs overflow-x-auto break-all">
               {bookmarkletCode}
             </div>
           </div>
