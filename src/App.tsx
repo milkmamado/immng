@@ -17,7 +17,7 @@ import RiskManagement from "./pages/RiskManagement";
 import StatisticsManagement from "./pages/StatisticsManagement";
 import MarketingStatistics from "./pages/MarketingStatistics";
 import UserManual from "./pages/UserManual";
-
+import CRMBookmarklet from "./pages/CRMBookmarklet";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -106,7 +106,15 @@ function AppRoutes() {
           } 
         />
         <Route 
-          path="/marketing-statistics" 
+          path="/crm-bookmarklet" 
+          element={
+            <ProtectedRoute>
+              <CRMBookmarklet />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/marketing-statistics"
           element={
             <ProtectedRoute requiredRole="master">
               <MarketingStatistics />

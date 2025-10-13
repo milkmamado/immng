@@ -58,6 +58,17 @@ export default function FirstVisitManagement() {
 
   useEffect(() => {
     fetchPatients();
+
+    // CRM 북마크릿으로부터 데이터 받기
+    const handleCrmImport = (event: CustomEvent) => {
+      const data = event.detail;
+      handleProceedToRegistration(data);
+    };
+
+    window.addEventListener('crm-import', handleCrmImport as EventListener);
+    return () => {
+      window.removeEventListener('crm-import', handleCrmImport as EventListener);
+    };
   }, []);
 
   const fetchPatients = async () => {
