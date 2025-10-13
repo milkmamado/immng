@@ -9,8 +9,8 @@ export default function CRMBookmarklet() {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
-  // 북마크릿 JavaScript 코드 - CRM 자동화
-  const bookmarkletCode = `javascript:(function(){var hash=window.location.hash;var searchData=null;if(hash.indexOf('crm_data=')!==-1){try{var encoded=hash.split('crm_data=')[1];var decoded=decodeURIComponent(atob(encoded));searchData=JSON.parse(decoded);}catch(e){alert('데이터 파싱 오류: '+e.message);return;}}else{alert('검색 데이터가 없습니다.\\n먼저 "조회" 버튼을 클릭하세요.');return;}if(searchData){var searchBtn=document.querySelector('[id*="btn_bsClntNmPopUp"]');if(searchBtn){searchBtn.click();setTimeout(function(){var popup=document.querySelector('.win_popup-wapper');if(popup){var nameInput=popup.querySelector('[id*="srch_clnt_nm"]');var phoneInput=popup.querySelector('[id*="srch_hp_telno"]');var branchSelect=popup.querySelector('[id*="srch_bnch_cd"]');var popupSearchBtn=popup.querySelector('[id*="btn_srch"]');if(branchSelect)branchSelect.value='';if(nameInput)nameInput.value=searchData.name||'';if(phoneInput)phoneInput.value=searchData.phone||'';if(popupSearchBtn){popupSearchBtn.click();}}else{alert('검색 팝업을 찾을 수 없습니다.');}},500);}else{alert('돋보기 버튼을 찾을 수 없습니다.');}}document.addEventListener('dblclick',function(e){setTimeout(function(){var findInput=function(pattern){var inputs=document.querySelectorAll('input[id*="'+pattern+'"]');return inputs.length>0?inputs[0]:null;};var findSelect=function(pattern){var selects=document.querySelectorAll('select[id*="'+pattern+'"]');return selects.length>0?selects[0]:null;};var findTextarea=function(pattern){var textareas=document.querySelectorAll('textarea[id*="'+pattern+'"]');return textareas.length>0?textareas[0]:null;};var getValue=function(pattern){var el=findInput(pattern);return el?el.value.trim():'';};var getSelectedText=function(pattern){var select=findSelect(pattern);if(!select)return'';var option=select.options[select.selectedIndex];return option?option.text.trim():'';};var getTextareaValue=function(pattern){var el=findTextarea(pattern);return el?el.value.trim():'';};var name=getValue('bs_clnt_nm');if(name){var data={name:name,customer_number:getValue('bs_clnt_no'),resident_number_masked:getValue('bs_rrn'),phone:getValue('bs_hp_telno'),gender:getValue('bs_sex'),age:getValue('bs_spec_age')||getValue('bs_age'),address:(getValue('bs_up_addr1')+' '+getValue('bs_ref_addr1')).trim(),visit_motivation:getSelectedText('cmhs_motv_cd'),diagnosis_category:getSelectedText('dgns_cd'),diagnosis_detail:getSelectedText('dgns_detl_cd'),hospital_category:getSelectedText('org_hspt_cd'),crm_memo:getTextareaValue('cms_call_memo')};if(window.opener&&!window.opener.closed){window.opener.postMessage({type:'crm-patient-data',data:data},'*');alert('환자 정보 전송 완료!\\n원래 창에서 확인하세요.');window.close();}else{var appUrl=searchData?searchData.appUrl:'https://c1b1e147-d88f-49c7-a031-a4345f1f4a69.lovableproject.com/first-visit';localStorage.setItem('crm_patient_data',JSON.stringify(data));window.open(appUrl+'?crm=import','_blank');}}},500);});})();`;
+  // 북마크릿 JavaScript 코드 - CRM 자동화 (alert 없는 버전)
+  const bookmarkletCode = `javascript:(function(){var hash=window.location.hash;var searchData=null;if(hash.indexOf('crm_data=')!==-1){try{var encoded=hash.split('crm_data=')[1];var decoded=decodeURIComponent(atob(encoded));searchData=JSON.parse(decoded);}catch(e){console.error('데이터 파싱 오류:',e);return;}}else{console.log('검색 데이터가 URL에 없습니다.');return;}if(searchData){var searchBtn=document.querySelector('[id*="btn_bsClntNmPopUp"]');if(searchBtn){searchBtn.click();setTimeout(function(){var popup=document.querySelector('.win_popup-wapper');if(popup){var nameInput=popup.querySelector('[id*="srch_clnt_nm"]');var phoneInput=popup.querySelector('[id*="srch_hp_telno"]');var branchSelect=popup.querySelector('[id*="srch_bnch_cd"]');var popupSearchBtn=popup.querySelector('[id*="btn_srch"]');if(branchSelect)branchSelect.value='';if(nameInput)nameInput.value=searchData.name||'';if(phoneInput)phoneInput.value=searchData.phone||'';if(popupSearchBtn){popupSearchBtn.click();}}},500);}}document.addEventListener('dblclick',function(e){setTimeout(function(){var findInput=function(pattern){var inputs=document.querySelectorAll('input[id*="'+pattern+'"]');return inputs.length>0?inputs[0]:null;};var findSelect=function(pattern){var selects=document.querySelectorAll('select[id*="'+pattern+'"]');return selects.length>0?selects[0]:null;};var findTextarea=function(pattern){var textareas=document.querySelectorAll('textarea[id*="'+pattern+'"]');return textareas.length>0?textareas[0]:null;};var getValue=function(pattern){var el=findInput(pattern);return el?el.value.trim():'';};var getSelectedText=function(pattern){var select=findSelect(pattern);if(!select)return'';var option=select.options[select.selectedIndex];return option?option.text.trim():'';};var getTextareaValue=function(pattern){var el=findTextarea(pattern);return el?el.value.trim():'';};var name=getValue('bs_clnt_nm');if(name){var data={name:name,customer_number:getValue('bs_clnt_no'),resident_number_masked:getValue('bs_rrn'),phone:getValue('bs_hp_telno'),gender:getValue('bs_sex'),age:getValue('bs_spec_age')||getValue('bs_age'),address:(getValue('bs_up_addr1')+' '+getValue('bs_ref_addr1')).trim(),visit_motivation:getSelectedText('cmhs_motv_cd'),diagnosis_category:getSelectedText('dgns_cd'),diagnosis_detail:getSelectedText('dgns_detl_cd'),hospital_category:getSelectedText('org_hspt_cd'),crm_memo:getTextareaValue('cms_call_memo')};if(window.opener&&!window.opener.closed){window.opener.postMessage({type:'crm-patient-data',data:data},'*');window.close();}else{var appUrl=searchData?searchData.appUrl:window.location.origin+'/first-visit';localStorage.setItem('crm_patient_data',JSON.stringify(data));window.open(appUrl+'?crm=import','_blank');}}},500);});})();`;
 
   const handleCopyBookmarklet = () => {
     navigator.clipboard.writeText(bookmarkletCode);
@@ -138,17 +138,18 @@ export default function CRMBookmarklet() {
                     </li>
                     <li>
                       <strong>북마크바의 "CRM 연동" 북마크 클릭</strong>
-                      <div className="ml-6 text-xs text-gray-500">→ 자동으로 검색 실행됩니다</div>
+                      <div className="ml-6 text-xs text-gray-500">→ 자동으로 검색이 실행됩니다</div>
                     </li>
                     <li>
                       <strong>환자명 더블클릭</strong> (상세정보 표시)
-                      <div className="ml-6 text-xs text-gray-500">→ 다시 "CRM 연동" 북마크 클릭은 <strong>필요 없습니다!</strong></div>
-                      <div className="ml-6 text-xs text-gray-500">→ 더블클릭만 하면 자동으로 정보 추출됩니다</div>
-                    </li>
-                    <li>
-                      환자 관리 시스템에서 확인 및 등록
+                      <div className="ml-6 text-xs text-gray-500">→ 자동으로 정보가 추출되어 원래 창에 전달됩니다</div>
                     </li>
                   </ol>
+                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+                    <p className="text-green-900 text-xs font-semibold">
+                      ✨ 새 버전: 확인 버튼 없이 자동으로 처리됩니다! (오류 발생 시에만 브라우저 콘솔에 로그 표시)
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -172,9 +173,9 @@ export default function CRMBookmarklet() {
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <div>
-            <strong>Q: 북마크릿을 클릭했는데 "환자 정보를 찾을 수 없습니다" 메시지가 나옵니다</strong>
+            <strong>Q: 작동하지 않을 때는 어떻게 하나요?</strong>
             <p className="text-muted-foreground mt-1">
-              A: 환자명을 더블클릭하여 상세정보 창이 열려있는지 확인하세요. 상세정보가 표시된 상태에서 북마크릿을 클릭해야 합니다.
+              A: 브라우저 콘솔(F12)을 열어 오류 메시지를 확인하세요. 모든 디버그 정보는 콘솔에 표시됩니다.
             </p>
           </div>
           <div>
@@ -184,9 +185,9 @@ export default function CRMBookmarklet() {
             </p>
           </div>
           <div>
-            <strong>Q: 데이터가 일부만 가져와집니다</strong>
+            <strong>Q: 이전 버전에서 확인 버튼을 많이 눌러야 했는데요?</strong>
             <p className="text-muted-foreground mt-1">
-              A: CRM 상세정보 창에서 모든 정보가 로딩될 때까지 기다린 후 북마크릿을 클릭하세요.
+              A: 위의 "북마크릿 코드 복사" 버튼으로 새 버전을 복사하여 북마크를 업데이트하세요. 새 버전은 확인 버튼 없이 조용히 작동합니다.
             </p>
           </div>
         </CardContent>
