@@ -147,7 +147,7 @@ export function PatientLookupDialog({
     if (crmWindow) {
       toast({
         title: "CRM 페이지가 열렸습니다",
-        description: "확장 프로그램 아이콘을 클릭하여 환자 정보를 가져오세요.",
+        description: "북마크바의 'CRM 연동' 북마크를 클릭하세요.",
         duration: 5000,
       });
     } else {
