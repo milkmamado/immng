@@ -17,6 +17,7 @@ import RiskManagement from "./pages/RiskManagement";
 import StatisticsManagement from "./pages/StatisticsManagement";
 import MarketingStatistics from "./pages/MarketingStatistics";
 import UserManual from "./pages/UserManual";
+import CRMTest from "./pages/CRMTest";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ function AppRoutes() {
     return (
       <Routes>
         <Route path="/auth" element={<Auth />} />
+        <Route path="/crm-test" element={<CRMTest />} />
         <Route path="*" element={<Navigate to="/auth" replace />} />
       </Routes>
     );
@@ -128,6 +130,7 @@ function AppRoutes() {
             </ProtectedRoute>
           } 
         />
+        <Route path="/crm-test" element={<CRMTest />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Layout>
