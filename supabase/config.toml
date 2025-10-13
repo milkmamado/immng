@@ -1,1 +1,7 @@
 project_id = "fxqcvxlnfbqqxxjlnebh"
+
+[functions.delete-user]
+verify_jwt = false
+
+[functions.test-crm-connection]
+verify_jwt = false
