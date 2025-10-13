@@ -82,8 +82,8 @@ export default function FirstVisitManagement() {
     }
   };
 
-  const handleProceedToRegistration = (name: string, phone: string) => {
-    setInitialFormData({ name, phone });
+  const handleProceedToRegistration = (data: any) => {
+    setInitialFormData(data);
     setShowLookupDialog(false);
     setShowFullForm(true);
   };

@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 interface PatientBasicFormProps {
   patient?: any;
   onClose: () => void;
-  initialData?: { name: string; phone: string } | null;
+  initialData?: any;
 }
 
 interface Option {
@@ -101,8 +101,9 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
       fetchCurrentUserName();
       setFormData(prev => ({
         ...prev,
-        name: initialData.name,
-        phone: initialData.phone
+        ...initialData,
+        // manager_name은 현재 사용자로 덮어쓰기 위해 제외
+        manager_name: prev.manager_name
       }));
     } else {
       fetchCurrentUserName();
