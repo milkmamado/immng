@@ -75,9 +75,9 @@ export default function FirstVisitManagement() {
     // URL 파라미터에서 crm=import 확인
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('crm') === 'import') {
-      // localStorage에서 CRM 데이터 확인 (북마크릿 또는 Chrome 확장 프로그램)
+      // localStorage에서 CRM 데이터 확인 (CRM 연동 또는 Chrome 확장 프로그램)
       const checkStorage = async () => {
-        // 먼저 localStorage 확인 (북마크릿용)
+        // 먼저 localStorage 확인 (CRM 연동용)
         const localData = localStorage.getItem('crm_patient_data');
         if (localData) {
           try {

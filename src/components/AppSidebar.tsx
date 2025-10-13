@@ -33,7 +33,7 @@ const navigationItems = [
   { title: "일별 환자 관리 현황", url: "/daily-tracking", icon: ClipboardCheck },
   { title: "이탈 리스크 관리", url: "/risk-management", icon: Calendar },
   { title: "통계 관리", url: "/statistics", icon: BarChart3 },
-  { title: "CRM 북마크릿", url: "/crm-bookmarklet", icon: BookMarked },
+  { title: "CRM 연동", url: "/crm-bookmarklet", icon: BookMarked },
   { title: "사용자 메뉴얼", url: "/user-manual", icon: BookOpen },
 ];
 

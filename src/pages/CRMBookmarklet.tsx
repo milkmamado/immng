@@ -17,7 +17,7 @@ export default function CRMBookmarklet() {
     setCopied(true);
     toast({
       title: "복사 완료",
-      description: "북마크릿 코드가 클립보드에 복사되었습니다.",
+      description: "연동 코드가 클립보드에 복사되었습니다.",
       duration: 1000,
     });
     setTimeout(() => setCopied(false), 3000);
@@ -48,24 +48,24 @@ export default function CRMBookmarklet() {
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3 mb-6">
         <BookMarked className="h-8 w-8 text-primary" />
-        <h1 className="text-3xl font-bold">CRM 북마크릿 설치</h1>
+        <h1 className="text-3xl font-bold">CRM 연동 설정</h1>
       </div>
 
       <Alert>
         <FileCode className="h-4 w-4" />
         <AlertDescription>
-          북마크릿을 사용하면 CRM에서 클릭 한 번으로 환자 정보를 자동으로 가져올 수 있습니다.
+          CRM 연동을 사용하면 클릭 한 번으로 환자 정보를 자동으로 가져올 수 있습니다.
         </AlertDescription>
       </Alert>
 
       <Card>
         <CardHeader>
-          <CardTitle>북마크릿 설치 방법</CardTitle>
+          <CardTitle>연동 설정 방법</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <Alert className="bg-yellow-50 border-yellow-200">
             <AlertDescription className="text-yellow-800">
-              <strong>⚠️ 중요:</strong> 북마크릿은 <strong>북마크바에 드래그</strong>하거나 
+              <strong>⚠️ 중요:</strong> 연동 스크립트는 <strong>북마크바에 드래그</strong>하거나 
               <strong>북마크 추가 시 URL에 붙여넣기</strong> 해야 합니다. 
               일반 링크처럼 클릭하면 작동하지 않습니다!
             </AlertDescription>
@@ -118,7 +118,7 @@ export default function CRMBookmarklet() {
                     ) : (
                       <>
                         <Copy className="h-5 w-5" />
-                        북마크릿 코드 복사
+                        연동 코드 복사
                       </>
                     )}
                   </Button>
@@ -131,7 +131,7 @@ export default function CRMBookmarklet() {
                 3
               </div>
               <div>
-                <h3 className="font-semibold mb-2">북마크릿 사용 방법</h3>
+                <h3 className="font-semibold mb-2">사용 방법</h3>
                 <div className="text-sm text-muted-foreground space-y-2">
                   <ol className="list-decimal list-inside space-y-2">
                     <li>
@@ -160,7 +160,7 @@ export default function CRMBookmarklet() {
           <div className="bg-muted p-4 rounded-lg">
             <h4 className="font-semibold mb-2 flex items-center gap-2">
               <FileCode className="h-4 w-4" />
-              북마크릿 코드 미리보기
+              연동 코드 미리보기
             </h4>
             <div className="bg-background p-3 rounded border font-mono text-xs overflow-x-auto break-all">
               {bookmarkletCode}
@@ -181,7 +181,7 @@ export default function CRMBookmarklet() {
             </p>
           </div>
           <div>
-            <strong>Q: 북마크릿을 추가했는데 북마크바에 보이지 않습니다</strong>
+            <strong>Q: 북마크를 추가했는데 북마크바에 보이지 않습니다</strong>
             <p className="text-muted-foreground mt-1">
               A: 브라우저 설정에서 북마크바가 표시되도록 설정하세요. (Chrome: Ctrl+Shift+B)
             </p>
@@ -189,7 +189,7 @@ export default function CRMBookmarklet() {
           <div>
             <strong>Q: 이전 버전에서 확인 버튼을 많이 눌러야 했는데요?</strong>
             <p className="text-muted-foreground mt-1">
-              A: 위의 "북마크릿 코드 복사" 버튼으로 새 버전을 복사하여 북마크를 업데이트하세요. 새 버전은 확인 버튼 없이 조용히 작동합니다.
+              A: 위의 "연동 코드 복사" 버튼으로 새 버전을 복사하여 북마크를 업데이트하세요. 새 버전은 확인 버튼 없이 조용히 작동합니다.
             </p>
           </div>
         </CardContent>
