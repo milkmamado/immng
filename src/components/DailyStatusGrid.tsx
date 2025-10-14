@@ -1227,7 +1227,7 @@ export function DailyStatusGrid({
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      치료 계획 관리에서 자동 계산
+                      패키지 관리에서 자동 계산
                     </p>
                   </div>
 
