@@ -870,55 +870,55 @@ export default function PatientListManagement() {
         : 0;
 
       return (
-        <div className="border rounded-lg overflow-hidden">
-          <div className="bg-muted px-4 py-2 font-semibold text-sm">{title}</div>
+        <div className="border rounded-lg overflow-hidden shadow-sm">
+          <div className="bg-muted px-4 py-2 font-semibold text-sm border-b">{title}</div>
           <div className="max-h-64 overflow-y-auto">
-            <Table>
-              <TableHeader className="sticky top-0 bg-background">
+            <Table className="border-collapse">
+              <TableHeader className="sticky top-0 bg-muted/50">
                 <TableRow>
                   {headers.showRange ? (
                     <>
-                      <TableHead className="w-28">{headers.dateFrom}</TableHead>
-                      <TableHead className="w-28">{headers.dateTo}</TableHead>
+                      <TableHead className="w-28 border border-border text-center font-semibold">{headers.dateFrom}</TableHead>
+                      <TableHead className="w-28 border border-border text-center font-semibold">{headers.dateTo}</TableHead>
                     </>
                   ) : (
-                    <TableHead className="w-32">{headers.date}</TableHead>
+                    <TableHead className="w-32 border border-border text-center font-semibold">{headers.date}</TableHead>
                   )}
-                  <TableHead className="text-right">{headers.value}</TableHead>
-                  <TableHead>비고</TableHead>
+                  <TableHead className="border border-border text-center font-semibold">{headers.value}</TableHead>
+                  <TableHead className="border border-border text-center font-semibold">비고</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {transactions.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={headers.showRange ? 4 : 3} className="text-center text-muted-foreground py-4">
+                    <TableCell colSpan={headers.showRange ? 4 : 3} className="border border-border text-center text-muted-foreground py-4">
                       데이터 없음
                     </TableCell>
                   </TableRow>
                 ) : (
                   transactions.map((transaction) => (
-                    <TableRow key={transaction.id}>
+                    <TableRow key={transaction.id} className="hover:bg-muted/30">
                       {headers.showRange ? (
                         <>
-                          <TableCell className="font-mono text-sm">
+                          <TableCell className="border border-border font-mono text-sm text-center">
                             {(transaction as any).date_from ? new Date((transaction as any).date_from).toLocaleDateString('ko-KR') : '-'}
                           </TableCell>
-                          <TableCell className="font-mono text-sm">
+                          <TableCell className="border border-border font-mono text-sm text-center">
                             {(transaction as any).date_to ? new Date((transaction as any).date_to).toLocaleDateString('ko-KR') : '-'}
                           </TableCell>
                         </>
                       ) : (
-                        <TableCell className="font-mono text-sm">
+                        <TableCell className="border border-border font-mono text-sm text-center">
                           {new Date(transaction.transaction_date).toLocaleDateString('ko-KR')}
                         </TableCell>
                       )}
-                      <TableCell className="text-right font-semibold">
+                      <TableCell className="border border-border text-right font-semibold">
                         {type === 'amount' 
                           ? `${transaction.amount.toLocaleString()}원`
                           : `${transaction.count}회`
                         }
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="border border-border text-sm text-muted-foreground">
                         {transaction.note || '-'}
                       </TableCell>
                     </TableRow>
@@ -927,7 +927,7 @@ export default function PatientListManagement() {
               </TableBody>
             </Table>
           </div>
-          <div className="bg-muted px-4 py-2 flex justify-between items-center border-t">
+          <div className="bg-muted/50 px-4 py-2 flex justify-between items-center border-t">
             <span className="font-semibold text-sm">
               합계{title.includes('횟수 입력') ? ` / 남은 횟수: ${remainingCount}` : ''}
             </span>
