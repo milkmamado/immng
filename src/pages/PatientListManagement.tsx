@@ -411,6 +411,48 @@ export default function PatientListManagement() {
     }, 30000);
   };
 
+  const handleDeletePackageData = async () => {
+    if (!selectedPatientDetail) return;
+
+    if (!window.confirm('패키지 데이터를 모두 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
+      return;
+    }
+
+    try {
+      // package_transactions 삭제
+      const { error: transactionsError } = await supabase
+        .from('package_transactions')
+        .delete()
+        .eq('patient_id', selectedPatientDetail.id);
+
+      if (transactionsError) throw transactionsError;
+
+      // package_management 삭제
+      const { error: managementError } = await supabase
+        .from('package_management')
+        .delete()
+        .eq('patient_id', selectedPatientDetail.id);
+
+      if (managementError) throw managementError;
+
+      // 로컬 상태 초기화
+      setPackageData(null);
+      setPackageTransactions([]);
+
+      toast({
+        title: "삭제 완료",
+        description: "패키지 데이터가 모두 삭제되었습니다.",
+      });
+    } catch (error) {
+      console.error('Error deleting package data:', error);
+      toast({
+        title: "오류",
+        description: "패키지 데이터 삭제 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handlePackageDataReceived = async (data: any) => {
     console.log('📦 패키지 데이터 수신:', data);
     
@@ -852,15 +894,25 @@ export default function PatientListManagement() {
             <PackageIcon className="h-5 w-5 text-primary" />
             <h3 className="text-lg font-semibold">패키지 관리</h3>
           </div>
-          <Button
-            onClick={handleSyncPackage}
-            disabled={syncingPackage || !selectedPatientDetail?.customer_number}
-            size="sm"
-            className="gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${syncingPackage ? 'animate-spin' : ''}`} />
-            최신화
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleSyncPackage}
+              disabled={syncingPackage || !selectedPatientDetail?.customer_number}
+              size="sm"
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${syncingPackage ? 'animate-spin' : ''}`} />
+              최신화
+            </Button>
+            <Button
+              onClick={handleDeletePackageData}
+              variant="destructive"
+              size="sm"
+              className="gap-2"
+            >
+              내역삭제
+            </Button>
+          </div>
         </div>
 
         {!selectedPatientDetail?.customer_number ? (
