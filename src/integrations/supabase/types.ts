@@ -268,6 +268,75 @@ export type Database = {
           },
         ]
       }
+      package_management: {
+        Row: {
+          count_balance: number | null
+          count_total: number | null
+          count_used: number | null
+          created_at: string
+          customer_number: string | null
+          deposit_balance: number | null
+          deposit_total: number | null
+          deposit_used: number | null
+          id: string
+          last_synced_at: string | null
+          patient_id: string
+          reward_balance: number | null
+          reward_total: number | null
+          reward_used: number | null
+          updated_at: string
+        }
+        Insert: {
+          count_balance?: number | null
+          count_total?: number | null
+          count_used?: number | null
+          created_at?: string
+          customer_number?: string | null
+          deposit_balance?: number | null
+          deposit_total?: number | null
+          deposit_used?: number | null
+          id?: string
+          last_synced_at?: string | null
+          patient_id: string
+          reward_balance?: number | null
+          reward_total?: number | null
+          reward_used?: number | null
+          updated_at?: string
+        }
+        Update: {
+          count_balance?: number | null
+          count_total?: number | null
+          count_used?: number | null
+          created_at?: string
+          customer_number?: string | null
+          deposit_balance?: number | null
+          deposit_total?: number | null
+          deposit_used?: number | null
+          id?: string
+          last_synced_at?: string | null
+          patient_id?: string
+          reward_balance?: number | null
+          reward_total?: number | null
+          reward_used?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_management_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: true
+            referencedRelation: "patient_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_management_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: true
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       packages: {
         Row: {
           admission_cycle_id: string | null

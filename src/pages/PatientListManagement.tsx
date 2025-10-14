@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Search } from "lucide-react";
+import { Users, Search, RefreshCw, Package as PackageIcon } from "lucide-react";
 
 interface Patient {
   id: string;
@@ -74,6 +74,24 @@ interface PatientStatusOption extends Option {
   exclude_from_daily_tracking: boolean;
 }
 
+interface PackageManagement {
+  id: string;
+  patient_id: string;
+  customer_number?: string;
+  deposit_total: number;
+  deposit_used: number;
+  deposit_balance: number;
+  reward_total: number;
+  reward_used: number;
+  reward_balance: number;
+  count_total: number;
+  count_used: number;
+  count_balance: number;
+  last_synced_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function PatientListManagement() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
@@ -90,6 +108,8 @@ export default function PatientListManagement() {
   const [insuranceTypeOptions, setInsuranceTypeOptions] = useState<Option[]>([]);
   const [treatmentDetailOptions, setTreatmentDetailOptions] = useState<Option[]>([]);
   const [patientStatusOptions, setPatientStatusOptions] = useState<PatientStatusOption[]>([]);
+  const [packageData, setPackageData] = useState<PackageManagement | null>(null);
+  const [syncingPackage, setSyncingPackage] = useState(false);
   
   const { toast } = useToast();
   const { userRole } = useAuth();
@@ -98,6 +118,17 @@ export default function PatientListManagement() {
     fetchPatients();
     fetchOptions();
     fetchCurrentUserName();
+    
+    // 패키지 데이터 수신 이벤트 리스너
+    const handlePackageImport = (event: any) => {
+      handlePackageDataReceived(event.detail);
+    };
+    
+    window.addEventListener('package-import', handlePackageImport);
+    
+    return () => {
+      window.removeEventListener('package-import', handlePackageImport);
+    };
   }, []);
 
   useEffect(() => {
@@ -284,6 +315,118 @@ export default function PatientListManagement() {
     }
   };
 
+  const fetchPackageData = async (patientId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('package_management')
+        .select('*')
+        .eq('patient_id', patientId)
+        .maybeSingle();
+
+      if (error) throw error;
+      setPackageData(data);
+    } catch (error) {
+      console.error('Error fetching package data:', error);
+    }
+  };
+
+  const handleSyncPackage = () => {
+    if (!selectedPatientDetail?.customer_number) {
+      toast({
+        title: "오류",
+        description: "고객번호가 없어 패키지 정보를 가져올 수 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSyncingPackage(true);
+    
+    const data = {
+      customerNumber: selectedPatientDetail.customer_number,
+      patientId: selectedPatientDetail.id,
+      appUrl: window.location.origin + '/patient-list'
+    };
+    
+    const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+    const crmUrl = `http://192.168.1.101/crm/package#package_data=${encoded}`;
+    
+    window.open(crmUrl, '_blank');
+    
+    toast({
+      title: "CRM 페이지 열기",
+      description: "CRM 패키지 관리 페이지에서 '패키지 연동' 북마크를 클릭하세요.",
+    });
+    
+    setTimeout(() => setSyncingPackage(false), 3000);
+  };
+
+  const handlePackageDataReceived = async (data: any) => {
+    if (!data || !data.customerNumber) {
+      console.error('Invalid package data received:', data);
+      return;
+    }
+
+    try {
+      // 고객번호로 환자 찾기
+      const { data: patient, error: patientError } = await supabase
+        .from('patients')
+        .select('id')
+        .eq('customer_number', data.customerNumber)
+        .maybeSingle();
+
+      if (patientError) throw patientError;
+      
+      if (!patient) {
+        toast({
+          title: "오류",
+          description: "해당 고객번호의 환자를 찾을 수 없습니다.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // 패키지 데이터 UPSERT
+      const packagePayload = {
+        patient_id: patient.id,
+        customer_number: data.customerNumber,
+        deposit_total: data.depositTotal || 0,
+        deposit_used: data.depositUsed || 0,
+        deposit_balance: data.depositBalance || 0,
+        reward_total: data.rewardTotal || 0,
+        reward_used: data.rewardUsed || 0,
+        reward_balance: data.rewardBalance || 0,
+        count_total: data.countTotal || 0,
+        count_used: data.countUsed || 0,
+        count_balance: data.countBalance || 0,
+        last_synced_at: data.lastSyncedAt || new Date().toISOString(),
+      };
+
+      const { error: upsertError } = await supabase
+        .from('package_management')
+        .upsert(packagePayload, { onConflict: 'patient_id' });
+
+      if (upsertError) throw upsertError;
+
+      // 현재 선택된 환자의 패키지 데이터 갱신
+      if (selectedPatientDetail?.id === patient.id) {
+        await fetchPackageData(patient.id);
+      }
+
+      toast({
+        title: "패키지 정보 업데이트 완료",
+        description: "CRM에서 패키지 정보를 성공적으로 가져왔습니다.",
+      });
+    } catch (error) {
+      console.error('Error saving package data:', error);
+      toast({
+        title: "오류",
+        description: "패키지 정보 저장 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const updateEditingField = (field: string, value: any) => {
     setEditingFields(prev => ({ ...prev, [field]: value }));
     setSelectedPatientDetail(prev => prev ? { ...prev, [field]: value } : null);
@@ -427,11 +570,107 @@ export default function PatientListManagement() {
   const renderTreatmentManagement = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">패키지 관리</h3>
+        <div className="flex items-center gap-2">
+          <PackageIcon className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-semibold">패키지 관리</h3>
+        </div>
+        <Button
+          onClick={handleSyncPackage}
+          disabled={syncingPackage || !selectedPatientDetail?.customer_number}
+          size="sm"
+          className="gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${syncingPackage ? 'animate-spin' : ''}`} />
+          최신화
+        </Button>
       </div>
-      <div className="text-center py-8 text-muted-foreground">
-        CRM 연동을 통해 패키지 정보가 표시됩니다.
-      </div>
+
+      {!selectedPatientDetail?.customer_number ? (
+        <div className="text-center py-8 text-muted-foreground">
+          고객번호가 없어 패키지 정보를 가져올 수 없습니다.
+        </div>
+      ) : !packageData ? (
+        <div className="text-center py-8 text-muted-foreground">
+          최신화 버튼을 클릭하여 CRM에서 패키지 정보를 가져오세요.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* 예수금 */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">예수금</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm">총 입금액:</span>
+                <span className="font-semibold">{packageData.deposit_total.toLocaleString()}원</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">사용액:</span>
+                <span className="text-red-600">{packageData.deposit_used.toLocaleString()}원</span>
+              </div>
+              <div className="flex justify-between pt-2 border-t">
+                <span className="text-sm font-semibold">잔액:</span>
+                <span className="text-lg font-bold text-primary">
+                  {packageData.deposit_balance.toLocaleString()}원
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 적립금 */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">적립금</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm">총 적립액:</span>
+                <span className="font-semibold">{packageData.reward_total.toLocaleString()}원</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">사용액:</span>
+                <span className="text-red-600">{packageData.reward_used.toLocaleString()}원</span>
+              </div>
+              <div className="flex justify-between pt-2 border-t">
+                <span className="text-sm font-semibold">잔액:</span>
+                <span className="text-lg font-bold text-primary">
+                  {packageData.reward_balance.toLocaleString()}원
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 횟수 */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">횟수</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm">총 입력:</span>
+                <span className="font-semibold">{packageData.count_total}회</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">사용:</span>
+                <span className="text-red-600">{packageData.count_used}회</span>
+              </div>
+              <div className="flex justify-between pt-2 border-t">
+                <span className="text-sm font-semibold">잔여:</span>
+                <span className="text-lg font-bold text-primary">
+                  {packageData.count_balance}회
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {packageData?.last_synced_at && (
+        <div className="text-xs text-muted-foreground text-right">
+          마지막 동기화: {new Date(packageData.last_synced_at).toLocaleString('ko-KR')}
+        </div>
+      )}
     </div>
   );
 
@@ -493,6 +732,7 @@ export default function PatientListManagement() {
                       onClick={() => {
                         setSelectedPatientDetail(patient);
                         setViewMode('full');
+                        fetchPackageData(patient.id);
                       }}
                     >
                     <TableCell className="font-mono">{patient.customer_number || '-'}</TableCell>
@@ -524,6 +764,7 @@ export default function PatientListManagement() {
                             e.stopPropagation();
                             setSelectedPatientDetail(patient);
                             setViewMode('treatment-only');
+                            fetchPackageData(patient.id);
                           }}
                           className="px-2 py-1 h-6 text-xs"
                         >
@@ -566,6 +807,8 @@ export default function PatientListManagement() {
       <Dialog open={!!selectedPatientDetail} onOpenChange={() => {
         setSelectedPatientDetail(null);
         setViewMode('full');
+        setPackageData(null);
+        setEditingFields({});
       }}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
