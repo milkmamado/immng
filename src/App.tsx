@@ -18,6 +18,7 @@ import StatisticsManagement from "./pages/StatisticsManagement";
 import MarketingStatistics from "./pages/MarketingStatistics";
 import UserManual from "./pages/UserManual";
 import CRMBookmarklet from "./pages/CRMBookmarklet";
+import PackageIntegration from "./pages/PackageIntegration";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -110,6 +111,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <CRMBookmarklet />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/package-integration" 
+          element={
+            <ProtectedRoute>
+              <PackageIntegration />
             </ProtectedRoute>
           } 
         />

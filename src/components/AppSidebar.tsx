@@ -9,7 +9,8 @@ import {
   BarChart3,
   TrendingUp,
   BookOpen,
-  BookMarked
+  BookMarked,
+  Package
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,6 +35,7 @@ const navigationItems = [
   { title: "이탈 리스크 관리", url: "/risk-management", icon: Calendar },
   { title: "통계 관리", url: "/statistics", icon: BarChart3 },
   { title: "CRM 연동", url: "/crm-bookmarklet", icon: BookMarked },
+  { title: "패키지 연동", url: "/package-integration", icon: Package },
   { title: "사용자 메뉴얼", url: "/user-manual", icon: BookOpen },
 ];
 
