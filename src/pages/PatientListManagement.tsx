@@ -835,57 +835,88 @@ export default function PatientListManagement() {
     const countIn = packageTransactions.filter(t => t.transaction_type === 'count_in');
     const countOut = packageTransactions.filter(t => t.transaction_type === 'count_out');
 
-    const TransactionGrid = ({ title, transactions, type }: { title: string; transactions: PackageTransaction[]; type: 'amount' | 'count' }) => (
-      <div className="border rounded-lg overflow-hidden">
-        <div className="bg-muted px-4 py-2 font-semibold text-sm">{title}</div>
-        <div className="max-h-64 overflow-y-auto">
-          <Table>
-            <TableHeader className="sticky top-0 bg-background">
-              <TableRow>
-                <TableHead className="w-32">일자</TableHead>
-                <TableHead className="text-right">{type === 'amount' ? '금액' : '횟수'}</TableHead>
-                <TableHead>비고</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {transactions.length === 0 ? (
+    const TransactionGrid = ({ 
+      title, 
+      transactions, 
+      type, 
+      isUsage 
+    }: { 
+      title: string; 
+      transactions: PackageTransaction[]; 
+      type: 'amount' | 'count';
+      isUsage?: boolean;
+    }) => {
+      // 헤더 텍스트 결정
+      const getHeaders = () => {
+        if (title.includes('예치금 입금')) return { date: '입금일자', value: '예치금 입금' };
+        if (title.includes('예치금 사용')) return { date: '사용일자', value: '예치금 사용' };
+        if (title.includes('적립금 입금')) return { date: '입금일자', value: '적립금 입금' };
+        if (title.includes('적립금 사용')) return { date: '사용일자', value: '적립금 사용' };
+        if (title.includes('횟수 입력')) return { date: '입력일자', value: '횟수 입력' };
+        if (title.includes('횟수 사용')) return { date: '사용일자', value: '횟수 사용' };
+        return { date: '일자', value: type === 'amount' ? '금액' : '횟수' };
+      };
+
+      const headers = getHeaders();
+      const totalCount = transactions.reduce((sum, t) => sum + t.count, 0);
+      const remainingCount = title.includes('횟수') 
+        ? countIn.reduce((sum, t) => sum + t.count, 0) - countOut.reduce((sum, t) => sum + t.count, 0)
+        : 0;
+
+      return (
+        <div className="border rounded-lg overflow-hidden">
+          <div className="bg-muted px-4 py-2 font-semibold text-sm">{title}</div>
+          <div className="max-h-64 overflow-y-auto">
+            <Table>
+              <TableHeader className="sticky top-0 bg-background">
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center text-muted-foreground py-4">
-                    데이터 없음
-                  </TableCell>
+                  <TableHead className="w-32">{headers.date}</TableHead>
+                  <TableHead className="text-right">{headers.value}</TableHead>
+                  <TableHead>비고</TableHead>
                 </TableRow>
-              ) : (
-                transactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell className="font-mono text-sm">
-                      {new Date(transaction.transaction_date).toLocaleDateString('ko-KR')}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {type === 'amount' 
-                        ? `${transaction.amount.toLocaleString()}원`
-                        : `${transaction.count}회`
-                      }
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {transaction.note || '-'}
+              </TableHeader>
+              <TableBody>
+                {transactions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center text-muted-foreground py-4">
+                      데이터 없음
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  transactions.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell className="font-mono text-sm">
+                        {new Date(transaction.transaction_date).toLocaleDateString('ko-KR')}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold">
+                        {type === 'amount' 
+                          ? `${transaction.amount.toLocaleString()}원`
+                          : `${transaction.count}회`
+                        }
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {transaction.note || '-'}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="bg-muted px-4 py-2 flex justify-between items-center border-t">
+            <span className="font-semibold text-sm">
+              합계{title.includes('횟수 입력') ? ` / 남은 횟수: ${remainingCount}` : ''}
+            </span>
+            <span className="font-bold text-primary">
+              {type === 'amount'
+                ? `${transactions.reduce((sum, t) => sum + t.amount, 0).toLocaleString()}원`
+                : `${totalCount}회`
+              }
+            </span>
+          </div>
         </div>
-        <div className="bg-muted px-4 py-2 flex justify-between items-center border-t">
-          <span className="font-semibold text-sm">합계</span>
-          <span className="font-bold text-primary">
-            {type === 'amount'
-              ? `${transactions.reduce((sum, t) => sum + t.amount, 0).toLocaleString()}원`
-              : `${transactions.reduce((sum, t) => sum + t.count, 0)}회`
-            }
-          </span>
-        </div>
-      </div>
-    );
+      );
+    };
 
     return (
       <div className="space-y-6">
@@ -999,12 +1030,12 @@ export default function PatientListManagement() {
               <h4 className="font-semibold text-sm text-muted-foreground">일자별 거래 내역</h4>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <TransactionGrid title="예치금 입금" transactions={depositIncome} type="amount" />
-                <TransactionGrid title="예치금 사용" transactions={depositOut} type="amount" />
-                <TransactionGrid title="적립금 입금" transactions={rewardIncome} type="amount" />
-                <TransactionGrid title="적립금 사용" transactions={rewardOut} type="amount" />
-                <TransactionGrid title="횟수 입력" transactions={countIn} type="count" />
-                <TransactionGrid title="횟수 사용" transactions={countOut} type="count" />
+                <TransactionGrid title="예치금 입금" transactions={depositIncome} type="amount" isUsage={false} />
+                <TransactionGrid title="예치금 사용" transactions={depositOut} type="amount" isUsage={true} />
+                <TransactionGrid title="적립금 입금" transactions={rewardIncome} type="amount" isUsage={false} />
+                <TransactionGrid title="적립금 사용" transactions={rewardOut} type="amount" isUsage={true} />
+                <TransactionGrid title="횟수 입력" transactions={countIn} type="count" isUsage={false} />
+                <TransactionGrid title="횟수 사용" transactions={countOut} type="count" isUsage={true} />
               </div>
             </div>
           </>
