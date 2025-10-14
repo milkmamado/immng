@@ -646,12 +646,17 @@ export default function PatientListManagement() {
       if (selectedPatientDetail?.id === patient.id) {
         console.log('🔄 현재 선택된 환자의 패키지 데이터 갱신 중...');
         await fetchPackageData(patient.id);
+        
+        toast({
+          title: "✅ 패키지 정보 업데이트 완료",
+          description: `${transactionsToInsert.length}건의 거래 내역을 성공적으로 가져왔습니다. 화면에 바로 반영되었습니다.`,
+        });
+      } else {
+        toast({
+          title: "패키지 정보 저장 완료",
+          description: `${transactionsToInsert.length}건의 거래 내역을 저장했습니다. 해당 환자를 다시 선택하면 확인할 수 있습니다.`,
+        });
       }
-
-      toast({
-        title: "패키지 정보 업데이트 완료",
-        description: `${transactionsToInsert.length}건의 거래 내역을 성공적으로 가져왔습니다.`,
-      });
     } catch (error) {
       console.error('Error saving package data:', error);
       toast({
