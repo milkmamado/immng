@@ -595,24 +595,26 @@ export default function PatientListManagement() {
   // 한국어 날짜 형식을 YYYY-MM-DD로 변환
   const parseKoreanDate = (dateStr: string): string => {
     try {
-      // "2024-01-15" 형식이면 그대로 반환
+      // 이미 올바른 형식이면 그대로 반환
       if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
         return dateStr;
       }
       
-      // "2024.01.15" 형식
-      if (/^\d{4}\.\d{2}\.\d{2}$/.test(dateStr)) {
-        return dateStr.replace(/\./g, '-');
+      // YYYYMMDD 형식 (예: 20240213)
+      const cleaned = dateStr.replace(/[^0-9]/g, '');
+      if (cleaned.length === 8) {
+        return `${cleaned.substring(0, 4)}-${cleaned.substring(4, 6)}-${cleaned.substring(6, 8)}`;
       }
       
-      // "24-01-15" 형식 (연도 2자리)
-      if (/^\d{2}-\d{2}-\d{2}$/.test(dateStr)) {
-        const [yy, mm, dd] = dateStr.split('-');
+      // YYMMDD 형식 (예: 240213)
+      if (cleaned.length === 6) {
+        const yy = cleaned.substring(0, 2);
         const year = parseInt(yy) > 50 ? `19${yy}` : `20${yy}`;
-        return `${year}-${mm}-${dd}`;
+        return `${year}-${cleaned.substring(2, 4)}-${cleaned.substring(4, 6)}`;
       }
       
       // 기본값: 오늘 날짜
+      console.warn('날짜 형식을 인식할 수 없음:', dateStr);
       return new Date().toISOString().split('T')[0];
     } catch (error) {
       console.error('날짜 파싱 오류:', dateStr, error);
