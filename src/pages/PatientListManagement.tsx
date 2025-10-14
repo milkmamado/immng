@@ -852,6 +852,20 @@ export default function PatientListManagement() {
       type: 'amount' | 'count';
       isUsage?: boolean;
     }) => {
+      // 날짜를 YYYY-MM-DD 형식으로 포맷
+      const formatDate = (dateStr: string | null | undefined): string => {
+        if (!dateStr) return '-';
+        try {
+          const date = new Date(dateStr);
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        } catch {
+          return '-';
+        }
+      };
+
       // 헤더 텍스트 결정
       const getHeaders = () => {
         if (title.includes('예치금 입금')) return { date: '입금일자', value: '예치금 입금', showRange: false };
@@ -864,10 +878,28 @@ export default function PatientListManagement() {
       };
 
       const headers = getHeaders();
+      const total = transactions.reduce((sum, t) => sum + (type === 'amount' ? t.amount : t.count), 0);
       const totalCount = transactions.reduce((sum, t) => sum + t.count, 0);
       const remainingCount = title.includes('횟수') 
         ? countIn.reduce((sum, t) => sum + t.count, 0) - countOut.reduce((sum, t) => sum + t.count, 0)
         : 0;
+
+      // 잔액 계산
+      const getBalance = () => {
+        if (title.includes('예치금 입금')) {
+          const depositTotal = depositIncome.reduce((sum, t) => sum + t.amount, 0);
+          const depositUsed = depositOut.reduce((sum, t) => sum + t.amount, 0);
+          return depositTotal - depositUsed;
+        }
+        if (title.includes('적립금 입금')) {
+          const rewardTotal = rewardIncome.reduce((sum, t) => sum + t.amount, 0);
+          const rewardUsed = rewardOut.reduce((sum, t) => sum + t.amount, 0);
+          return rewardTotal - rewardUsed;
+        }
+        return null;
+      };
+
+      const balance = getBalance();
 
       return (
         <div className="border rounded-lg overflow-hidden shadow-sm">
@@ -901,15 +933,15 @@ export default function PatientListManagement() {
                       {headers.showRange ? (
                         <>
                           <TableCell className="border border-border font-mono text-sm text-center">
-                            {(transaction as any).date_from ? new Date((transaction as any).date_from).toLocaleDateString('ko-KR') : '-'}
+                            {formatDate((transaction as any).date_from)}
                           </TableCell>
                           <TableCell className="border border-border font-mono text-sm text-center">
-                            {(transaction as any).date_to ? new Date((transaction as any).date_to).toLocaleDateString('ko-KR') : '-'}
+                            {formatDate((transaction as any).date_to)}
                           </TableCell>
                         </>
                       ) : (
                         <TableCell className="border border-border font-mono text-sm text-center">
-                          {new Date(transaction.transaction_date).toLocaleDateString('ko-KR')}
+                          {formatDate(transaction.transaction_date)}
                         </TableCell>
                       )}
                       <TableCell className="border border-border text-right font-semibold">
@@ -930,13 +962,21 @@ export default function PatientListManagement() {
           <div className="bg-muted/50 px-4 py-2 flex justify-between items-center border-t">
             <span className="font-semibold text-sm">
               합계{title.includes('횟수 입력') ? ` / 남은 횟수: ${remainingCount}` : ''}
+              {balance !== null && ` / 잔액:`}
             </span>
-            <span className="font-bold text-primary">
-              {type === 'amount'
-                ? `${transactions.reduce((sum, t) => sum + t.amount, 0).toLocaleString()}원`
-                : `${totalCount}회`
-              }
-            </span>
+            <div className="flex items-center gap-4">
+              <span className="font-bold text-primary">
+                {type === 'amount'
+                  ? `${total.toLocaleString()}원`
+                  : `${totalCount}회`
+                }
+              </span>
+              {balance !== null && (
+                <span className="font-bold text-green-600">
+                  {balance.toLocaleString()}원
+                </span>
+              )}
+            </div>
           </div>
         </div>
       );
