@@ -376,6 +376,9 @@ export default function PatientListManagement() {
       appUrl: window.location.origin + '/patient-list'
     };
     
+    // localStorage에도 저장 (북마크릿이 URL 파싱 실패시 폴백용)
+    localStorage.setItem('crm_package_search', JSON.stringify(data));
+    
     const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
     const crmUrl = `http://192.168.1.101/html/MEDI20/main.html#package_data=${encoded}`;
     
@@ -386,7 +389,26 @@ export default function PatientListManagement() {
       description: "CRM 패키지 관리 페이지에서 '패키지 연동' 북마크를 클릭하세요.",
     });
     
-    setTimeout(() => setSyncingPackage(false), 3000);
+    // localStorage 결과 체크 시작
+    const checkInterval = setInterval(() => {
+      const result = localStorage.getItem('crm_package_result');
+      if (result) {
+        try {
+          const packageData = JSON.parse(result);
+          localStorage.removeItem('crm_package_result');
+          handlePackageDataReceived(packageData);
+          clearInterval(checkInterval);
+          setSyncingPackage(false);
+        } catch (e) {
+          console.error('localStorage 결과 파싱 오류:', e);
+        }
+      }
+    }, 1000);
+    
+    setTimeout(() => {
+      clearInterval(checkInterval);
+      setSyncingPackage(false);
+    }, 30000);
   };
 
   const handlePackageDataReceived = async (data: any) => {
