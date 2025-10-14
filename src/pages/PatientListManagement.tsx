@@ -650,11 +650,13 @@ export default function PatientListManagement() {
         toast({
           title: "✅ 패키지 정보 업데이트 완료",
           description: `${transactionsToInsert.length}건의 거래 내역을 성공적으로 가져왔습니다. 화면에 바로 반영되었습니다.`,
+          duration: 1000,
         });
       } else {
         toast({
           title: "패키지 정보 저장 완료",
           description: `${transactionsToInsert.length}건의 거래 내역을 저장했습니다. 해당 환자를 다시 선택하면 확인할 수 있습니다.`,
+          duration: 1000,
         });
       }
     } catch (error) {
