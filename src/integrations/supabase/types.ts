@@ -343,6 +343,8 @@ export type Database = {
           count: number | null
           created_at: string
           customer_number: string | null
+          date_from: string | null
+          date_to: string | null
           id: string
           note: string | null
           patient_id: string
@@ -355,6 +357,8 @@ export type Database = {
           count?: number | null
           created_at?: string
           customer_number?: string | null
+          date_from?: string | null
+          date_to?: string | null
           id?: string
           note?: string | null
           patient_id: string
@@ -367,6 +371,8 @@ export type Database = {
           count?: number | null
           created_at?: string
           customer_number?: string | null
+          date_from?: string | null
+          date_to?: string | null
           id?: string
           note?: string | null
           patient_id?: string

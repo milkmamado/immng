@@ -513,6 +513,8 @@ export default function PatientListManagement() {
             patient_id: patient.id,
             customer_number: data.customerNumber,
             transaction_date: parseKoreanDate(item.date),
+            date_from: item.dateFrom ? parseKoreanDate(item.dateFrom) : parseKoreanDate(item.date),
+            date_to: item.dateTo ? parseKoreanDate(item.dateTo) : parseKoreanDate(item.date),
             transaction_type: 'deposit_out',
             amount: item.value,
             count: 0,
@@ -543,6 +545,8 @@ export default function PatientListManagement() {
             patient_id: patient.id,
             customer_number: data.customerNumber,
             transaction_date: parseKoreanDate(item.date),
+            date_from: item.dateFrom ? parseKoreanDate(item.dateFrom) : parseKoreanDate(item.date),
+            date_to: item.dateTo ? parseKoreanDate(item.dateTo) : parseKoreanDate(item.date),
             transaction_type: 'reward_out',
             amount: item.value,
             count: 0,
@@ -573,6 +577,8 @@ export default function PatientListManagement() {
             patient_id: patient.id,
             customer_number: data.customerNumber,
             transaction_date: parseKoreanDate(item.date),
+            date_from: item.dateFrom ? parseKoreanDate(item.dateFrom) : parseKoreanDate(item.date),
+            date_to: item.dateTo ? parseKoreanDate(item.dateTo) : parseKoreanDate(item.date),
             transaction_type: 'count_out',
             amount: 0,
             count: item.value,
@@ -848,13 +854,13 @@ export default function PatientListManagement() {
     }) => {
       // 헤더 텍스트 결정
       const getHeaders = () => {
-        if (title.includes('예치금 입금')) return { date: '입금일자', value: '예치금 입금' };
-        if (title.includes('예치금 사용')) return { date: '사용일자', value: '예치금 사용' };
-        if (title.includes('적립금 입금')) return { date: '입금일자', value: '적립금 입금' };
-        if (title.includes('적립금 사용')) return { date: '사용일자', value: '적립금 사용' };
-        if (title.includes('횟수 입력')) return { date: '입력일자', value: '횟수 입력' };
-        if (title.includes('횟수 사용')) return { date: '사용일자', value: '횟수 사용' };
-        return { date: '일자', value: type === 'amount' ? '금액' : '횟수' };
+        if (title.includes('예치금 입금')) return { date: '입금일자', value: '예치금 입금', showRange: false };
+        if (title.includes('예치금 사용')) return { dateFrom: '사용일자F', dateTo: '사용일자T', value: '예치금 사용', showRange: true };
+        if (title.includes('적립금 입금')) return { date: '입금일자', value: '적립금 입금', showRange: false };
+        if (title.includes('적립금 사용')) return { dateFrom: '사용일자F', dateTo: '사용일자T', value: '적립금 사용', showRange: true };
+        if (title.includes('횟수 입력')) return { date: '입력일자', value: '횟수 입력', showRange: false };
+        if (title.includes('횟수 사용')) return { date: '사용일자', value: '횟수 사용', showRange: false };
+        return { date: '일자', value: type === 'amount' ? '금액' : '횟수', showRange: false };
       };
 
       const headers = getHeaders();
@@ -870,7 +876,14 @@ export default function PatientListManagement() {
             <Table>
               <TableHeader className="sticky top-0 bg-background">
                 <TableRow>
-                  <TableHead className="w-32">{headers.date}</TableHead>
+                  {headers.showRange ? (
+                    <>
+                      <TableHead className="w-28">{headers.dateFrom}</TableHead>
+                      <TableHead className="w-28">{headers.dateTo}</TableHead>
+                    </>
+                  ) : (
+                    <TableHead className="w-32">{headers.date}</TableHead>
+                  )}
                   <TableHead className="text-right">{headers.value}</TableHead>
                   <TableHead>비고</TableHead>
                 </TableRow>
@@ -878,16 +891,27 @@ export default function PatientListManagement() {
               <TableBody>
                 {transactions.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center text-muted-foreground py-4">
+                    <TableCell colSpan={headers.showRange ? 4 : 3} className="text-center text-muted-foreground py-4">
                       데이터 없음
                     </TableCell>
                   </TableRow>
                 ) : (
                   transactions.map((transaction) => (
                     <TableRow key={transaction.id}>
-                      <TableCell className="font-mono text-sm">
-                        {new Date(transaction.transaction_date).toLocaleDateString('ko-KR')}
-                      </TableCell>
+                      {headers.showRange ? (
+                        <>
+                          <TableCell className="font-mono text-sm">
+                            {(transaction as any).date_from ? new Date((transaction as any).date_from).toLocaleDateString('ko-KR') : '-'}
+                          </TableCell>
+                          <TableCell className="font-mono text-sm">
+                            {(transaction as any).date_to ? new Date((transaction as any).date_to).toLocaleDateString('ko-KR') : '-'}
+                          </TableCell>
+                        </>
+                      ) : (
+                        <TableCell className="font-mono text-sm">
+                          {new Date(transaction.transaction_date).toLocaleDateString('ko-KR')}
+                        </TableCell>
+                      )}
                       <TableCell className="text-right font-semibold">
                         {type === 'amount' 
                           ? `${transaction.amount.toLocaleString()}원`
