@@ -119,15 +119,17 @@ export default function PatientListManagement() {
     fetchOptions();
     fetchCurrentUserName();
     
-    // 패키지 데이터 수신 이벤트 리스너
-    const handlePackageImport = (event: any) => {
-      handlePackageDataReceived(event.detail);
+    // CRM에서 postMessage로 패키지 데이터 수신
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'crm-package-data') {
+        handlePackageDataReceived(event.data.data);
+      }
     };
     
-    window.addEventListener('package-import', handlePackageImport);
+    window.addEventListener('message', handleMessage);
     
     return () => {
-      window.removeEventListener('package-import', handlePackageImport);
+      window.removeEventListener('message', handleMessage);
     };
   }, []);
 
