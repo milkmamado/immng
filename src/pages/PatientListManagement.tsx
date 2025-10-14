@@ -364,6 +364,8 @@ export default function PatientListManagement() {
   };
 
   const handlePackageDataReceived = async (data: any) => {
+    console.log('📦 패키지 데이터 수신:', data);
+    
     if (!data || !data.customerNumber) {
       console.error('Invalid package data received:', data);
       return;
@@ -388,6 +390,8 @@ export default function PatientListManagement() {
         return;
       }
 
+      console.log('✅ 환자 찾음:', patient.id);
+
       // 패키지 데이터 UPSERT
       const packagePayload = {
         patient_id: patient.id,
@@ -404,14 +408,17 @@ export default function PatientListManagement() {
         last_synced_at: data.lastSyncedAt || new Date().toISOString(),
       };
 
+      console.log('💾 저장할 패키지 데이터:', packagePayload);
+
       const { error: upsertError } = await supabase
         .from('package_management')
         .upsert(packagePayload, { onConflict: 'patient_id' });
 
       if (upsertError) throw upsertError;
 
-      // 현재 선택된 환자의 패키지 데이터 갱신
+      // 항상 패키지 데이터 갱신 (현재 선택된 환자인 경우)
       if (selectedPatientDetail?.id === patient.id) {
+        console.log('🔄 현재 선택된 환자의 패키지 데이터 갱신 중...');
         await fetchPackageData(patient.id);
       }
 
