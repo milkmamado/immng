@@ -337,6 +337,60 @@ export type Database = {
           },
         ]
       }
+      package_transactions: {
+        Row: {
+          amount: number
+          count: number | null
+          created_at: string
+          customer_number: string | null
+          id: string
+          note: string | null
+          patient_id: string
+          transaction_date: string
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          count?: number | null
+          created_at?: string
+          customer_number?: string | null
+          id?: string
+          note?: string | null
+          patient_id: string
+          transaction_date: string
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          count?: number | null
+          created_at?: string
+          customer_number?: string | null
+          id?: string
+          note?: string | null
+          patient_id?: string
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_transactions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_transactions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       packages: {
         Row: {
           admission_cycle_id: string | null
