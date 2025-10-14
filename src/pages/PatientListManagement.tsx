@@ -349,7 +349,7 @@ export default function PatientListManagement() {
     };
     
     const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
-    const crmUrl = `http://192.168.1.101/crm/package#package_data=${encoded}`;
+    const crmUrl = `http://192.168.1.101/html/MEDI20/main.html#package_data=${encoded}`;
     
     window.open(crmUrl, '_blank');
     
