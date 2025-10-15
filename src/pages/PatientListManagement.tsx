@@ -398,16 +398,23 @@ export default function PatientListManagement() {
           localStorage.removeItem('crm_package_result');
           handlePackageDataReceived(packageData);
           clearInterval(checkInterval);
-          setSyncingPackage(false);
         } catch (e) {
           console.error('localStorage 결과 파싱 오류:', e);
+          setSyncingPackage(false);
         }
       }
     }, 1000);
     
     setTimeout(() => {
       clearInterval(checkInterval);
-      setSyncingPackage(false);
+      if (syncingPackage) {
+        toast({
+          title: "시간 초과",
+          description: "패키지 데이터를 받지 못했습니다. 다시 시도해주세요.",
+          variant: "destructive",
+        });
+        setSyncingPackage(false);
+      }
     }, 30000);
   };
 
@@ -458,6 +465,7 @@ export default function PatientListManagement() {
     
     if (!data || !data.customerNumber) {
       console.error('Invalid package data received:', data);
+      setSyncingPackage(false);
       return;
     }
 
@@ -477,6 +485,7 @@ export default function PatientListManagement() {
           description: "해당 고객번호의 환자를 찾을 수 없습니다.",
           variant: "destructive",
         });
+        setSyncingPackage(false);
         return;
       }
 
@@ -640,8 +649,6 @@ export default function PatientListManagement() {
         .from('package_management')
         .upsert(packagePayload, { onConflict: 'patient_id' });
 
-      if (upsertError) throw upsertError;
-
       // 항상 패키지 데이터 갱신
       if (selectedPatientDetail?.id === patient.id) {
         console.log('🔄 현재 선택된 환자의 패키지 데이터 갱신 중...');
@@ -659,6 +666,9 @@ export default function PatientListManagement() {
           duration: 1000,
         });
       }
+      
+      // 동기화 완료
+      setSyncingPackage(false);
     } catch (error) {
       console.error('Error saving package data:', error);
       toast({
@@ -666,6 +676,7 @@ export default function PatientListManagement() {
         description: "패키지 정보 저장 중 오류가 발생했습니다.",
         variant: "destructive",
       });
+      setSyncingPackage(false);
     }
   };
 
