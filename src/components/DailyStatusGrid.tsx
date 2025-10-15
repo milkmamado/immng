@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 
 interface AdmissionCycle {
   id: string;
@@ -127,6 +127,9 @@ export function DailyStatusGrid({
   const [hospitalOptions, setHospitalOptions] = useState<any[]>([]);
   const [insuranceTypeOptions, setInsuranceTypeOptions] = useState<any[]>([]);
   const [patientStatusOptions, setPatientStatusOptions] = useState<any[]>([]);
+  const [packageData, setPackageData] = useState<any | null>(null);
+  const [packageTransactions, setPackageTransactions] = useState<any[]>([]);
+  const [syncingPackage, setSyncingPackage] = useState(false);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -139,6 +142,19 @@ export function DailyStatusGrid({
   useEffect(() => {
     fetchOptions();
     fetchCurrentUserName();
+    
+    // CRM에서 postMessage로 패키지 데이터 수신
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'crm-package-data') {
+        handlePackageDataReceived(event.data.data);
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+    
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
   }, []);
 
   const fetchOptions = async () => {
@@ -178,6 +194,366 @@ export function DailyStatusGrid({
     }
   };
 
+  const fetchPackageData = async (patientId: string) => {
+    try {
+      const [summaryResult, transactionsResult] = await Promise.all([
+        supabase
+          .from('package_management')
+          .select('*')
+          .eq('patient_id', patientId)
+          .maybeSingle(),
+        supabase
+          .from('package_transactions')
+          .select('*')
+          .eq('patient_id', patientId)
+          .order('transaction_date', { ascending: false })
+      ]);
+
+      if (summaryResult.error) throw summaryResult.error;
+      if (transactionsResult.error) throw transactionsResult.error;
+
+      setPackageData(summaryResult.data);
+      setPackageTransactions(transactionsResult.data || []);
+    } catch (error) {
+      console.error('Error fetching package data:', error);
+    }
+  };
+
+  const handleSyncPackage = () => {
+    if (!selectedPatientDetail?.customer_number) {
+      console.error('고객번호가 없어 패키지 정보를 가져올 수 없습니다.');
+      return;
+    }
+
+    setSyncingPackage(true);
+    
+    const data = {
+      customerNumber: selectedPatientDetail.customer_number,
+      patientId: selectedPatientDetail.id,
+      appUrl: window.location.origin + '/daily-tracking'
+    };
+    
+    localStorage.setItem('crm_package_search', JSON.stringify(data));
+    
+    const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+    const crmUrl = `http://192.168.1.101/html/MEDI20/main.html#package_data=${encoded}`;
+    
+    window.open(crmUrl, '_blank');
+    
+    const checkInterval = setInterval(() => {
+      const result = localStorage.getItem('crm_package_result');
+      if (result) {
+        try {
+          const packageData = JSON.parse(result);
+          localStorage.removeItem('crm_package_result');
+          handlePackageDataReceived(packageData);
+          clearInterval(checkInterval);
+        } catch (e) {
+          console.error('localStorage 결과 파싱 오류:', e);
+          setSyncingPackage(false);
+        }
+      }
+    }, 1000);
+    
+    setTimeout(() => {
+      clearInterval(checkInterval);
+      if (syncingPackage) {
+        console.error('패키지 데이터를 받지 못했습니다.');
+        setSyncingPackage(false);
+      }
+    }, 30000);
+  };
+
+  const handleDeletePackageData = async () => {
+    if (!selectedPatientDetail) return;
+
+    if (!window.confirm('패키지 데이터를 모두 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
+      return;
+    }
+
+    try {
+      const { error: transactionsError } = await supabase
+        .from('package_transactions')
+        .delete()
+        .eq('patient_id', selectedPatientDetail.id);
+
+      if (transactionsError) throw transactionsError;
+
+      const { error: managementError } = await supabase
+        .from('package_management')
+        .delete()
+        .eq('patient_id', selectedPatientDetail.id);
+
+      if (managementError) throw managementError;
+
+      const { error: paymentResetError } = await supabase
+        .from('patients')
+        .update({ payment_amount: 0 })
+        .eq('id', selectedPatientDetail.id);
+
+      if (paymentResetError) throw paymentResetError;
+
+      setPackageData(null);
+      setPackageTransactions([]);
+
+      const { data: updatedPatient } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('id', selectedPatientDetail.id)
+        .single();
+      
+      if (updatedPatient) {
+        setSelectedPatientDetail(updatedPatient);
+      }
+
+      console.log('패키지 데이터가 삭제되었습니다.');
+    } catch (error) {
+      console.error('Error deleting package data:', error);
+    }
+  };
+
+  const handlePackageDataReceived = async (data: any) => {
+    if (!data || !data.customerNumber) {
+      console.error('Invalid package data received:', data);
+      setSyncingPackage(false);
+      return;
+    }
+
+    try {
+      const { data: patient, error: patientError } = await supabase
+        .from('patients')
+        .select('id')
+        .eq('customer_number', data.customerNumber)
+        .maybeSingle();
+
+      if (patientError) throw patientError;
+      if (!patient) {
+        console.error('해당 고객번호의 환자를 찾을 수 없습니다.');
+        setSyncingPackage(false);
+        return;
+      }
+
+      const { data: existingTransactions, error: fetchError } = await supabase
+        .from('package_transactions')
+        .select('transaction_date, transaction_type, amount, count')
+        .eq('patient_id', patient.id);
+
+      if (fetchError) throw fetchError;
+
+      const existingKeys = new Set(
+        (existingTransactions || []).map(t => 
+          `${t.transaction_date}_${t.transaction_type}_${t.amount}_${t.count}`
+        )
+      );
+
+      const transactionsToInsert: any[] = [];
+      const parseKoreanDate = (dateStr: string): string => {
+        try {
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+          const cleaned = dateStr.replace(/[^0-9]/g, '');
+          if (cleaned.length === 8) {
+            return `${cleaned.substring(0, 4)}-${cleaned.substring(4, 6)}-${cleaned.substring(6, 8)}`;
+          }
+          if (cleaned.length === 6) {
+            const yy = cleaned.substring(0, 2);
+            const year = parseInt(yy) > 50 ? `19${yy}` : `20${yy}`;
+            return `${year}-${cleaned.substring(2, 4)}-${cleaned.substring(4, 6)}`;
+          }
+          return new Date().toISOString().split('T')[0];
+        } catch (error) {
+          return new Date().toISOString().split('T')[0];
+        }
+      };
+
+      data.depositIncome?.forEach((item: any) => {
+        if (item.date && item.value) {
+          const transaction = {
+            patient_id: patient.id,
+            customer_number: data.customerNumber,
+            transaction_date: parseKoreanDate(item.date),
+            transaction_type: 'deposit_in',
+            amount: item.value,
+            count: 0,
+            note: item.note || null
+          };
+          const key = `${transaction.transaction_date}_${transaction.transaction_type}_${transaction.amount}_${transaction.count}`;
+          if (!existingKeys.has(key)) transactionsToInsert.push(transaction);
+        }
+      });
+
+      data.depositUsage?.forEach((item: any) => {
+        if (item.date && item.value) {
+          const transaction = {
+            patient_id: patient.id,
+            customer_number: data.customerNumber,
+            transaction_date: parseKoreanDate(item.date),
+            date_from: item.dateFrom ? parseKoreanDate(item.dateFrom) : parseKoreanDate(item.date),
+            date_to: item.dateTo ? parseKoreanDate(item.dateTo) : parseKoreanDate(item.date),
+            transaction_type: 'deposit_out',
+            amount: item.value,
+            count: 0,
+            note: item.note || null
+          };
+          const key = `${transaction.transaction_date}_${transaction.transaction_type}_${transaction.amount}_${transaction.count}`;
+          if (!existingKeys.has(key)) transactionsToInsert.push(transaction);
+        }
+      });
+
+      data.rewardIncome?.forEach((item: any) => {
+        if (item.date && item.value) {
+          const transaction = {
+            patient_id: patient.id,
+            customer_number: data.customerNumber,
+            transaction_date: parseKoreanDate(item.date),
+            transaction_type: 'reward_in',
+            amount: item.value,
+            count: 0,
+            note: item.note || null
+          };
+          const key = `${transaction.transaction_date}_${transaction.transaction_type}_${transaction.amount}_${transaction.count}`;
+          if (!existingKeys.has(key)) transactionsToInsert.push(transaction);
+        }
+      });
+
+      data.rewardUsage?.forEach((item: any) => {
+        if (item.date && item.value) {
+          const transaction = {
+            patient_id: patient.id,
+            customer_number: data.customerNumber,
+            transaction_date: parseKoreanDate(item.date),
+            date_from: item.dateFrom ? parseKoreanDate(item.dateFrom) : parseKoreanDate(item.date),
+            date_to: item.dateTo ? parseKoreanDate(item.dateTo) : parseKoreanDate(item.date),
+            transaction_type: 'reward_out',
+            amount: item.value,
+            count: 0,
+            note: item.note || null
+          };
+          const key = `${transaction.transaction_date}_${transaction.transaction_type}_${transaction.amount}_${transaction.count}`;
+          if (!existingKeys.has(key)) transactionsToInsert.push(transaction);
+        }
+      });
+
+      data.countInput?.forEach((item: any) => {
+        if (item.date && item.value) {
+          const transaction = {
+            patient_id: patient.id,
+            customer_number: data.customerNumber,
+            transaction_date: parseKoreanDate(item.date),
+            transaction_type: 'count_in',
+            amount: 0,
+            count: item.value,
+            note: item.note || null
+          };
+          const key = `${transaction.transaction_date}_${transaction.transaction_type}_${transaction.amount}_${transaction.count}`;
+          if (!existingKeys.has(key)) transactionsToInsert.push(transaction);
+        }
+      });
+
+      data.countUsage?.forEach((item: any) => {
+        if (item.date && item.value) {
+          const transaction = {
+            patient_id: patient.id,
+            customer_number: data.customerNumber,
+            transaction_date: parseKoreanDate(item.date),
+            date_from: item.dateFrom ? parseKoreanDate(item.dateFrom) : parseKoreanDate(item.date),
+            date_to: item.dateTo ? parseKoreanDate(item.dateTo) : parseKoreanDate(item.date),
+            transaction_type: 'count_out',
+            amount: 0,
+            count: item.value,
+            note: item.note || null
+          };
+          const key = `${transaction.transaction_date}_${transaction.transaction_type}_${transaction.amount}_${transaction.count}`;
+          if (!existingKeys.has(key)) transactionsToInsert.push(transaction);
+        }
+      });
+
+      if (transactionsToInsert.length > 0) {
+        const { error: insertError } = await supabase
+          .from('package_transactions')
+          .insert(transactionsToInsert);
+
+        if (insertError) throw insertError;
+      }
+
+      const { data: allTransactions, error: allError } = await supabase
+        .from('package_transactions')
+        .select('transaction_type, amount, count')
+        .eq('patient_id', patient.id);
+
+      if (allError) throw allError;
+
+      const depositTotal = (allTransactions || [])
+        .filter(t => t.transaction_type === 'deposit_in')
+        .reduce((sum, t) => sum + t.amount, 0);
+      const depositUsed = (allTransactions || [])
+        .filter(t => t.transaction_type === 'deposit_out')
+        .reduce((sum, t) => sum + t.amount, 0);
+      const rewardTotal = (allTransactions || [])
+        .filter(t => t.transaction_type === 'reward_in')
+        .reduce((sum, t) => sum + t.amount, 0);
+      const rewardUsed = (allTransactions || [])
+        .filter(t => t.transaction_type === 'reward_out')
+        .reduce((sum, t) => sum + t.amount, 0);
+      const countTotal = (allTransactions || [])
+        .filter(t => t.transaction_type === 'count_in')
+        .reduce((sum, t) => sum + t.count, 0);
+      const countUsed = (allTransactions || [])
+        .filter(t => t.transaction_type === 'count_out')
+        .reduce((sum, t) => sum + t.count, 0);
+
+      const packagePayload = {
+        patient_id: patient.id,
+        customer_number: data.customerNumber,
+        deposit_total: depositTotal,
+        deposit_used: depositUsed,
+        deposit_balance: depositTotal - depositUsed,
+        reward_total: rewardTotal,
+        reward_used: rewardUsed,
+        reward_balance: rewardTotal - rewardUsed,
+        count_total: countTotal,
+        count_used: countUsed,
+        count_balance: countTotal - countUsed,
+        last_synced_at: data.lastSyncedAt || new Date().toISOString(),
+      };
+
+      const { error: upsertError } = await supabase
+        .from('package_management')
+        .upsert(packagePayload, { onConflict: 'patient_id' });
+
+      if (upsertError) throw upsertError;
+
+      const { error: paymentUpdateError } = await supabase
+        .from('patients')
+        .update({ payment_amount: depositTotal })
+        .eq('id', patient.id);
+
+      if (paymentUpdateError) throw paymentUpdateError;
+
+      if (selectedPatientDetail?.id === patient.id) {
+        await fetchPackageData(patient.id);
+        
+        setSelectedPatientDetail(null);
+        setTimeout(async () => {
+          const { data: updatedPatient } = await supabase
+            .from('patients')
+            .select('*')
+            .eq('id', patient.id)
+            .single();
+          
+          if (updatedPatient) {
+            setSelectedPatientDetail(updatedPatient);
+            await calculatePatientStats(patient.id);
+          }
+        }, 100);
+      }
+      
+      setSyncingPackage(false);
+    } catch (error) {
+      console.error('Error saving package data:', error);
+      setSyncingPackage(false);
+    }
+  };
+
   const updateEditingField = (field: string, value: any) => {
     setEditingFields(prev => ({ ...prev, [field]: value }));
     setSelectedPatientDetail((prev: any) => prev ? { ...prev, [field]: value } : null);
@@ -196,7 +572,6 @@ export function DailyStatusGrid({
 
       setEditingFields({});
 
-      // 성공 메시지 (toast 사용하려면 부모 컴포넌트에서 전달받아야 함)
       console.log('정보가 저장되었습니다.');
     } catch (error) {
       console.error('Error updating patient fields:', error);
@@ -464,14 +839,27 @@ export function DailyStatusGrid({
         .eq('patient_id', patientId)
         .eq('is_paid', true);
 
+      // 환자의 payment_amount 가져오기 (패키지 예치금 입금 총액)
+      const { data: patientData } = await supabase
+        .from('patients')
+        .select('payment_amount')
+        .eq('id', patientId)
+        .single();
+
+      const paymentAmount = patientData?.payment_amount || 0;
+
       if (treatmentPlans) {
-        // 당월 매출
+        // 당월 매출 = 당월 treatment_plans + payment_amount
         currentMonthStats.revenue = treatmentPlans
           .filter(tp => tp.payment_date && tp.payment_date >= monthStart && tp.payment_date <= monthEnd)
-          .reduce((sum, tp) => sum + (tp.treatment_amount || 0), 0);
+          .reduce((sum, tp) => sum + (tp.treatment_amount || 0), 0) + paymentAmount;
 
-        // 전체 매출
-        totalStats.revenue = treatmentPlans.reduce((sum, tp) => sum + (tp.treatment_amount || 0), 0);
+        // 전체 매출 = 전체 treatment_plans + payment_amount
+        totalStats.revenue = treatmentPlans.reduce((sum, tp) => sum + (tp.treatment_amount || 0), 0) + paymentAmount;
+      } else {
+        // treatment_plans가 없어도 payment_amount는 포함
+        currentMonthStats.revenue = paymentAmount;
+        totalStats.revenue = paymentAmount;
       }
 
       setPatientStats({
@@ -698,6 +1086,7 @@ export function DailyStatusGrid({
                           setSelectedPatientDetail(patient);
                           setEditingManagementStatus(patient.management_status || '관리 중');
                           calculatePatientStats(patient.id);
+                          fetchPackageData(patient.id);
                         }}
                       >
                         {patient.name}
@@ -1299,6 +1688,166 @@ export function DailyStatusGrid({
                     수정 저장
                   </Button>
                 </div>
+              </div>
+
+              {/* 패키지 관리 섹션 */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold">패키지 관리</h3>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleSyncPackage}
+                      disabled={syncingPackage || !selectedPatientDetail?.customer_number}
+                      size="sm"
+                      className="gap-2"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${syncingPackage ? 'animate-spin' : ''}`} />
+                      최신화
+                    </Button>
+                    <Button
+                      onClick={handleDeletePackageData}
+                      variant="destructive"
+                      size="sm"
+                      className="gap-2"
+                    >
+                      내역삭제
+                    </Button>
+                  </div>
+                </div>
+
+                {!selectedPatientDetail?.customer_number ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    고객번호가 없어 패키지 정보를 가져올 수 없습니다.
+                  </div>
+                ) : !packageData && packageTransactions.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    최신화 버튼을 클릭하여 CRM에서 패키지 정보를 가져오세요.
+                  </div>
+                ) : (
+                  <>
+                    {/* 합계 카드 */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-medium text-muted-foreground">예치금</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-sm">입금:</span>
+                            <span className="font-semibold">
+                              {packageTransactions
+                                .filter(t => t.transaction_type === 'deposit_in')
+                                .reduce((sum, t) => sum + t.amount, 0)
+                                .toLocaleString()}원
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">사용:</span>
+                            <span className="text-red-600">
+                              {packageTransactions
+                                .filter(t => t.transaction_type === 'deposit_out')
+                                .reduce((sum, t) => sum + t.amount, 0)
+                                .toLocaleString()}원
+                            </span>
+                          </div>
+                          <div className="flex justify-between pt-2 border-t">
+                            <span className="text-sm font-semibold">잔액:</span>
+                            <span className="text-lg font-bold text-primary">
+                              {(packageTransactions
+                                .filter(t => t.transaction_type === 'deposit_in')
+                                .reduce((sum, t) => sum + t.amount, 0) -
+                              packageTransactions
+                                .filter(t => t.transaction_type === 'deposit_out')
+                                .reduce((sum, t) => sum + t.amount, 0))
+                                .toLocaleString()}원
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-medium text-muted-foreground">적립금</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-sm">입금:</span>
+                            <span className="font-semibold">
+                              {packageTransactions
+                                .filter(t => t.transaction_type === 'reward_in')
+                                .reduce((sum, t) => sum + t.amount, 0)
+                                .toLocaleString()}원
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">사용:</span>
+                            <span className="text-red-600">
+                              {packageTransactions
+                                .filter(t => t.transaction_type === 'reward_out')
+                                .reduce((sum, t) => sum + t.amount, 0)
+                                .toLocaleString()}원
+                            </span>
+                          </div>
+                          <div className="flex justify-between pt-2 border-t">
+                            <span className="text-sm font-semibold">잔액:</span>
+                            <span className="text-lg font-bold text-primary">
+                              {(packageTransactions
+                                .filter(t => t.transaction_type === 'reward_in')
+                                .reduce((sum, t) => sum + t.amount, 0) -
+                              packageTransactions
+                                .filter(t => t.transaction_type === 'reward_out')
+                                .reduce((sum, t) => sum + t.amount, 0))
+                                .toLocaleString()}원
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-medium text-muted-foreground">횟수</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-sm">입력:</span>
+                            <span className="font-semibold">
+                              {packageTransactions
+                                .filter(t => t.transaction_type === 'count_in')
+                                .reduce((sum, t) => sum + t.count, 0)}회
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">사용:</span>
+                            <span className="text-red-600">
+                              {packageTransactions
+                                .filter(t => t.transaction_type === 'count_out')
+                                .reduce((sum, t) => sum + t.count, 0)}회
+                            </span>
+                          </div>
+                          <div className="flex justify-between pt-2 border-t">
+                            <span className="text-sm font-semibold">잔여:</span>
+                            <span className="text-lg font-bold text-primary">
+                              {packageTransactions
+                                .filter(t => t.transaction_type === 'count_in')
+                                .reduce((sum, t) => sum + t.count, 0) -
+                              packageTransactions
+                                .filter(t => t.transaction_type === 'count_out')
+                                .reduce((sum, t) => sum + t.count, 0)}회
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {packageData?.last_synced_at && (
+                      <div className="text-xs text-muted-foreground text-right">
+                        마지막 동기화: {new Date(packageData.last_synced_at).toLocaleString('ko-KR')}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               {/* 활동 통계 정보 */}
