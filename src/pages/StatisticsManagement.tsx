@@ -98,10 +98,10 @@ export default function StatisticsManagement() {
       const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
       const endDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
 
-      // 유입 환자 목록 가져오기 (역할에 따라 필터링)
+      // 유입 환자 목록 가져오기 (역할에 따라 필터링, payment_amount 포함)
       let query = supabase
         .from('patients')
-        .select('id, assigned_manager, manager_name')
+        .select('id, assigned_manager, manager_name, payment_amount')
         .eq('inflow_status', '유입');
 
       // 일반 매니저는 본인 환자만, 마스터/관리자가 특정 매니저 선택 시 해당 매니저만
@@ -161,7 +161,7 @@ export default function StatisticsManagement() {
         stats.total_patients += 1;
       });
 
-      // 실제 결제 데이터로 매출 계산
+      // 실제 결제 데이터로 매출 계산 (치료 계획)
       payments?.forEach(payment => {
         const patient = patients?.find(p => p.id === payment.patient_id);
         if (!patient) return;
@@ -170,6 +170,14 @@ export default function StatisticsManagement() {
         if (!stats) return;
 
         stats.total_revenue += payment.treatment_amount || 0;
+      });
+
+      // 패키지 예치금 입금 매출 추가 (환자별 payment_amount)
+      patients?.forEach(patient => {
+        const stats = managerMap.get(patient.assigned_manager);
+        if (!stats) return;
+
+        stats.total_revenue += patient.payment_amount || 0;
       });
 
       // 상태별 일수 집계 (입원/재원, 외래, 낮병동, 전화F/U 각각의 총 일수)

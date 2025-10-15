@@ -692,6 +692,18 @@ export default function PatientListManagement() {
         .from('package_management')
         .upsert(packagePayload, { onConflict: 'patient_id' });
 
+      if (upsertError) throw upsertError;
+
+      // 예치금 입금 총액을 환자의 수납금액(payment_amount)에 업데이트
+      const { error: paymentUpdateError } = await supabase
+        .from('patients')
+        .update({ payment_amount: depositTotal })
+        .eq('id', patient.id);
+
+      if (paymentUpdateError) throw paymentUpdateError;
+
+      console.log('💰 환자 수납금액 업데이트:', depositTotal);
+
       // 항상 패키지 데이터 갱신
       if (selectedPatientDetail?.id === patient.id) {
         console.log('🔄 현재 선택된 환자의 패키지 데이터 갱신 중...');

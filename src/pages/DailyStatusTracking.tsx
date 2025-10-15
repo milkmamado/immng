@@ -230,19 +230,23 @@ export default function DailyStatusTracking() {
         .select('treatment_amount, payment_date, is_paid')
         .eq('is_paid', true);
 
-      // 당월 매출 계산
+      // 당월 매출 계산 (치료 계획)
       const currentMonthRevenue = (treatmentPlans || [])
         .filter(tp => tp.payment_date && tp.payment_date >= startDate && tp.payment_date <= endDate)
         .reduce((sum, tp) => sum + (tp.treatment_amount || 0), 0);
 
-      // 누적 총매출 계산
+      // 누적 총매출 계산 (치료 계획)
       const totalRevenue = (treatmentPlans || [])
         .reduce((sum, tp) => sum + (tp.treatment_amount || 0), 0);
 
+      // 패키지 예치금 입금 매출 추가 (환자별 payment_amount)
+      const packageRevenue = (patientsData || [])
+        .reduce((sum, p) => sum + (p.payment_amount || 0), 0);
+
       setStats({
         당월총환자: patientsData?.length || 0,
-        당월매출: currentMonthRevenue,
-        누적총매출: totalRevenue
+        당월매출: currentMonthRevenue + packageRevenue,
+        누적총매출: totalRevenue + packageRevenue
       });
 
     } catch (error) {
