@@ -75,7 +75,28 @@ Deno.serve(async (req) => {
       )
     }
 
-    // 1. 먼저 해당 매니저에게 할당된 환자들을 조회
+    // 1. 옵션 테이블들의 created_by를 NULL로 변경
+    const optionTables = [
+      'diagnosis_options',
+      'hospital_options',
+      'insurance_type_options',
+      'patient_status_options',
+      'treatment_detail_options'
+    ];
+
+    for (const table of optionTables) {
+      const { error: updateError } = await supabaseClient
+        .from(table)
+        .update({ created_by: null })
+        .eq('created_by', userId);
+      
+      if (updateError) {
+        console.error(`${table} created_by 업데이트 오류:`, updateError);
+        // 계속 진행
+      }
+    }
+
+    // 2. 해당 매니저에게 할당된 환자들을 조회
     const { data: assignedPatients, error: fetchError } = await supabaseClient
       .from('patients')
       .select('id')
@@ -86,7 +107,7 @@ Deno.serve(async (req) => {
       throw new Error(`환자 조회 실패: ${fetchError.message}`);
     }
 
-    // 2. 환자가 있으면 관련 데이터를 모두 삭제
+    // 3. 환자가 있으면 관련 데이터를 모두 삭제
     if (assignedPatients && assignedPatients.length > 0) {
       const patientIds = assignedPatients.map(p => p.id);
       
@@ -118,7 +139,25 @@ Deno.serve(async (req) => {
         }
       }
 
-      // 3. 마지막으로 환자 데이터 삭제
+      // 4. created_by가 삭제될 사용자인 데이터 처리
+      const createdByTables = [
+        'patient_notes',
+        'daily_patient_status'
+      ];
+
+      for (const table of createdByTables) {
+        const { error: updateError } = await supabaseClient
+          .from(table)
+          .update({ created_by: null })
+          .eq('created_by', userId);
+        
+        if (updateError) {
+          console.error(`${table} created_by 업데이트 오류:`, updateError);
+          // 계속 진행
+        }
+      }
+
+      // 5. 마지막으로 환자 데이터 삭제
       const { error: patientsDeleteError } = await supabaseClient
         .from('patients')
         .delete()
@@ -132,7 +171,7 @@ Deno.serve(async (req) => {
       console.log(`매니저 ${userId}의 환자 ${patientIds.length}명 및 관련 데이터 삭제 완료`);
     }
 
-    // 4. user_roles 테이블에서 사용자 역할 삭제
+    // 6. user_roles 테이블에서 사용자 역할 삭제
     const { error: rolesDeleteError } = await supabaseClient
       .from('user_roles')
       .delete()
@@ -143,7 +182,7 @@ Deno.serve(async (req) => {
       // 계속 진행
     }
 
-    // 5. profiles 테이블에서 프로필 삭제
+    // 7. profiles 테이블에서 프로필 삭제
     const { error: profileDeleteError } = await supabaseClient
       .from('profiles')
       .delete()
