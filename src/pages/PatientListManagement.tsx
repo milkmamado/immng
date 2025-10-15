@@ -491,11 +491,22 @@ export default function PatientListManagement() {
 
       console.log('✅ 환자 찾음:', patient.id);
 
-      // 기존 거래 내역 삭제 (새로 동기화할 때마다)
-      await supabase
+      // 기존 거래 내역 조회 (중복 체크용)
+      const { data: existingTransactions, error: fetchError } = await supabase
         .from('package_transactions')
-        .delete()
+        .select('transaction_date, transaction_type, amount, count')
         .eq('patient_id', patient.id);
+
+      if (fetchError) throw fetchError;
+
+      // 중복 체크를 위한 Set 생성
+      const existingKeys = new Set(
+        (existingTransactions || []).map(t => 
+          `${t.transaction_date}_${t.transaction_type}_${t.amount}_${t.count}`
+        )
+      );
+
+      console.log('📋 기존 거래 내역:', existingTransactions?.length || 0, '건');
 
       // 일자별 거래 내역 저장
       const transactionsToInsert: any[] = [];
@@ -503,7 +514,7 @@ export default function PatientListManagement() {
       // 예치금 입금
       data.depositIncome?.forEach((item: any) => {
         if (item.date && item.value) {
-          transactionsToInsert.push({
+          const transaction = {
             patient_id: patient.id,
             customer_number: data.customerNumber,
             transaction_date: parseKoreanDate(item.date),
@@ -511,14 +522,18 @@ export default function PatientListManagement() {
             amount: item.value,
             count: 0,
             note: item.note || null
-          });
+          };
+          const key = `${transaction.transaction_date}_${transaction.transaction_type}_${transaction.amount}_${transaction.count}`;
+          if (!existingKeys.has(key)) {
+            transactionsToInsert.push(transaction);
+          }
         }
       });
 
       // 예치금 사용
       data.depositUsage?.forEach((item: any) => {
         if (item.date && item.value) {
-          transactionsToInsert.push({
+          const transaction = {
             patient_id: patient.id,
             customer_number: data.customerNumber,
             transaction_date: parseKoreanDate(item.date),
@@ -528,14 +543,18 @@ export default function PatientListManagement() {
             amount: item.value,
             count: 0,
             note: item.note || null
-          });
+          };
+          const key = `${transaction.transaction_date}_${transaction.transaction_type}_${transaction.amount}_${transaction.count}`;
+          if (!existingKeys.has(key)) {
+            transactionsToInsert.push(transaction);
+          }
         }
       });
 
       // 적립금 입금
       data.rewardIncome?.forEach((item: any) => {
         if (item.date && item.value) {
-          transactionsToInsert.push({
+          const transaction = {
             patient_id: patient.id,
             customer_number: data.customerNumber,
             transaction_date: parseKoreanDate(item.date),
@@ -543,14 +562,18 @@ export default function PatientListManagement() {
             amount: item.value,
             count: 0,
             note: item.note || null
-          });
+          };
+          const key = `${transaction.transaction_date}_${transaction.transaction_type}_${transaction.amount}_${transaction.count}`;
+          if (!existingKeys.has(key)) {
+            transactionsToInsert.push(transaction);
+          }
         }
       });
 
       // 적립금 사용
       data.rewardUsage?.forEach((item: any) => {
         if (item.date && item.value) {
-          transactionsToInsert.push({
+          const transaction = {
             patient_id: patient.id,
             customer_number: data.customerNumber,
             transaction_date: parseKoreanDate(item.date),
@@ -560,14 +583,18 @@ export default function PatientListManagement() {
             amount: item.value,
             count: 0,
             note: item.note || null
-          });
+          };
+          const key = `${transaction.transaction_date}_${transaction.transaction_type}_${transaction.amount}_${transaction.count}`;
+          if (!existingKeys.has(key)) {
+            transactionsToInsert.push(transaction);
+          }
         }
       });
 
       // 횟수 입력
       data.countInput?.forEach((item: any) => {
         if (item.date && item.value) {
-          transactionsToInsert.push({
+          const transaction = {
             patient_id: patient.id,
             customer_number: data.customerNumber,
             transaction_date: parseKoreanDate(item.date),
@@ -575,14 +602,18 @@ export default function PatientListManagement() {
             amount: 0,
             count: item.value,
             note: item.note || null
-          });
+          };
+          const key = `${transaction.transaction_date}_${transaction.transaction_type}_${transaction.amount}_${transaction.count}`;
+          if (!existingKeys.has(key)) {
+            transactionsToInsert.push(transaction);
+          }
         }
       });
 
       // 횟수 사용
       data.countUsage?.forEach((item: any) => {
         if (item.date && item.value) {
-          transactionsToInsert.push({
+          const transaction = {
             patient_id: patient.id,
             customer_number: data.customerNumber,
             transaction_date: parseKoreanDate(item.date),
@@ -592,13 +623,17 @@ export default function PatientListManagement() {
             amount: 0,
             count: item.value,
             note: item.note || null
-          });
+          };
+          const key = `${transaction.transaction_date}_${transaction.transaction_type}_${transaction.amount}_${transaction.count}`;
+          if (!existingKeys.has(key)) {
+            transactionsToInsert.push(transaction);
+          }
         }
       });
 
-      console.log('💾 저장할 거래 내역:', transactionsToInsert.length, '건');
+      console.log('💾 저장할 거래 내역:', transactionsToInsert.length, '건 (중복 제외)');
 
-      // 거래 내역 저장
+      // 거래 내역 저장 (중복되지 않은 것만)
       if (transactionsToInsert.length > 0) {
         const { error: insertError } = await supabase
           .from('package_transactions')
@@ -607,23 +642,31 @@ export default function PatientListManagement() {
         if (insertError) throw insertError;
       }
 
+      // 전체 거래 내역 다시 조회해서 합계 계산 (기존 + 새로운)
+      const { data: allTransactions, error: allError } = await supabase
+        .from('package_transactions')
+        .select('transaction_type, amount, count')
+        .eq('patient_id', patient.id);
+
+      if (allError) throw allError;
+
       // 합계 계산
-      const depositTotal = transactionsToInsert
+      const depositTotal = (allTransactions || [])
         .filter(t => t.transaction_type === 'deposit_in')
         .reduce((sum, t) => sum + t.amount, 0);
-      const depositUsed = transactionsToInsert
+      const depositUsed = (allTransactions || [])
         .filter(t => t.transaction_type === 'deposit_out')
         .reduce((sum, t) => sum + t.amount, 0);
-      const rewardTotal = transactionsToInsert
+      const rewardTotal = (allTransactions || [])
         .filter(t => t.transaction_type === 'reward_in')
         .reduce((sum, t) => sum + t.amount, 0);
-      const rewardUsed = transactionsToInsert
+      const rewardUsed = (allTransactions || [])
         .filter(t => t.transaction_type === 'reward_out')
         .reduce((sum, t) => sum + t.amount, 0);
-      const countTotal = transactionsToInsert
+      const countTotal = (allTransactions || [])
         .filter(t => t.transaction_type === 'count_in')
         .reduce((sum, t) => sum + t.count, 0);
-      const countUsed = transactionsToInsert
+      const countUsed = (allTransactions || [])
         .filter(t => t.transaction_type === 'count_out')
         .reduce((sum, t) => sum + t.count, 0);
 
@@ -656,14 +699,21 @@ export default function PatientListManagement() {
         
         toast({
           title: "✅ 패키지 정보 업데이트 완료",
-          description: `${transactionsToInsert.length}건의 거래 내역을 성공적으로 가져왔습니다. 화면에 바로 반영되었습니다.`,
-          duration: 1000,
+          description: `${transactionsToInsert.length}건의 새로운 거래 내역을 추가했습니다. (중복 제외)`,
+          duration: 2000,
         });
+        
+        // 동기화 완료 후 모달을 자동으로 다시 열어 UI 새로고침
+        const tempPatient = selectedPatientDetail;
+        setSelectedPatientDetail(null);
+        setTimeout(() => {
+          setSelectedPatientDetail(tempPatient);
+        }, 100);
       } else {
         toast({
           title: "패키지 정보 저장 완료",
-          description: `${transactionsToInsert.length}건의 거래 내역을 저장했습니다. 해당 환자를 다시 선택하면 확인할 수 있습니다.`,
-          duration: 1000,
+          description: `${transactionsToInsert.length}건의 새로운 거래 내역을 저장했습니다. 해당 환자를 다시 선택하면 확인할 수 있습니다.`,
+          duration: 2000,
         });
       }
       
