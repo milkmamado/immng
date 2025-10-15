@@ -442,13 +442,35 @@ export default function PatientListManagement() {
 
       if (managementError) throw managementError;
 
+      // 환자의 수납금액도 0으로 초기화
+      const { error: paymentResetError } = await supabase
+        .from('patients')
+        .update({ payment_amount: 0 })
+        .eq('id', selectedPatientDetail.id);
+
+      if (paymentResetError) throw paymentResetError;
+
       // 로컬 상태 초기화
       setPackageData(null);
       setPackageTransactions([]);
 
+      // 환자 목록 새로고침 (통계 반영)
+      await fetchPatients();
+
+      // 모달도 업데이트된 정보로 새로고침
+      const { data: updatedPatient } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('id', selectedPatientDetail.id)
+        .single();
+      
+      if (updatedPatient) {
+        setSelectedPatientDetail(updatedPatient);
+      }
+
       toast({
         title: "삭제 완료",
-        description: "패키지 데이터가 모두 삭제되었습니다.",
+        description: "패키지 데이터가 모두 삭제되었습니다. 수납금액도 0으로 초기화되었습니다.",
       });
     } catch (error) {
       console.error('Error deleting package data:', error);
