@@ -75,7 +75,86 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Delete the user from auth.users (this will cascade to profiles and user_roles)
+    // 1. 먼저 해당 매니저에게 할당된 환자들을 조회
+    const { data: assignedPatients, error: fetchError } = await supabaseClient
+      .from('patients')
+      .select('id')
+      .eq('assigned_manager', userId);
+
+    if (fetchError) {
+      console.error('환자 조회 오류:', fetchError);
+      throw new Error(`환자 조회 실패: ${fetchError.message}`);
+    }
+
+    // 2. 환자가 있으면 관련 데이터를 모두 삭제
+    if (assignedPatients && assignedPatients.length > 0) {
+      const patientIds = assignedPatients.map(p => p.id);
+      
+      console.log(`매니저 ${userId}에게 할당된 환자 ${patientIds.length}명 삭제 시작`);
+
+      // 환자 관련 테이블들을 순서대로 삭제
+      const tablesToDelete = [
+        'package_transactions',
+        'package_management',
+        'treatment_plans',
+        'treatment_history',
+        'patient_reconnect_tracking',
+        'patient_notes',
+        'packages',
+        'medical_info',
+        'daily_patient_status',
+        'admission_cycles'
+      ];
+
+      for (const table of tablesToDelete) {
+        const { error: deleteError } = await supabaseClient
+          .from(table)
+          .delete()
+          .in('patient_id', patientIds);
+        
+        if (deleteError) {
+          console.error(`${table} 삭제 오류:`, deleteError);
+          // 계속 진행 (일부 테이블에 데이터가 없을 수 있음)
+        }
+      }
+
+      // 3. 마지막으로 환자 데이터 삭제
+      const { error: patientsDeleteError } = await supabaseClient
+        .from('patients')
+        .delete()
+        .in('id', patientIds);
+
+      if (patientsDeleteError) {
+        console.error('환자 삭제 오류:', patientsDeleteError);
+        throw new Error(`환자 삭제 실패: ${patientsDeleteError.message}`);
+      }
+
+      console.log(`매니저 ${userId}의 환자 ${patientIds.length}명 및 관련 데이터 삭제 완료`);
+    }
+
+    // 4. user_roles 테이블에서 사용자 역할 삭제
+    const { error: rolesDeleteError } = await supabaseClient
+      .from('user_roles')
+      .delete()
+      .eq('user_id', userId);
+
+    if (rolesDeleteError) {
+      console.error('사용자 역할 삭제 오류:', rolesDeleteError);
+      // 계속 진행
+    }
+
+    // 5. profiles 테이블에서 프로필 삭제
+    const { error: profileDeleteError } = await supabaseClient
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
+
+    if (profileDeleteError) {
+      console.error('프로필 삭제 오류:', profileDeleteError);
+      // 계속 진행
+    }
+
+    // 6. 마지막으로 auth.users에서 사용자 삭제
     const { error: deleteError } = await supabaseClient.auth.admin.deleteUser(userId)
 
     if (deleteError) {
