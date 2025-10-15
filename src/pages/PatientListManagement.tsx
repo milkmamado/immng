@@ -709,19 +709,33 @@ export default function PatientListManagement() {
         console.log('🔄 현재 선택된 환자의 패키지 데이터 갱신 중...');
         await fetchPackageData(patient.id);
         
+        // 환자 목록 새로고침 (payment_amount 반영)
+        await fetchPatients();
+        
         toast({
           title: "✅ 패키지 정보 업데이트 완료",
           description: `${transactionsToInsert.length}건의 새로운 거래 내역을 추가했습니다. (중복 제외)`,
           duration: 2000,
         });
         
-        // 동기화 완료 후 모달을 자동으로 다시 열어 UI 새로고침
-        const tempPatient = selectedPatientDetail;
+        // 동기화 완료 후 업데이트된 환자 정보로 모달 재실행
         setSelectedPatientDetail(null);
-        setTimeout(() => {
-          setSelectedPatientDetail(tempPatient);
+        setTimeout(async () => {
+          // 업데이트된 환자 정보 조회
+          const { data: updatedPatient } = await supabase
+            .from('patients')
+            .select('*')
+            .eq('id', patient.id)
+            .single();
+          
+          if (updatedPatient) {
+            setSelectedPatientDetail(updatedPatient);
+          }
         }, 100);
       } else {
+        // 환자 목록 새로고침 (다른 환자여도 목록 업데이트)
+        await fetchPatients();
+        
         toast({
           title: "패키지 정보 저장 완료",
           description: `${transactionsToInsert.length}건의 새로운 거래 내역을 저장했습니다. 해당 환자를 다시 선택하면 확인할 수 있습니다.`,
