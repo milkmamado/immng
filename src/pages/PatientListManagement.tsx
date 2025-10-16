@@ -729,31 +729,33 @@ export default function PatientListManagement() {
       // 항상 패키지 데이터 갱신
       if (selectedPatientDetail?.id === patient.id) {
         console.log('🔄 현재 선택된 환자의 패키지 데이터 갱신 중...');
-        await fetchPackageData(patient.id);
         
-        // 환자 목록 새로고침 (payment_amount 반영)
-        await fetchPatients();
+        // 모달을 닫고 데이터 갱신
+        setSelectedPatientDetail(null);
+        
+        // 패키지 데이터와 환자 목록 동시 갱신
+        await Promise.all([
+          fetchPackageData(patient.id),
+          fetchPatients()
+        ]);
+        
+        // 업데이트된 환자 정보 조회
+        const { data: updatedPatient } = await supabase
+          .from('patients')
+          .select('*')
+          .eq('id', patient.id)
+          .single();
+        
+        // 모달 다시 열기
+        if (updatedPatient) {
+          setSelectedPatientDetail(updatedPatient);
+        }
         
         toast({
           title: "✅ 패키지 정보 업데이트 완료",
           description: `${transactionsToInsert.length}건의 새로운 거래 내역을 추가했습니다. (중복 제외)`,
           duration: 2000,
         });
-        
-        // 동기화 완료 후 업데이트된 환자 정보로 모달 재실행
-        setSelectedPatientDetail(null);
-        setTimeout(async () => {
-          // 업데이트된 환자 정보 조회
-          const { data: updatedPatient } = await supabase
-            .from('patients')
-            .select('*')
-            .eq('id', patient.id)
-            .single();
-          
-          if (updatedPatient) {
-            setSelectedPatientDetail(updatedPatient);
-          }
-        }, 100);
       } else {
         // 환자 목록 새로고침 (다른 환자여도 목록 업데이트)
         await fetchPatients();
