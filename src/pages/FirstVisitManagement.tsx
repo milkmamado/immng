@@ -58,15 +58,10 @@ export default function FirstVisitManagement() {
 
   useEffect(() => {
     fetchPatients();
-  }, []);
 
-  useEffect(() => {
     // postMessage로 CRM 데이터 수신 (window.opener에서 전송)
     const handleMessage = (event: MessageEvent) => {
-      console.log('[CRM 연동] 메시지 수신:', event.data);
-      
       if (event.data?.type === 'crm-patient-data' && event.data?.data) {
-        console.log('[CRM 연동] 환자 데이터 처리:', event.data.data);
         handleProceedToRegistration(event.data.data);
         setShowLookupDialog(false);
         toast({
@@ -77,28 +72,16 @@ export default function FirstVisitManagement() {
       }
     };
 
-    window.addEventListener('message', handleMessage);
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
-  }, [toast]);
-
-  useEffect(() => {
     // URL 파라미터에서 crm=import 확인
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('crm') === 'import') {
-      console.log('[CRM 연동] URL 파라미터 감지, storage 체크 시작');
-      
       // localStorage에서 CRM 데이터 확인 (CRM 연동 또는 Chrome 확장 프로그램)
       const checkStorage = async () => {
         // 먼저 localStorage 확인 (CRM 연동용)
         const localData = localStorage.getItem('crm_patient_data');
-        console.log('[CRM 연동] localStorage 체크:', localData ? '데이터 있음' : '데이터 없음');
-        
         if (localData) {
           try {
             const data = JSON.parse(localData);
-            console.log('[CRM 연동] localStorage 데이터 처리:', data);
             handleProceedToRegistration(data);
             setShowLookupDialog(false);
             localStorage.removeItem('crm_patient_data');
@@ -110,7 +93,7 @@ export default function FirstVisitManagement() {
             window.history.replaceState({}, '', '/first-visit');
             return;
           } catch (e) {
-            console.error('[CRM 연동] localStorage 파싱 오류:', e);
+            console.error('Failed to parse localStorage CRM data:', e);
           }
         }
 
@@ -119,10 +102,7 @@ export default function FirstVisitManagement() {
         if (chromeAPI?.storage?.local) {
           try {
             chromeAPI.storage.local.get(['patientData'], (result: any) => {
-              console.log('[CRM 연동] Chrome storage 체크:', result.patientData ? '데이터 있음' : '데이터 없음');
-              
               if (result.patientData) {
-                console.log('[CRM 연동] Chrome storage 데이터 처리:', result.patientData);
                 handleProceedToRegistration(result.patientData);
                 setShowLookupDialog(false);
                 chromeAPI.storage.local.remove('patientData');
@@ -135,14 +115,19 @@ export default function FirstVisitManagement() {
               }
             });
           } catch (e) {
-            console.error('[CRM 연동] Chrome storage 접근 오류:', e);
+            console.error('Failed to access chrome.storage:', e);
           }
         }
       };
 
       checkStorage();
     }
-  }, [toast]);
+
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, []);
 
   const fetchPatients = async () => {
     setLoading(true);
