@@ -124,42 +124,54 @@ export default function UserManual() {
               <div>
                 <h4 className="font-semibold flex items-center gap-2 mb-3">
                   <Plus className="w-4 h-4 text-green-600" />
-                  신규 환자 등록 절차
+                  신규 환자 등록 절차 (CRM 연동)
                 </h4>
-                <ol className="space-y-2 ml-4">
+                <ol className="space-y-3 ml-4">
                   <li className="flex gap-2">
                     <span className="font-bold text-primary">1.</span>
                     <div>
-                      우측 상단 <Badge>환자 등록</Badge> 버튼 클릭
+                      우측 상단 <Badge>새 환자 등록</Badge> 버튼 클릭
                     </div>
                   </li>
                   <li className="flex gap-2">
                     <span className="font-bold text-primary">2.</span>
                     <div>
-                      <strong>필수 정보</strong> 입력:
-                      <ul className="mt-2 space-y-1 ml-4">
-                        <li>• <strong>차트번호:</strong> 병원 시스템의 차트번호 입력</li>
-                        <li>• <strong>유입/실패:</strong> 유입 또는 실패 선택</li>
-                        <li>• <strong>입원/외래:</strong> 방문 유형 선택</li>
-                        <li>• <strong>환자명, 연락처, 생년월일</strong></li>
-                        <li>• <strong>진단명:</strong> 드롭다운에서 선택 (췌장암, 유방암 등)</li>
-                        <li>• <strong>담당매니저:</strong> 담당자명 입력</li>
-                      </ul>
+                      조회 창에서 <strong>환자명</strong>과 <strong>전화번호</strong> 입력 후 <Badge>조회</Badge> 버튼 클릭
+                      <div className="mt-1 text-sm text-muted-foreground ml-4">
+                        → CRM 시스템 페이지가 새 탭으로 열립니다
+                      </div>
                     </div>
                   </li>
                   <li className="flex gap-2">
                     <span className="font-bold text-primary">3.</span>
                     <div>
-                      <strong>추가 정보</strong> (선택사항):
-                      <ul className="mt-2 space-y-1 ml-4">
-                        <li>• 이전 병원, 주치의 정보</li>
-                        <li>• 상담 내용, 메모</li>
-                        <li>• 보호자 정보</li>
+                      <strong>CRM 연동 북마크 사용:</strong>
+                      <ul className="mt-2 space-y-1 ml-4 text-sm">
+                        <li>• 북마크바의 <Badge variant="outline">CRM 연동</Badge> 북마크 클릭</li>
+                        <li>• 자동으로 환자 검색이 실행됩니다</li>
+                        <li>• 해당 환자명을 더블클릭하면 상세 정보가 자동으로 추출됩니다</li>
                       </ul>
+                      <div className="mt-2 bg-blue-50 border-l-4 border-blue-500 p-3">
+                        <p className="text-xs">
+                          <strong>💡 참고:</strong> CRM 연동 북마크 설정은 
+                          <strong className="text-blue-600"> CRM 연동</strong> 메뉴에서 확인하세요.
+                        </p>
+                      </div>
                     </div>
                   </li>
                   <li className="flex gap-2">
                     <span className="font-bold text-primary">4.</span>
+                    <div>
+                      자동으로 가져온 정보 확인 및 추가 정보 입력:
+                      <ul className="mt-2 space-y-1 ml-4 text-sm">
+                        <li>• <strong>자동 입력:</strong> 고객번호, 환자명, 연락처, 나이, 주소, 내원동기, 진단명 등</li>
+                        <li>• <strong>수동 입력:</strong> 유입/실패, 입원/외래, 담당매니저, 주치의 정보 등</li>
+                        <li>• <strong>선택 입력:</strong> 보호자 정보, 추가 메모</li>
+                      </ul>
+                    </div>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold text-primary">5.</span>
                     <div><Badge>등록</Badge> 버튼으로 완료</div>
                   </li>
                 </ol>
@@ -175,11 +187,27 @@ export default function UserManual() {
                 <p className="mb-2">검색창에서 다음 정보로 환자를 찾을 수 있습니다:</p>
                 <div className="grid grid-cols-2 gap-2 ml-4">
                   <div>• 환자명</div>
-                  <div>• 차트번호</div>
+                  <div>• 고객번호</div>
                   <div>• 담당매니저</div>
                   <div>• 주치의 이름</div>
+                  <div>• 입원/외래</div>
                   <div>• 이전병원</div>
-                  <div>• 연락처</div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold flex items-center gap-2 mb-3">
+                  <AlertTriangle className="w-4 h-4 text-orange-600" />
+                  주의사항
+                </h4>
+                <div className="bg-orange-50 border-l-4 border-orange-500 p-3">
+                  <ul className="text-sm space-y-1">
+                    <li>• 환자 삭제는 복구할 수 없으니 신중하게 진행하세요</li>
+                    <li>• CRM 연동 북마크가 설정되어 있어야 자동 입력이 가능합니다</li>
+                    <li>• 중복 등록을 방지하기 위해 등록 전 검색으로 기존 환자 여부를 확인하세요</li>
+                  </ul>
                 </div>
               </div>
             </div>
