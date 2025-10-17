@@ -63,14 +63,6 @@ export default function PackageIntegration() {
           <CardTitle>연동 설정 방법</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <Alert className="bg-yellow-50 border-yellow-200">
-            <AlertDescription className="text-yellow-800">
-              <strong>⚠️ 중요:</strong> 연동 스크립트는 <strong>북마크바에 드래그</strong>하거나 
-              <strong>북마크 추가 시 URL에 붙여넣기</strong> 해야 합니다. 
-              일반 링크처럼 클릭하면 작동하지 않습니다!
-            </AlertDescription>
-          </Alert>
-
           <div className="space-y-4">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold">
@@ -134,7 +126,11 @@ export default function PackageIntegration() {
                   <ol className="list-decimal list-inside space-y-2">
                     <li>
                       <strong>관리환자 리스트에서 환자 선택 → 패키지 관리 → 최신화 버튼 클릭</strong>
-                      <div className="ml-6 text-xs text-gray-500">→ CRM 패키지 관리 페이지가 새 탭으로 열립니다</div>
+                      <div className="ml-6 text-xs text-gray-500">→ 새 탭에서 CRM 패키지 관리 페이지를 수동으로 열어줍니다</div>
+                    </li>
+                    <li>
+                      <strong>CRM에서 해당 환자의 패키지 관리 페이지로 이동</strong>
+                      <div className="ml-6 text-xs text-gray-500">→ 환자를 검색하고 패키지 관리 화면을 엽니다</div>
                     </li>
                     <li>
                       <strong>북마크바의 "패키지 연동" 북마크 클릭</strong>
