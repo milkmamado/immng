@@ -496,18 +496,45 @@ export default function PatientListManagement() {
       const workbook = XLSX.read(data);
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       
-      // 헤더가 10번째 행(A10)부터 시작하므로 range 옵션 사용
-      const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet, { 
-        range: 9, // 0-based index, 9 = 10번째 행
-        raw: false // 날짜를 문자열로 변환
-      });
+      // 여러 range 시도하여 헤더 자동 탐지
+      let jsonData: any[] = [];
+      const rangesToTry = [5, 6, 7, 8, 9]; // 6번째~10번째 행 시도
+      
+      for (const rangeIndex of rangesToTry) {
+        const testData = XLSX.utils.sheet_to_json(worksheet, { 
+          range: rangeIndex,
+          raw: false,
+          defval: ''
+        });
+        
+        console.log(`🔍 Range ${rangeIndex + 1}번째 행 시도:`, testData.length > 0 ? testData[0] : 'empty');
+        
+        // '수납일자'와 '입금총액' 컬럼이 있는지 확인
+        if (testData.length > 0 && testData[0]['수납일자'] && testData[0]['입금총액'] !== undefined) {
+          console.log(`✅ Range ${rangeIndex + 1}번째 행에서 헤더 발견!`);
+          jsonData = testData;
+          break;
+        }
+      }
 
-      console.log('📊 엑셀 데이터 파싱:', jsonData);
-      console.log('📋 첫 번째 행 샘플:', jsonData[0]);
+      if (jsonData.length === 0) {
+        console.error('❌ 유효한 헤더를 찾을 수 없습니다');
+        toast({
+          title: "오류",
+          description: "엑셀 파일 형식을 인식할 수 없습니다.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      console.log('📊 엑셀 데이터 파싱:', jsonData.length, '행');
+      console.log('📋 첫 번째 데이터 행:', jsonData[0]);
+      console.log('📋 컬럼명들:', Object.keys(jsonData[0]));
 
       // 수납일자와 입금총액 추출
       const transactions: { date: string; amount: number }[] = [];
-      jsonData.forEach((row: any) => {
+      jsonData.forEach((row: any, index: number) => {
         // 빈 행이거나 합계 행은 제외
         if (!row['수납일자'] || row['순서'] === '합계' || row['순서'] === '') {
           return;
@@ -516,9 +543,9 @@ export default function PatientListManagement() {
         const dateStr = row['수납일자'];
         const amountStr = row['입금총액'];
 
-        console.log('📅 수납일자:', dateStr, '💰 입금총액:', amountStr);
+        console.log(`[${index}] 📅 수납일자:`, dateStr, '| 💰 입금총액:', amountStr);
 
-        if (dateStr && amountStr) {
+        if (dateStr && amountStr !== undefined && amountStr !== '') {
           // 날짜 파싱
           let date: Date;
           
@@ -536,7 +563,7 @@ export default function PatientListManagement() {
             date = new Date(dateStr);
           }
 
-          // 금액 파싱 (쉼표 제거)
+          // 금액 파싱 (쉼표 제거, 0도 허용)
           let amount = 0;
           if (typeof amountStr === 'number') {
             amount = amountStr;
@@ -544,7 +571,7 @@ export default function PatientListManagement() {
             amount = parseFloat(amountStr.replace(/,/g, ''));
           }
 
-          if (!isNaN(date.getTime()) && !isNaN(amount) && amount > 0) {
+          if (!isNaN(date.getTime()) && !isNaN(amount) && amount >= 0) {
             transactions.push({
               date: date.toISOString().split('T')[0],
               amount: amount
