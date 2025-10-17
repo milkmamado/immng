@@ -1616,7 +1616,7 @@ export function DailyStatusGrid({
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      패키지 관리에서 자동 계산
+                      총 수납금액 (예치금 + 입원/외래 매출)
                     </p>
                   </div>
 
@@ -1692,38 +1692,18 @@ export function DailyStatusGrid({
 
               {/* 패키지 관리 섹션 */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-semibold">패키지 관리</h3>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={handleSyncPackage}
-                      disabled={syncingPackage || !selectedPatientDetail?.customer_number}
-                      size="sm"
-                      className="gap-2"
-                    >
-                      <RefreshCw className={`h-4 w-4 ${syncingPackage ? 'animate-spin' : ''}`} />
-                      최신화
-                    </Button>
-                    <Button
-                      onClick={handleDeletePackageData}
-                      variant="destructive"
-                      size="sm"
-                      className="gap-2"
-                    >
-                      내역삭제
-                    </Button>
-                  </div>
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <h3 className="text-lg font-semibold">패키지 관리</h3>
+                  <Badge variant="outline">현황</Badge>
                 </div>
 
                 {!selectedPatientDetail?.customer_number ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    고객번호가 없어 패키지 정보를 가져올 수 없습니다.
+                    고객번호가 없어 패키지 정보를 표시할 수 없습니다.
                   </div>
-                ) : !packageData && packageTransactions.length === 0 ? (
+                ) : packageTransactions.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    최신화 버튼을 클릭하여 CRM에서 패키지 정보를 가져오세요.
+                    패키지 데이터가 없습니다.
                   </div>
                 ) : (
                   <>
@@ -1847,6 +1827,78 @@ export function DailyStatusGrid({
                       </div>
                     )}
                   </>
+                )}
+              </div>
+
+              {/* 입원 매출 현황 */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <h3 className="text-lg font-semibold">입원 매출</h3>
+                  <Badge variant="outline">현황</Badge>
+                </div>
+
+                {packageTransactions.filter(t => t.transaction_type === 'inpatient_revenue').length > 0 ? (
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">총 건수:</span>
+                          <span className="font-semibold">
+                            {packageTransactions.filter(t => t.transaction_type === 'inpatient_revenue').length}건
+                          </span>
+                        </div>
+                        <div className="flex justify-between pt-2 border-t">
+                          <span className="text-sm font-semibold">합계:</span>
+                          <span className="text-lg font-bold text-primary">
+                            {packageTransactions
+                              .filter(t => t.transaction_type === 'inpatient_revenue')
+                              .reduce((sum, t) => sum + t.amount, 0)
+                              .toLocaleString()}원
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground text-sm">
+                    입원 매출 데이터가 없습니다.
+                  </div>
+                )}
+              </div>
+
+              {/* 외래 매출 현황 */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <h3 className="text-lg font-semibold">외래 매출</h3>
+                  <Badge variant="outline">현황</Badge>
+                </div>
+
+                {packageTransactions.filter(t => t.transaction_type === 'outpatient_revenue').length > 0 ? (
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">총 건수:</span>
+                          <span className="font-semibold">
+                            {packageTransactions.filter(t => t.transaction_type === 'outpatient_revenue').length}건
+                          </span>
+                        </div>
+                        <div className="flex justify-between pt-2 border-t">
+                          <span className="text-sm font-semibold">합계:</span>
+                          <span className="text-lg font-bold text-primary">
+                            {packageTransactions
+                              .filter(t => t.transaction_type === 'outpatient_revenue')
+                              .reduce((sum, t) => sum + t.amount, 0)
+                              .toLocaleString()}원
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground text-sm">
+                    외래 매출 데이터가 없습니다.
+                  </div>
                 )}
               </div>
 
