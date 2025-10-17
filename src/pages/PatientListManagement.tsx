@@ -1624,6 +1624,20 @@ export default function PatientListManagement() {
                   </TableBody>
                 </Table>
               </div>
+              {(() => {
+                const inpatientTransactions = packageTransactions.filter(t => t.transaction_type === 'inpatient_revenue');
+                if (inpatientTransactions.length > 0) {
+                  const latestUpload = inpatientTransactions.reduce((latest, current) => 
+                    new Date(current.created_at) > new Date(latest.created_at) ? current : latest
+                  );
+                  return (
+                    <div className="text-xs text-muted-foreground text-right pt-2">
+                      마지막 업로드: {new Date(latestUpload.created_at).toLocaleString('ko-KR')}
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
           ) : (
             <div className="text-center py-6 text-muted-foreground text-sm border rounded-md bg-muted/30">
@@ -1710,6 +1724,20 @@ export default function PatientListManagement() {
                   </TableBody>
                 </Table>
               </div>
+              {(() => {
+                const outpatientTransactions = packageTransactions.filter(t => t.transaction_type === 'outpatient_revenue');
+                if (outpatientTransactions.length > 0) {
+                  const latestUpload = outpatientTransactions.reduce((latest, current) => 
+                    new Date(current.created_at) > new Date(latest.created_at) ? current : latest
+                  );
+                  return (
+                    <div className="text-xs text-muted-foreground text-right pt-2">
+                      마지막 업로드: {new Date(latestUpload.created_at).toLocaleString('ko-KR')}
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
           ) : (
             <div className="text-center py-6 text-muted-foreground text-sm border rounded-md bg-muted/30">
