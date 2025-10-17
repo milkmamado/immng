@@ -249,9 +249,105 @@ export default function UserManual() {
                     <strong>수납금액 = 예치금 입금 + 입원 매출 + 외래 매출</strong>
                   </p>
                   <p className="text-sm mt-2 text-muted-foreground">
-                    패키지 연동 메뉴에서 엑셀 업로드로 자동 집계되며, 
                     거래 내역은 환자 상세 팝업에서 확인할 수 있습니다.
                   </p>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold flex items-center gap-2 mb-3">
+                  <Package className="w-4 h-4 text-purple-600" />
+                  패키지 관리 (예치금, 적립금, 횟수)
+                </h4>
+                <div className="space-y-3">
+                  <ol className="space-y-2 ml-4">
+                    <li className="flex gap-2">
+                      <span className="font-bold text-primary">1.</span>
+                      <div>
+                        환자 상세 팝업에서 <Badge>패키지 관리</Badge> 섹션 확인
+                      </div>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="font-bold text-primary">2.</span>
+                      <div>
+                        <Badge variant="outline">최신화</Badge> 버튼 클릭 → CRM 패키지 관리 페이지로 이동
+                      </div>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="font-bold text-primary">3.</span>
+                      <div>
+                        CRM에서 해당 환자의 패키지 관리 화면을 엽니다
+                      </div>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="font-bold text-primary">4.</span>
+                      <div>
+                        북마크바의 <Badge variant="outline">패키지 연동</Badge> 북마크 클릭
+                        <div className="mt-1 text-sm text-muted-foreground ml-4">
+                          → 예수금, 적립금, 횟수 정보가 자동으로 추출됩니다
+                        </div>
+                      </div>
+                    </li>
+                  </ol>
+                  <div className="bg-purple-50 border-l-4 border-purple-500 p-3">
+                    <p className="text-xs">
+                      <strong>💡 참고:</strong> 패키지 연동 북마크 설정은 
+                      <strong className="text-purple-600"> 패키지 연동</strong> 메뉴에서 확인하세요.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold flex items-center gap-2 mb-3">
+                  <DollarSign className="w-4 h-4 text-green-600" />
+                  입원/외래 매출 관리
+                </h4>
+                <div className="space-y-3">
+                  <ol className="space-y-2 ml-4">
+                    <li className="flex gap-2">
+                      <span className="font-bold text-primary">1.</span>
+                      <div>
+                        환자 상세 팝업에서 <Badge>입원 매출</Badge> 또는 <Badge>외래 매출</Badge> 섹션 확인
+                      </div>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="font-bold text-primary">2.</span>
+                      <div>
+                        <Badge variant="outline">엑셀 업로드</Badge> 버튼 클릭
+                      </div>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="font-bold text-primary">3.</span>
+                      <div>
+                        엑셀 파일 선택 후 업로드
+                        <div className="mt-2 ml-4">
+                          <p className="text-sm font-medium">엑셀 파일 형식:</p>
+                          <ul className="text-sm text-muted-foreground space-y-1 ml-4 mt-1">
+                            <li>• <strong>수납일자</strong> 컬럼 필수</li>
+                            <li>• <strong>금액</strong> 컬럼 필수</li>
+                            <li>• <strong>비고</strong> 컬럼 선택사항</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="font-bold text-primary">4.</span>
+                      <div>
+                        업로드된 데이터는 자동으로 수납금액에 합산됩니다
+                      </div>
+                    </li>
+                  </ol>
+                  <div className="bg-green-50 border-l-4 border-green-500 p-3">
+                    <p className="text-xs">
+                      <strong>✨ 자동 계산:</strong> 입원/외래 매출은 수납일자 기준으로 
+                      당월 매출 및 누적 매출에 자동 집계됩니다.
+                    </p>
+                  </div>
                 </div>
               </div>
 
