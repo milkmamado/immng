@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Search, RefreshCw, Package as PackageIcon } from "lucide-react";
+import { Users, Search, RefreshCw, Package as PackageIcon, Upload, FileSpreadsheet } from "lucide-react";
+import * as XLSX from 'xlsx';
 
 interface Patient {
   id: string;
@@ -123,6 +124,8 @@ export default function PatientListManagement() {
   const [packageData, setPackageData] = useState<PackageManagement | null>(null);
   const [packageTransactions, setPackageTransactions] = useState<PackageTransaction[]>([]);
   const [syncingPackage, setSyncingPackage] = useState(false);
+  const [uploadingInpatient, setUploadingInpatient] = useState(false);
+  const [uploadingOutpatient, setUploadingOutpatient] = useState(false);
   
   const { toast } = useToast();
   const { userRole } = useAuth();
@@ -479,6 +482,169 @@ export default function PatientListManagement() {
         description: "패키지 데이터 삭제 중 오류가 발생했습니다.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleExcelUpload = async (file: File, revenueType: 'inpatient' | 'outpatient') => {
+    if (!selectedPatientDetail) return;
+
+    const setLoading = revenueType === 'inpatient' ? setUploadingInpatient : setUploadingOutpatient;
+    setLoading(true);
+
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
+
+      console.log('📊 엑셀 데이터 파싱:', jsonData);
+
+      // 수납일자와 입금총액 추출
+      const transactions: { date: string; amount: number }[] = [];
+      jsonData.forEach((row: any) => {
+        const dateStr = row['수납일자'] || row['날짜'];
+        const amountValue = row['입금총액'] || row['금액'];
+
+        if (dateStr && amountValue) {
+          // 날짜 파싱 (엑셀 시리얼 날짜 또는 문자열 날짜)
+          let date: Date;
+          if (typeof dateStr === 'number') {
+            // 엑셀 시리얼 날짜 (1900년 1월 1일부터의 일수)
+            const excelEpoch = new Date(1900, 0, 1);
+            date = new Date(excelEpoch.getTime() + (dateStr - 2) * 24 * 60 * 60 * 1000);
+          } else {
+            // 문자열 날짜
+            date = new Date(dateStr);
+          }
+
+          const amount = typeof amountValue === 'number' ? amountValue : parseFloat(String(amountValue).replace(/[^0-9.-]/g, ''));
+
+          if (!isNaN(date.getTime()) && !isNaN(amount) && amount > 0) {
+            transactions.push({
+              date: date.toISOString().split('T')[0],
+              amount: amount
+            });
+          }
+        }
+      });
+
+      console.log(`✅ ${revenueType === 'inpatient' ? '입원' : '외래'} 거래 데이터 추출:`, transactions);
+
+      if (transactions.length === 0) {
+        toast({
+          title: "오류",
+          description: "유효한 데이터를 찾을 수 없습니다. 수납일자와 입금총액 컬럼을 확인해주세요.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // 기존 거래 내역 조회 (중복 체크용)
+      const { data: existingTransactions } = await supabase
+        .from('package_transactions')
+        .select('transaction_date, amount, transaction_type')
+        .eq('patient_id', selectedPatientDetail.id);
+
+      console.log('📋 기존 거래 내역:', existingTransactions);
+
+      // 중복 체크: patient_id + transaction_date + amount 조합으로 비교
+      const transactionType = revenueType === 'inpatient' ? 'inpatient_revenue' : 'outpatient_revenue';
+      const newTransactions = transactions.filter(t => {
+        const isDuplicate = existingTransactions?.some(existing => 
+          existing.transaction_date === t.date && 
+          existing.amount === t.amount
+        );
+        return !isDuplicate;
+      });
+
+      console.log(`🆕 신규 거래 (중복 제외):`, newTransactions);
+
+      if (newTransactions.length === 0) {
+        toast({
+          title: "알림",
+          description: "모든 데이터가 이미 등록되어 있습니다. 중복 데이터를 제외했습니다.",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // 신규 거래 삽입
+      const transactionsToInsert = newTransactions.map(t => ({
+        patient_id: selectedPatientDetail.id,
+        customer_number: selectedPatientDetail.customer_number,
+        transaction_date: t.date,
+        transaction_type: transactionType,
+        amount: t.amount,
+        count: 0,
+        note: `${revenueType === 'inpatient' ? '입원' : '외래'} 매출 (엑셀 업로드)`
+      }));
+
+      const { error: insertError } = await supabase
+        .from('package_transactions')
+        .insert(transactionsToInsert);
+
+      if (insertError) throw insertError;
+
+      console.log(`✅ ${transactionsToInsert.length}건의 새로운 거래 내역 추가 완료`);
+
+      // 환자의 payment_amount 업데이트 (모든 거래 내역 합산)
+      const { data: allTransactions } = await supabase
+        .from('package_transactions')
+        .select('amount, transaction_type')
+        .eq('patient_id', selectedPatientDetail.id);
+
+      const totalPayment = allTransactions?.reduce((sum, t) => {
+        // deposit_in, inpatient_revenue, outpatient_revenue만 합산
+        if (['deposit_in', 'inpatient_revenue', 'outpatient_revenue'].includes(t.transaction_type)) {
+          return sum + t.amount;
+        }
+        return sum;
+      }, 0) || 0;
+
+      const { error: updateError } = await supabase
+        .from('patients')
+        .update({ payment_amount: totalPayment })
+        .eq('id', selectedPatientDetail.id);
+
+      if (updateError) throw updateError;
+
+      console.log(`💰 총 수납금액 업데이트: ${totalPayment.toLocaleString()}원`);
+
+      // 패키지 데이터와 환자 목록 동시 갱신
+      setSelectedPatientDetail(null);
+      
+      await Promise.all([
+        fetchPackageData(selectedPatientDetail.id),
+        fetchPatients()
+      ]);
+
+      // 업데이트된 환자 정보 조회
+      const { data: updatedPatient } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('id', selectedPatientDetail.id)
+        .single();
+
+      // 모달 다시 열기
+      if (updatedPatient) {
+        setSelectedPatientDetail(updatedPatient);
+      }
+
+      toast({
+        title: "✅ 매출 데이터 업로드 완료",
+        description: `${transactionsToInsert.length}건의 새로운 ${revenueType === 'inpatient' ? '입원' : '외래'} 매출 데이터를 추가했습니다.`,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Error uploading excel:', error);
+      toast({
+        title: "오류",
+        description: "엑셀 파일 처리 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1228,6 +1394,154 @@ export default function PatientListManagement() {
             마지막 동기화: {new Date(packageData.last_synced_at).toLocaleString('ko-KR')}
           </div>
         )}
+
+        {/* 입원 매출 관리 */}
+        <div className="space-y-4 pt-6 border-t">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileSpreadsheet className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">입원 매출 관리</h3>
+            </div>
+            <label htmlFor="inpatient-excel-upload">
+              <input
+                id="inpatient-excel-upload"
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleExcelUpload(file, 'inpatient');
+                  }
+                  e.target.value = '';
+                }}
+                className="hidden"
+              />
+              <Button
+                size="sm"
+                className="gap-2"
+                disabled={uploadingInpatient}
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('inpatient-excel-upload')?.click();
+                }}
+              >
+                <Upload className={`h-4 w-4 ${uploadingInpatient ? 'animate-pulse' : ''}`} />
+                {uploadingInpatient ? '업로드 중...' : '엑셀 업로드'}
+              </Button>
+            </label>
+          </div>
+          
+          {packageTransactions.filter(t => t.transaction_type === 'inpatient_revenue').length > 0 ? (
+            <div className="space-y-2">
+              <div className="text-sm text-muted-foreground">
+                총 {packageTransactions.filter(t => t.transaction_type === 'inpatient_revenue').length}건 | 
+                합계: {packageTransactions
+                  .filter(t => t.transaction_type === 'inpatient_revenue')
+                  .reduce((sum, t) => sum + t.amount, 0)
+                  .toLocaleString()}원
+              </div>
+              <div className="max-h-40 overflow-y-auto border rounded-md">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>수납일자</TableHead>
+                      <TableHead className="text-right">입금총액</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {packageTransactions
+                      .filter(t => t.transaction_type === 'inpatient_revenue')
+                      .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime())
+                      .map((t) => (
+                        <TableRow key={t.id}>
+                          <TableCell>{new Date(t.transaction_date).toLocaleDateString('ko-KR')}</TableCell>
+                          <TableCell className="text-right font-semibold">{t.amount.toLocaleString()}원</TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-6 text-muted-foreground text-sm border rounded-md bg-muted/30">
+              입원 매출 데이터가 없습니다. 엑셀 파일을 업로드하세요.
+            </div>
+          )}
+        </div>
+
+        {/* 외래 매출 관리 */}
+        <div className="space-y-4 pt-6 border-t">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileSpreadsheet className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">외래 매출 관리</h3>
+            </div>
+            <label htmlFor="outpatient-excel-upload">
+              <input
+                id="outpatient-excel-upload"
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleExcelUpload(file, 'outpatient');
+                  }
+                  e.target.value = '';
+                }}
+                className="hidden"
+              />
+              <Button
+                size="sm"
+                className="gap-2"
+                disabled={uploadingOutpatient}
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('outpatient-excel-upload')?.click();
+                }}
+              >
+                <Upload className={`h-4 w-4 ${uploadingOutpatient ? 'animate-pulse' : ''}`} />
+                {uploadingOutpatient ? '업로드 중...' : '엑셀 업로드'}
+              </Button>
+            </label>
+          </div>
+          
+          {packageTransactions.filter(t => t.transaction_type === 'outpatient_revenue').length > 0 ? (
+            <div className="space-y-2">
+              <div className="text-sm text-muted-foreground">
+                총 {packageTransactions.filter(t => t.transaction_type === 'outpatient_revenue').length}건 | 
+                합계: {packageTransactions
+                  .filter(t => t.transaction_type === 'outpatient_revenue')
+                  .reduce((sum, t) => sum + t.amount, 0)
+                  .toLocaleString()}원
+              </div>
+              <div className="max-h-40 overflow-y-auto border rounded-md">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>수납일자</TableHead>
+                      <TableHead className="text-right">입금총액</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {packageTransactions
+                      .filter(t => t.transaction_type === 'outpatient_revenue')
+                      .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime())
+                      .map((t) => (
+                        <TableRow key={t.id}>
+                          <TableCell>{new Date(t.transaction_date).toLocaleDateString('ko-KR')}</TableCell>
+                          <TableCell className="text-right font-semibold">{t.amount.toLocaleString()}원</TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-6 text-muted-foreground text-sm border rounded-md bg-muted/30">
+              외래 매출 데이터가 없습니다. 엑셀 파일을 업로드하세요.
+            </div>
+          )}
+        </div>
       </div>
     );
   };
