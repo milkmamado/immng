@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Search, RefreshCw, Package as PackageIcon, Upload, FileSpreadsheet } from "lucide-react";
+import { Users, Search, RefreshCw, Package as PackageIcon, Upload, FileSpreadsheet, Trash2 } from "lucide-react";
 import * as XLSX from 'xlsx';
 
 interface Patient {
@@ -718,6 +718,84 @@ export default function PatientListManagement() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteRevenueData = async (revenueType: 'inpatient' | 'outpatient') => {
+    if (!selectedPatientDetail) return;
+
+    const typeLabel = revenueType === 'inpatient' ? '입원' : '외래';
+    
+    if (!window.confirm(`${typeLabel} 매출 데이터를 모두 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
+      return;
+    }
+
+    try {
+      const transactionType = revenueType === 'inpatient' ? 'inpatient_revenue' : 'outpatient_revenue';
+      
+      // 해당 타입의 매출 데이터만 삭제
+      const { error: deleteError } = await supabase
+        .from('package_transactions')
+        .delete()
+        .eq('patient_id', selectedPatientDetail.id)
+        .eq('transaction_type', transactionType);
+
+      if (deleteError) throw deleteError;
+
+      console.log(`✅ ${typeLabel} 매출 데이터 삭제 완료`);
+
+      // 환자의 payment_amount 재계산 (deposit_in, inpatient_revenue, outpatient_revenue 합산)
+      const { data: allTransactions } = await supabase
+        .from('package_transactions')
+        .select('amount, transaction_type')
+        .eq('patient_id', selectedPatientDetail.id);
+
+      const totalPayment = allTransactions?.reduce((sum, t) => {
+        if (['deposit_in', 'inpatient_revenue', 'outpatient_revenue'].includes(t.transaction_type)) {
+          return sum + t.amount;
+        }
+        return sum;
+      }, 0) || 0;
+
+      const { error: updateError } = await supabase
+        .from('patients')
+        .update({ payment_amount: totalPayment })
+        .eq('id', selectedPatientDetail.id);
+
+      if (updateError) throw updateError;
+
+      console.log(`💰 총 수납금액 재계산: ${totalPayment.toLocaleString()}원`);
+
+      // UI 갱신
+      setSelectedPatientDetail(null);
+      
+      await Promise.all([
+        fetchPackageData(selectedPatientDetail.id),
+        fetchPatients()
+      ]);
+
+      const { data: updatedPatient } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('id', selectedPatientDetail.id)
+        .single();
+
+      if (updatedPatient) {
+        setSelectedPatientDetail(updatedPatient);
+      }
+
+      toast({
+        title: "✅ 삭제 완료",
+        description: `${typeLabel} 매출 데이터가 모두 삭제되었습니다.`,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Error deleting revenue data:', error);
+      toast({
+        title: "오류",
+        description: `${typeLabel} 매출 데이터 삭제 중 오류가 발생했습니다.`,
+        variant: "destructive",
+      });
     }
   };
 
@@ -1475,33 +1553,45 @@ export default function PatientListManagement() {
               <FileSpreadsheet className="h-5 w-5 text-primary" />
               <h3 className="text-lg font-semibold">입원 매출 관리</h3>
             </div>
-            <label htmlFor="inpatient-excel-upload">
-              <input
-                id="inpatient-excel-upload"
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    handleExcelUpload(file, 'inpatient');
-                  }
-                  e.target.value = '';
-                }}
-                className="hidden"
-              />
+            <div className="flex gap-2">
+              <label htmlFor="inpatient-excel-upload">
+                <input
+                  id="inpatient-excel-upload"
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      handleExcelUpload(file, 'inpatient');
+                    }
+                    e.target.value = '';
+                  }}
+                  className="hidden"
+                />
+                <Button
+                  size="sm"
+                  className="gap-2"
+                  disabled={uploadingInpatient}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('inpatient-excel-upload')?.click();
+                  }}
+                >
+                  <Upload className={`h-4 w-4 ${uploadingInpatient ? 'animate-pulse' : ''}`} />
+                  {uploadingInpatient ? '업로드 중...' : '엑셀 업로드'}
+                </Button>
+              </label>
               <Button
                 size="sm"
+                variant="destructive"
                 className="gap-2"
-                disabled={uploadingInpatient}
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById('inpatient-excel-upload')?.click();
-                }}
+                onClick={() => handleDeleteRevenueData('inpatient')}
+                disabled={packageTransactions.filter(t => t.transaction_type === 'inpatient_revenue').length === 0}
               >
-                <Upload className={`h-4 w-4 ${uploadingInpatient ? 'animate-pulse' : ''}`} />
-                {uploadingInpatient ? '업로드 중...' : '엑셀 업로드'}
+                <Trash2 className="h-4 w-4" />
+                데이터 삭제
               </Button>
-            </label>
+            </div>
           </div>
           
           {packageTransactions.filter(t => t.transaction_type === 'inpatient_revenue').length > 0 ? (
@@ -1549,33 +1639,45 @@ export default function PatientListManagement() {
               <FileSpreadsheet className="h-5 w-5 text-primary" />
               <h3 className="text-lg font-semibold">외래 매출 관리</h3>
             </div>
-            <label htmlFor="outpatient-excel-upload">
-              <input
-                id="outpatient-excel-upload"
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    handleExcelUpload(file, 'outpatient');
-                  }
-                  e.target.value = '';
-                }}
-                className="hidden"
-              />
+            <div className="flex gap-2">
+              <label htmlFor="outpatient-excel-upload">
+                <input
+                  id="outpatient-excel-upload"
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      handleExcelUpload(file, 'outpatient');
+                    }
+                    e.target.value = '';
+                  }}
+                  className="hidden"
+                />
+                <Button
+                  size="sm"
+                  className="gap-2"
+                  disabled={uploadingOutpatient}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('outpatient-excel-upload')?.click();
+                  }}
+                >
+                  <Upload className={`h-4 w-4 ${uploadingOutpatient ? 'animate-pulse' : ''}`} />
+                  {uploadingOutpatient ? '업로드 중...' : '엑셀 업로드'}
+                </Button>
+              </label>
               <Button
                 size="sm"
+                variant="destructive"
                 className="gap-2"
-                disabled={uploadingOutpatient}
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById('outpatient-excel-upload')?.click();
-                }}
+                onClick={() => handleDeleteRevenueData('outpatient')}
+                disabled={packageTransactions.filter(t => t.transaction_type === 'outpatient_revenue').length === 0}
               >
-                <Upload className={`h-4 w-4 ${uploadingOutpatient ? 'animate-pulse' : ''}`} />
-                {uploadingOutpatient ? '업로드 중...' : '엑셀 업로드'}
+                <Trash2 className="h-4 w-4" />
+                데이터 삭제
               </Button>
-            </label>
+            </div>
           </div>
           
           {packageTransactions.filter(t => t.transaction_type === 'outpatient_revenue').length > 0 ? (
