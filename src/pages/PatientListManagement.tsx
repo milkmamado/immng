@@ -799,6 +799,79 @@ export default function PatientListManagement() {
     }
   };
 
+  const handleDeleteSingleTransaction = async (transactionId: string, revenueType: 'inpatient' | 'outpatient') => {
+    if (!selectedPatientDetail) return;
+
+    const typeLabel = revenueType === 'inpatient' ? '입원' : '외래';
+    
+    if (!window.confirm(`이 ${typeLabel} 매출 항목을 삭제하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      // 단일 거래 삭제
+      const { error: deleteError } = await supabase
+        .from('package_transactions')
+        .delete()
+        .eq('id', transactionId);
+
+      if (deleteError) throw deleteError;
+
+      console.log(`✅ ${typeLabel} 매출 항목 삭제 완료`);
+
+      // 환자의 payment_amount 재계산
+      const { data: allTransactions } = await supabase
+        .from('package_transactions')
+        .select('amount, transaction_type')
+        .eq('patient_id', selectedPatientDetail.id);
+
+      const totalPayment = allTransactions?.reduce((sum, t) => {
+        if (['deposit_in', 'inpatient_revenue', 'outpatient_revenue'].includes(t.transaction_type)) {
+          return sum + t.amount;
+        }
+        return sum;
+      }, 0) || 0;
+
+      const { error: updateError } = await supabase
+        .from('patients')
+        .update({ payment_amount: totalPayment })
+        .eq('id', selectedPatientDetail.id);
+
+      if (updateError) throw updateError;
+
+      // UI 갱신
+      setSelectedPatientDetail(null);
+      
+      await Promise.all([
+        fetchPackageData(selectedPatientDetail.id),
+        fetchPatients()
+      ]);
+
+      const { data: updatedPatient } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('id', selectedPatientDetail.id)
+        .single();
+
+      if (updatedPatient) {
+        setSelectedPatientDetail(updatedPatient);
+      }
+
+      toast({
+        title: "✅ 삭제 완료",
+        description: `${typeLabel} 매출 항목이 삭제되었습니다.`,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Error deleting single transaction:', error);
+      toast({
+        title: "오류",
+        description: `${typeLabel} 매출 항목 삭제 중 오류가 발생했습니다.`,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handlePackageDataReceived = async (data: any) => {
     console.log('📦 패키지 데이터 수신:', data);
     
@@ -1609,6 +1682,7 @@ export default function PatientListManagement() {
                     <TableRow>
                       <TableHead>수납일자</TableHead>
                       <TableHead className="text-right">입금총액</TableHead>
+                      <TableHead className="w-20"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1619,6 +1693,19 @@ export default function PatientListManagement() {
                         <TableRow key={t.id}>
                           <TableCell>{new Date(t.transaction_date).toLocaleDateString('ko-KR')}</TableCell>
                           <TableCell className="text-right font-semibold">{t.amount.toLocaleString()}원</TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteSingleTransaction(t.id, 'inpatient');
+                              }}
+                              className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))}
                   </TableBody>
@@ -1709,6 +1796,7 @@ export default function PatientListManagement() {
                     <TableRow>
                       <TableHead>수납일자</TableHead>
                       <TableHead className="text-right">입금총액</TableHead>
+                      <TableHead className="w-20"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1719,6 +1807,19 @@ export default function PatientListManagement() {
                         <TableRow key={t.id}>
                           <TableCell>{new Date(t.transaction_date).toLocaleDateString('ko-KR')}</TableCell>
                           <TableCell className="text-right font-semibold">{t.amount.toLocaleString()}원</TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteSingleTransaction(t.id, 'outpatient');
+                              }}
+                              className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))}
                   </TableBody>
