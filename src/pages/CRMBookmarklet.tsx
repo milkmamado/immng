@@ -156,42 +156,6 @@ export default function CRMBookmarklet() {
               </div>
             </div>
           </div>
-
-          <div className="bg-muted p-4 rounded-lg">
-            <h4 className="font-semibold mb-2 flex items-center gap-2">
-              <FileCode className="h-4 w-4" />
-              연동 코드 미리보기
-            </h4>
-            <div className="bg-background p-3 rounded border font-mono text-xs overflow-x-auto break-all">
-              {bookmarkletCode}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>문제 해결</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <div>
-            <strong>Q: 작동하지 않을 때는 어떻게 하나요?</strong>
-            <p className="text-muted-foreground mt-1">
-              A: 브라우저 콘솔(F12)을 열어 오류 메시지를 확인하세요. 모든 디버그 정보는 콘솔에 표시됩니다.
-            </p>
-          </div>
-          <div>
-            <strong>Q: 북마크를 추가했는데 북마크바에 보이지 않습니다</strong>
-            <p className="text-muted-foreground mt-1">
-              A: 브라우저 설정에서 북마크바가 표시되도록 설정하세요. (Chrome: Ctrl+Shift+B)
-            </p>
-          </div>
-          <div>
-            <strong>Q: 이전 버전에서 확인 버튼을 많이 눌러야 했는데요?</strong>
-            <p className="text-muted-foreground mt-1">
-              A: 위의 "연동 코드 복사" 버튼으로 새 버전을 복사하여 북마크를 업데이트하세요. 새 버전은 확인 버튼 없이 조용히 작동합니다.
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>
