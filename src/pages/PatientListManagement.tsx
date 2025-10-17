@@ -1894,7 +1894,7 @@ export default function PatientListManagement() {
                   <TableHead>월평균입원일수</TableHead>
                   <TableHead>월평균외래일수</TableHead>
                   <TableHead>마지막내원일</TableHead>
-                  <TableHead>수납급액(비급여)</TableHead>
+                  <TableHead>총 수납금액 (예치금 + 입원/외래 매출)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
