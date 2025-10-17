@@ -308,25 +308,42 @@ export default function UserManual() {
                   입원/외래 매출 관리
                 </h4>
                 <div className="space-y-3">
+                  <div className="bg-blue-50 border-l-4 border-blue-500 p-3 mb-3">
+                    <p className="text-sm">
+                      <strong>📋 엑셀 파일 준비:</strong> 닥터스 프로그램 → 매출통계 → 환자명으로 검색 → 엑셀 다운로드
+                    </p>
+                  </div>
                   <ol className="space-y-2 ml-4">
                     <li className="flex gap-2">
                       <span className="font-bold text-primary">1.</span>
                       <div>
-                        환자 상세 팝업에서 <Badge>입원 매출</Badge> 또는 <Badge>외래 매출</Badge> 섹션 확인
+                        <strong>닥터스 프로그램에서 엑셀 파일 다운로드:</strong>
+                        <ul className="text-sm text-muted-foreground space-y-1 ml-4 mt-1">
+                          <li>• 닥터스 프로그램 실행</li>
+                          <li>• 매출통계 메뉴 선택</li>
+                          <li>• 환자명으로 검색</li>
+                          <li>• 해당 환자의 입원 또는 외래 매출 데이터를 엑셀로 다운로드</li>
+                        </ul>
                       </div>
                     </li>
                     <li className="flex gap-2">
                       <span className="font-bold text-primary">2.</span>
                       <div>
-                        <Badge variant="outline">엑셀 업로드</Badge> 버튼 클릭
+                        환자 상세 팝업에서 <Badge>입원 매출</Badge> 또는 <Badge>외래 매출</Badge> 섹션 확인
                       </div>
                     </li>
                     <li className="flex gap-2">
                       <span className="font-bold text-primary">3.</span>
                       <div>
-                        엑셀 파일 선택 후 업로드
+                        <Badge variant="outline">엑셀 업로드</Badge> 버튼 클릭
+                      </div>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="font-bold text-primary">4.</span>
+                      <div>
+                        닥터스에서 다운받은 엑셀 파일 선택 후 업로드
                         <div className="mt-2 ml-4">
-                          <p className="text-sm font-medium">엑셀 파일 형식:</p>
+                          <p className="text-sm font-medium">엑셀 파일 형식 요구사항:</p>
                           <ul className="text-sm text-muted-foreground space-y-1 ml-4 mt-1">
                             <li>• <strong>수납일자</strong> 컬럼 필수</li>
                             <li>• <strong>금액</strong> 컬럼 필수</li>
@@ -336,7 +353,7 @@ export default function UserManual() {
                       </div>
                     </li>
                     <li className="flex gap-2">
-                      <span className="font-bold text-primary">4.</span>
+                      <span className="font-bold text-primary">5.</span>
                       <div>
                         업로드된 데이터는 자동으로 수납금액에 합산됩니다
                       </div>
