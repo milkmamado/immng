@@ -93,22 +93,8 @@ export default function PackageIntegration() {
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold mb-2">북마크 생성</h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  아래 방법 중 하나를 선택하세요:
-                </p>
                 
                 <div className="space-y-3">
-                  <div className="border rounded p-3 bg-blue-50">
-                    <strong className="text-blue-900">방법 A: 새 북마크 만들기 (추천)</strong>
-                    <ol className="list-decimal list-inside ml-2 mt-2 text-sm space-y-1">
-                      <li>아무 페이지에서 Ctrl+D (또는 ⌘+D) 눌러 북마크 추가</li>
-                      <li>이름: <code className="bg-blue-100 px-1">패키지 연동</code></li>
-                      <li>아래 버튼 클릭하여 코드 복사</li>
-                      <li>URL 필드에 복사한 코드 <strong>전체</strong> 붙여넣기</li>
-                      <li>저장</li>
-                    </ol>
-                  </div>
-
                   <Button onClick={handleCopyBookmarklet} className="w-full gap-2" size="lg">
                     {copied ? (
                       <>
@@ -122,6 +108,18 @@ export default function PackageIntegration() {
                       </>
                     )}
                   </Button>
+
+                  <div className="border rounded p-3 bg-blue-50">
+                    <strong className="text-blue-900">방법: 새 북마크 만들기</strong>
+                    <ol className="list-decimal list-inside ml-2 mt-2 text-sm space-y-1">
+                      <li>위 "패키지 연동 코드 복사" 버튼 클릭</li>
+                      <li>아무 페이지에서 <code className="bg-blue-100 px-1">Ctrl+D</code> (또는 <code className="bg-blue-100 px-1">⌘+D</code>) 눌러 북마크 추가하고 완료</li>
+                      <li>이름: <code className="bg-blue-100 px-1">패키지 연동</code></li>
+                      <li>추가된 "패키지 연동" 북마크에 마우스 우클릭 → <strong>수정</strong> 클릭</li>
+                      <li>URL 필드에 복사한 코드 <strong>전체</strong> 붙여넣기</li>
+                      <li>저장</li>
+                    </ol>
+                  </div>
                 </div>
               </div>
             </div>
