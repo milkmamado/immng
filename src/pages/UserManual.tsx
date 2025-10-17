@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { 
   BookOpen, 
   Home, 
@@ -9,15 +10,19 @@ import {
   Calendar,
   BarChart3,
   Search,
-  Filter,
   Plus,
-  AlertCircle,
-  TrendingUp
+  TrendingUp,
+  BookMarked,
+  Package,
+  DollarSign,
+  AlertTriangle,
+  CheckCircle,
+  Info
 } from "lucide-react";
 
 export default function UserManual() {
   return (
-    <div className="container mx-auto p-6 max-w-5xl space-y-8">
+    <div className="container mx-auto p-6 max-w-6xl space-y-8">
       {/* 헤더 */}
       <div className="space-y-2">
         <div className="flex items-center gap-3">
@@ -25,8 +30,8 @@ export default function UserManual() {
             <BookOpen className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">사용자 메뉴얼</h1>
-            <p className="text-gray-600">면력한방병원 환자 관리 시스템 사용 가이드</p>
+            <h1 className="text-3xl font-bold">사용자 메뉴얼</h1>
+            <p className="text-muted-foreground">면력한방병원 환자 관리 시스템 완벽 가이드</p>
           </div>
         </div>
       </div>
@@ -37,436 +42,632 @@ export default function UserManual() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Home className="w-5 h-5 text-primary" />
-              시스템 소개
+              시스템 개요
             </CardTitle>
-            <CardDescription>환자 관리 시스템의 전체 구조를 이해해보세요</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="prose max-w-none">
-              <p className="text-gray-700 leading-relaxed">
-                면력한방병원 환자 관리 시스템은 초진 상담부터 일별 관리, 통계 분석까지 
-                환자 관리의 전 과정을 효율적으로 지원하는 통합 시스템입니다.
+            <p className="leading-relaxed">
+              면력한방병원 환자 관리 시스템은 초진 상담부터 일별 상태 추적, 매출 분석까지 
+              환자 관리의 전 과정을 효율적으로 지원하는 통합 시스템입니다.
+            </p>
+            <div className="bg-primary/5 border-l-4 border-primary p-4">
+              <p className="text-sm flex items-start gap-2">
+                <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span>
+                  <strong>중요:</strong> 모든 데이터는 실시간으로 자동 저장되며, 
+                  각 메뉴는 서로 연동되어 한 곳에서 수정하면 모든 곳에 즉시 반영됩니다.
+                </span>
               </p>
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 my-4">
-                <p className="text-sm text-blue-900">
-                  <strong>💡 핵심 포인트:</strong> 모든 데이터는 자동으로 저장되며, 
-                  각 메뉴는 실시간으로 연동됩니다.
-                </p>
-              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* 대시보드 */}
+        {/* 1. 대시보드 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Home className="w-5 h-5 text-primary" />
               1. 대시보드
             </CardTitle>
-            <CardDescription>전체 환자 현황을 한눈에 파악하세요</CardDescription>
+            <CardDescription>전체 환자 현황을 한눈에 확인</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">📊 주요 기능</h4>
-                <ul className="space-y-2 text-gray-700">
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary mt-1">•</span>
-                    <span><strong>전체 환자:</strong> 시스템에 등록된 총 환자 수를 표시합니다</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary mt-1">•</span>
-                    <span><strong>이탈 리스크 환자:</strong> 아웃위기/아웃 상태인 환자 수를 표시합니다</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary mt-1">•</span>
-                    <span><strong>당월 현재 매출:</strong> 이번 달 수납 완료된 총 금액을 확인할 수 있습니다</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary mt-1">•</span>
-                    <span><strong>이탈 리스크 환자 리스트:</strong> 관리가 필요한 환자 목록을 바로 확인할 수 있습니다</span>
-                  </li>
-                </ul>
+              <h4 className="font-semibold flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                주요 지표
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="border rounded-lg p-3">
+                  <div className="font-medium mb-1">📊 전체 환자</div>
+                  <p className="text-sm text-muted-foreground">시스템에 등록된 총 환자 수</p>
+                </div>
+                <div className="border rounded-lg p-3">
+                  <div className="font-medium mb-1">⚠️ 이탈 리스크 환자</div>
+                  <p className="text-sm text-muted-foreground">14일 이상 체크 없는 환자 수</p>
+                </div>
+                <div className="border rounded-lg p-3">
+                  <div className="font-medium mb-1">💰 당월 현재 매출</div>
+                  <p className="text-sm text-muted-foreground">
+                    해당 월 예치금 입금 + 입원/외래 매출 합계
+                  </p>
+                </div>
+                <div className="border rounded-lg p-3">
+                  <div className="font-medium mb-1">📈 누적 매출</div>
+                  <p className="text-sm text-muted-foreground">
+                    전체 기간 예치금 입금 + 입원/외래 매출 합계
+                  </p>
+                </div>
               </div>
+            </div>
+
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
+              <p className="text-sm">
+                <strong>💡 활용 팁:</strong> 대시보드의 이탈 리스크 환자 목록을 클릭하면 
+                해당 환자의 상세 정보로 바로 이동할 수 있습니다.
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        {/* 초진관리 */}
+        {/* 2. 초진관리 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Heart className="w-5 h-5 text-primary" />
               2. 초진관리
             </CardTitle>
-            <CardDescription>신규 환자 등록과 초진 상담 관리</CardDescription>
+            <CardDescription>신규 환자 등록 및 초진 상담 관리</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-4">
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <h4 className="font-semibold flex items-center gap-2 mb-3">
                   <Plus className="w-4 h-4 text-green-600" />
-                  신규 환자 등록하기
+                  신규 환자 등록 절차
                 </h4>
-                <ol className="space-y-2 text-gray-700 ml-4">
-                  <li>1. 우측 상단 <Badge variant="default">환자 등록</Badge> 버튼 클릭</li>
-                  <li>2. <strong>필수 정보</strong> 입력:
-                    <ul className="ml-4 mt-1 space-y-1">
-                      <li>• <strong>차트 번호:</strong> 병원 차트 번호 입력</li>
-                      <li>• <strong>유입/실패:</strong> 환자 유입 상태 선택</li>
-                      <li>• <strong>입원/외래:</strong> 방문 유형 선택</li>
-                      <li>• <strong>환자명, 생년월일, 연락처</strong></li>
-                      <li>• <strong>진단명:</strong> 드롭다운에서 선택 (췌장암, 유방암 등)</li>
-                      <li>• <strong>담당 매니저:</strong> 직접 입력 (자동 선택 아님)</li>
-                    </ul>
+                <ol className="space-y-2 ml-4">
+                  <li className="flex gap-2">
+                    <span className="font-bold text-primary">1.</span>
+                    <div>
+                      우측 상단 <Badge>환자 등록</Badge> 버튼 클릭
+                    </div>
                   </li>
-                  <li>3. <strong>추가 정보</strong> (선택):
-                    <ul className="ml-4 mt-1 space-y-1">
-                      <li>• 이전 병원, 주치의 정보</li>
-                      <li>• 상담 내용, 메모</li>
-                      <li>• 보호자 정보</li>
-                    </ul>
+                  <li className="flex gap-2">
+                    <span className="font-bold text-primary">2.</span>
+                    <div>
+                      <strong>필수 정보</strong> 입력:
+                      <ul className="mt-2 space-y-1 ml-4">
+                        <li>• <strong>차트번호:</strong> 병원 시스템의 차트번호 입력</li>
+                        <li>• <strong>유입/실패:</strong> 유입 또는 실패 선택</li>
+                        <li>• <strong>입원/외래:</strong> 방문 유형 선택</li>
+                        <li>• <strong>환자명, 연락처, 생년월일</strong></li>
+                        <li>• <strong>진단명:</strong> 드롭다운에서 선택 (췌장암, 유방암 등)</li>
+                        <li>• <strong>담당매니저:</strong> 담당자명 입력</li>
+                      </ul>
+                    </div>
                   </li>
-                  <li>4. <Badge variant="default">등록</Badge> 버튼으로 완료</li>
+                  <li className="flex gap-2">
+                    <span className="font-bold text-primary">3.</span>
+                    <div>
+                      <strong>추가 정보</strong> (선택사항):
+                      <ul className="mt-2 space-y-1 ml-4">
+                        <li>• 이전 병원, 주치의 정보</li>
+                        <li>• 상담 내용, 메모</li>
+                        <li>• 보호자 정보</li>
+                      </ul>
+                    </div>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold text-primary">4.</span>
+                    <div><Badge>등록</Badge> 버튼으로 완료</div>
+                  </li>
                 </ol>
               </div>
 
+              <Separator />
+
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <h4 className="font-semibold flex items-center gap-2 mb-3">
                   <Search className="w-4 h-4 text-blue-600" />
-                  환자 검색 및 필터링
+                  환자 검색 기능
                 </h4>
-                <p className="text-gray-700 mb-2">검색창에서 다음 정보로 환자를 찾을 수 있습니다:</p>
-                <ul className="space-y-1 text-gray-700 ml-4">
-                  <li>• 환자명 (예: "김민수")</li>
-                  <li>• 차트번호 (예: "C-2025-401")</li>
-                  <li>• 담당매니저 이름 (예: "권은솔")</li>
-                  <li>• 주치의 이름 (양방/한방)</li>
-                  <li>• 이전병원 (예: "서울대병원")</li>
-                </ul>
+                <p className="mb-2">검색창에서 다음 정보로 환자를 찾을 수 있습니다:</p>
+                <div className="grid grid-cols-2 gap-2 ml-4">
+                  <div>• 환자명</div>
+                  <div>• 차트번호</div>
+                  <div>• 담당매니저</div>
+                  <div>• 주치의 이름</div>
+                  <div>• 이전병원</div>
+                  <div>• 연락처</div>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* 관리 환자 리스트 */}
+        {/* 3. 관리 환자 리스트 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5 text-primary" />
               3. 관리 환자 리스트
             </CardTitle>
-            <CardDescription>모든 환자의 상세 정보를 관리하세요</CardDescription>
+            <CardDescription>모든 환자의 상세 정보 조회 및 수정</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-4">
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">📋 환자 정보 실시간 수정</h4>
-                <ol className="space-y-2 text-gray-700 ml-4">
+                <h4 className="font-semibold flex items-center gap-2 mb-3">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  환자 정보 실시간 수정
+                </h4>
+                <ol className="space-y-2 ml-4">
                   <li>1. 환자 목록에서 수정할 환자 행 클릭</li>
                   <li>2. 상세 정보 팝업에서 각 필드를 직접 클릭하여 수정</li>
-                  <li>3. 수정 사항은 <strong>실시간으로 자동 저장</strong>됩니다</li>
+                  <li>3. 수정 사항은 <strong className="text-green-600">실시간으로 자동 저장</strong>됩니다</li>
                 </ol>
-                <div className="bg-green-50 border-l-4 border-green-500 p-4 mt-3">
-                  <p className="text-sm text-green-900">
-                    <strong>💡 편의 기능:</strong> 별도의 저장 버튼 없이 각 필드를 수정하면 
-                    즉시 반영되어 다른 모든 메뉴에서도 바로 확인할 수 있습니다.
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold flex items-center gap-2 mb-3">
+                  <DollarSign className="w-4 h-4 text-blue-600" />
+                  수납금액 표시
+                </h4>
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
+                  <p className="text-sm">
+                    <strong>수납금액 = 예치금 입금 + 입원 매출 + 외래 매출</strong>
+                  </p>
+                  <p className="text-sm mt-2 text-muted-foreground">
+                    패키지 연동 메뉴에서 엑셀 업로드로 자동 집계되며, 
+                    거래 내역은 환자 상세 팝업에서 확인할 수 있습니다.
                   </p>
                 </div>
               </div>
 
+              <Separator />
+
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">🔄 관리 상태 변경</h4>
-                <p className="text-gray-700 mb-2">환자의 관리 상태를 변경하면 다음과 같이 처리됩니다:</p>
-                <ul className="space-y-3 text-gray-700 ml-4">
-                  <li>
-                    <strong>• 관리 중:</strong>
-                    <ul className="ml-4 mt-1">
-                      <li>- 일반적인 관리 상태</li>
-                      <li>- 일별 환자 관리 현황에 표시됨</li>
-                      <li>- 통계에 정상 관리 환자로 집계됨</li>
+                <h4 className="font-semibold mb-3">🔄 관리 상태 설명</h4>
+                <div className="space-y-3">
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-1">
+                      <Badge className="bg-green-600">관리 중</Badge>
+                    </div>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• 일반적인 관리 상태</li>
+                      <li>• 일별 환자 관리 현황에 표시됨</li>
+                      <li>• 통계에 정상 관리 환자로 집계됨</li>
                     </ul>
-                  </li>
-                  <li>
-                    <strong>• 아웃위기:</strong>
-                    <ul className="ml-4 mt-1">
-                      <li>- 14일 이상 연락 없는 환자 자동 분류</li>
-                      <li>- 이탈 리스크 관리 페이지에 표시됨</li>
-                      <li>- 대시보드 이탈 리스크 환자 수에 포함됨</li>
+                  </div>
+
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-1">
+                      <Badge className="bg-orange-600">아웃위기</Badge>
+                    </div>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• 14일 이상 연락 없는 환자 자동 분류</li>
+                      <li>• 이탈 리스크 관리 페이지에 표시됨</li>
+                      <li>• 대시보드 이탈 리스크 수에 포함됨</li>
                     </ul>
-                  </li>
-                  <li>
-                    <strong>• 아웃:</strong>
-                    <ul className="ml-4 mt-1">
-                      <li>- 21일 이상 연락 없는 환자 자동 분류</li>
-                      <li>- 이탈 리스크 관리 페이지에 표시됨</li>
-                      <li>- 통계 관리의 아웃 환자 수에 집계됨</li>
+                  </div>
+
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-1">
+                      <Badge className="bg-red-600">아웃</Badge>
+                    </div>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• 21일 이상 연락 없는 환자 자동 분류</li>
+                      <li>• 이탈 리스크 관리 페이지에 표시됨</li>
+                      <li>• 통계의 아웃 환자 수에 집계됨</li>
                     </ul>
-                  </li>
-                  <li>
-                    <strong>• 상태악화:</strong>
-                    <ul className="ml-4 mt-1">
-                      <li>- 환자 건강 상태 악화 시 표시</li>
-                      <li>- 특별 관리가 필요한 환자로 분류됨</li>
-                      <li>- 일별 관리에서 제외됨</li>
+                  </div>
+
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-1">
+                      <Badge variant="secondary">상태악화 / 치료종료 / 사망</Badge>
+                    </div>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• 일별 관리에서 제외됨</li>
+                      <li>• 다시 "관리 중"으로 변경하면 일별 관리에 표시</li>
                     </ul>
-                  </li>
-                  <li>
-                    <strong>• 치료종료:</strong>
-                    <ul className="ml-4 mt-1">
-                      <li>- 치료가 완전히 종료된 환자</li>
-                      <li>- 일별 관리에서 제외됨</li>
-                    </ul>
-                  </li>
-                  <li>
-                    <strong>• 사망:</strong>
-                    <ul className="ml-4 mt-1">
-                      <li>- 환자 사망 시 표시</li>
-                      <li>- 일별 관리에서 제외됨</li>
-                    </ul>
-                  </li>
-                </ul>
-                <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mt-3">
-                  <p className="text-sm text-yellow-900">
-                    <strong>💡 중요:</strong> 상태악화, 치료종료, 사망 상태의 환자는 일별 관리에서 제외됩니다. 
-                    다시 관리 상태를 <strong>"관리 중"</strong>으로 변경하면 일별 환자 관리 현황에 다시 표시되어 
-                    정상적인 일별 관리가 가능합니다.
-                  </p>
+                  </div>
                 </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">💊 치료 계획 관리</h4>
-                <p className="text-gray-700 mb-2">환자 상세 페이지에서 다음을 관리할 수 있습니다:</p>
-                <ul className="space-y-2 text-gray-700 ml-4">
-                  <li>
-                    <strong>• 치료 계획 추가:</strong> 치료 상세 내용과 치료 금액 기록
-                  </li>
-                  <li>
-                    <strong>• 수납 관리:</strong> 치료비 결제 완료 체크 및 결제일 기록
-                  </li>
-                  <li>
-                    <strong>• 월평균 일수:</strong> 입원/외래 월평균 일수 자동 계산
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">💊 치료 계획 관리</h4>
-                <p className="text-gray-700 mb-2">환자 상세 페이지에서 다음을 관리할 수 있습니다:</p>
-                <ul className="space-y-2 text-gray-700 ml-4">
-                  <li>
-                    <strong>• 치료 계획 추가:</strong> 치료 상세 내용과 치료 금액 기록
-                  </li>
-                  <li>
-                    <strong>• 수납 관리:</strong> 치료비 결제 완료 체크 및 결제일 기록
-                  </li>
-                  <li>
-                    <strong>• 월평균 일수:</strong> 입원/외래 월평균 일수 자동 계산
-                  </li>
-                </ul>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* 일별 환자 관리 현황 */}
+        {/* 4. 일별 환자 관리 현황 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ClipboardCheck className="w-5 h-5 text-primary" />
               4. 일별 환자 관리 현황
             </CardTitle>
-            <CardDescription>매일의 환자 상태를 캘린더로 추적하세요</CardDescription>
+            <CardDescription>매일의 환자 상태를 캘린더로 추적</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-4">
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">📅 일별 상태 기록하기</h4>
-                <ol className="space-y-2 text-gray-700 ml-4">
-                  <li>1. 상단에서 월 선택 (이전/다음 월 이동 가능)</li>
+                <h4 className="font-semibold mb-3">📅 일별 상태 기록 방법</h4>
+                <ol className="space-y-2 ml-4">
+                  <li>1. 상단에서 월 선택 (캘린더 또는 화살표 버튼)</li>
                   <li>2. 환자 리스트에서 상태를 기록할 환자의 날짜 칸 클릭</li>
                   <li>3. 드롭다운에서 해당 날짜 환자 상태 선택:
-                    <ul className="ml-4 mt-1 space-y-1">
-                      <li>• <Badge className="bg-blue-500">입원</Badge> - 신규 입원</li>
-                      <li>• <Badge className="bg-purple-500">재입원</Badge> - 재입원 상태</li>
-                      <li>• <Badge className="bg-green-500">외래</Badge> - 외래 진료</li>
-                      <li>• <Badge className="bg-yellow-500">낮병동</Badge> - 낮병동 이용</li>
-                      <li>• <Badge className="bg-orange-500">전화F/U</Badge> - 전화 상담</li>
-                      <li>• <Badge className="bg-gray-500">퇴원</Badge> - 퇴원</li>
-                    </ul>
+                    <div className="mt-2 space-y-1 ml-4">
+                      <div><Badge className="bg-blue-500">입원</Badge> - 신규 입원</div>
+                      <div><Badge className="bg-indigo-500">재원</Badge> - 입원 중 (2일차 이후)</div>
+                      <div><Badge className="bg-green-500">외래</Badge> - 외래 진료</div>
+                      <div><Badge className="bg-yellow-500">낮병동</Badge> - 낮병동 이용</div>
+                      <div><Badge className="bg-orange-500">전화F/U</Badge> - 전화 상담</div>
+                      <div><Badge className="bg-gray-500">퇴원</Badge> - 퇴원</div>
+                    </div>
                   </li>
                   <li>4. 메모 란에 특이사항 입력 가능</li>
                 </ol>
               </div>
 
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">👤 환자 활동 통계 보기</h4>
-                <p className="text-gray-700 mb-2">
-                  환자 이름을 클릭하면 해당 환자의 월별 활동 통계를 확인할 수 있습니다:
-                </p>
-                <ul className="space-y-1 text-gray-700 ml-4">
-                  <li>• 총 입원 일수 (입원 + 재입원)</li>
-                  <li>• 외래 방문 일수</li>
-                  <li>• 낮병동 이용 일수</li>
-                  <li>• 전화 상담 횟수</li>
-                </ul>
-              </div>
+              <Separator />
 
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">📊 관리 상태 자동 업데이트</h4>
-                <p className="text-gray-700 mb-2">
-                  환자의 마지막 방문/연락 후 경과 일수에 따라 관리 상태가 자동으로 변경됩니다:
-                </p>
-                <ul className="space-y-2 text-gray-700 ml-4">
-                  <li>
-                    <strong>• 아웃위기 (14일 이상):</strong>
-                    <ul className="ml-4 mt-1">
-                      <li>- 마지막 일별 체크 후 14일 이상 경과</li>
-                      <li>- 이탈 리스크 관리 페이지로 자동 이동</li>
-                      <li>- 일별 관리 현황에서는 보이지 않음</li>
-                    </ul>
-                  </li>
-                  <li>
-                    <strong>• 아웃 (21일 이상):</strong>
-                    <ul className="ml-4 mt-1">
-                      <li>- 마지막 일별 체크 후 21일 이상 경과</li>
-                      <li>- 이탈 리스크 관리 페이지로 자동 이동</li>
-                      <li>- 통계의 아웃 환자 수에 포함됨</li>
-                    </ul>
-                  </li>
-                </ul>
+                <h4 className="font-semibold mb-3">👤 환자명 클릭 시 팝업</h4>
+                <p className="mb-2">환자 이름을 클릭하면 다음 정보를 확인할 수 있습니다:</p>
+                <div className="space-y-2 ml-4">
+                  <div>• <strong>월별 활동 통계:</strong> 입원일수, 외래일수, 낮병동일수, 전화상담 횟수</div>
+                  <div>• <strong>패키지 관리 현황:</strong> 예치금, 리워드, 횟수권 잔액</div>
+                  <div>• <strong>입원 매출:</strong> 거래 건수 및 총액</div>
+                  <div>• <strong>외래 매출:</strong> 거래 건수 및 총액</div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold mb-3">📊 관리 상태 자동 업데이트</h4>
+                <div className="space-y-2">
+                  <div className="bg-orange-50 border-l-4 border-orange-500 p-3">
+                    <p className="text-sm">
+                      <strong>아웃위기 (14일):</strong> 마지막 체크 후 14일 이상 경과 시 자동 변경
+                    </p>
+                  </div>
+                  <div className="bg-red-50 border-l-4 border-red-500 p-3">
+                    <p className="text-sm">
+                      <strong>아웃 (21일):</strong> 마지막 체크 후 21일 이상 경과 시 자동 변경
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
-                <p className="text-sm text-blue-900">
-                  <strong>💡 활용 팁:</strong> 매일 아침 전날 환자들의 상태를 입력하는 습관을 들이면, 
-                  환자 관리 현황을 정확하게 추적할 수 있습니다.
+                <p className="text-sm">
+                  <strong>💡 활용 팁:</strong> 매일 아침 전날 환자들의 상태를 입력하는 습관을 들이면 
+                  정확한 환자 관리 현황을 추적할 수 있습니다.
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* 이탈 리스크 관리 */}
+        {/* 5. 이탈 리스크 관리 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-primary" />
               5. 이탈 리스크 관리
             </CardTitle>
-            <CardDescription>관리가 필요한 환자를 자동으로 파악하세요</CardDescription>
+            <CardDescription>관리가 필요한 환자를 자동으로 파악</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-4">
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">⚠️ 리스크 판단 기준</h4>
-                <p className="text-gray-700 mb-2">시스템이 자동으로 다음 기준에 따라 환자를 분류합니다:</p>
-                <ul className="space-y-2 text-gray-700 ml-4">
-                  <li>• <strong>아웃위기 (14일+):</strong> 마지막 일별 체크 후 14일 이상 경과</li>
-                  <li>• <strong>아웃 (21일+):</strong> 마지막 일별 체크 후 21일 이상 경과</li>
-                </ul>
+                <h4 className="font-semibold mb-3">⚠️ 리스크 판단 기준</h4>
+                <div className="space-y-2">
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium text-orange-600 mb-1">아웃위기 환자</div>
+                    <p className="text-sm text-muted-foreground">
+                      마지막 일별 체크 후 14일 이상 경과한 환자
+                    </p>
+                  </div>
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium text-red-600 mb-1">아웃 환자</div>
+                    <p className="text-sm text-muted-foreground">
+                      마지막 일별 체크 후 21일 이상 경과한 환자
+                    </p>
+                  </div>
+                </div>
               </div>
 
+              <Separator />
+
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">📞 재연락 관리</h4>
-                <ol className="space-y-2 text-gray-700 ml-4">
-                  <li>1. 리스크 환자 리스트에서 환자 카드 확인</li>
-                  <li>2. <strong>재연락 완료</strong> 체크박스 클릭</li>
-                  <li>3. 메모 영역에 재연락 내용 작성 후 저장</li>
-                  <li>4. <Badge variant="default">관리 중 복귀</Badge> 버튼 클릭</li>
+                <h4 className="font-semibold mb-3">🔄 재접촉 관리</h4>
+                <ol className="space-y-2 ml-4">
+                  <li>1. 이탈 리스크 환자 목록에서 재접촉할 환자 선택</li>
+                  <li>2. <Badge variant="outline">재접촉 시도</Badge> 버튼 클릭</li>
+                  <li>3. 재접촉 메모 입력 (전화 내용, 응답 여부 등)</li>
+                  <li>4. 재접촉 성공 시 <Badge className="bg-green-600">재접속 완료</Badge> 체크</li>
+                  <li>5. 일별 환자 관리에서 해당 환자의 상태를 다시 기록하면 "관리 중" 상태로 복귀</li>
                 </ol>
               </div>
 
-              <div className="bg-green-50 border-l-4 border-green-500 p-4">
-                <p className="text-sm text-green-900">
-                  <strong>✅ 관리 중 복귀 효과:</strong> 관리 중 복귀 버튼을 클릭하면 
-                  환자가 <strong>일별 환자 관리 현황</strong> 페이지에 다시 추가되어 
-                  정상적인 일별 관리를 계속할 수 있습니다.
-                </p>
-              </div>
-
-              <div className="bg-red-50 border-l-4 border-red-500 p-4">
-                <p className="text-sm text-red-900">
-                  <strong>⚠️ 중요:</strong> 이탈 리스크가 높은 환자는 조기에 연락하여 
-                  재방문을 유도하는 것이 환자 유지율을 높이는 핵심입니다.
+              <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                <p className="text-sm">
+                  <strong>💡 중요:</strong> 재접촉만으로는 관리 중 상태로 돌아가지 않습니다. 
+                  일별 환자 관리 현황에서 실제 방문이나 전화 상담 기록을 입력해야 합니다.
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* 통계 관리 */}
+        {/* 6. 통계 관리 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-primary" />
               6. 통계 관리
             </CardTitle>
-            <CardDescription>매출과 환자 현황을 분석하세요</CardDescription>
+            <CardDescription>매출 및 환자 관리 통계 분석</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-4">
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">📈 주요 통계 지표</h4>
-                <ul className="space-y-2 text-gray-700 ml-4">
-                  <li>
-                    <strong>• 총 관리 환자:</strong> 현재 관리 중인 전체 환자 수
-                  </li>
-                  <li>
-                    <strong>• 총 매출:</strong> 선택한 월의 실제 결제 완료된 금액 합계
-                  </li>
-                  <li>
-                    <strong>• 평균 객단가:</strong> 총 매출 ÷ 총 관리 환자
-                  </li>
-                  <li>
-                    <strong>• 아웃 환자:</strong> 관리 상태가 "아웃"인 환자 수
-                  </li>
-                  <li>
-                    <strong>• 유입률 (초진상담):</strong> 해당 월에 신규로 유입된 초진 환자 수
-                  </li>
-                  <li>
-                    <strong>• 재진관리비율:</strong> 전월 초진 환자 중 당월에 활동한 환자 비율
-                  </li>
-                </ul>
+                <h4 className="font-semibold mb-3">📊 주요 통계 지표</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-1">총 관리 환자</div>
+                    <p className="text-sm text-muted-foreground">현재 관리 중인 전체 환자 수</p>
+                  </div>
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-1">누적 매출</div>
+                    <p className="text-sm text-muted-foreground">
+                      전체 기간 예치금 + 입원/외래 매출
+                    </p>
+                  </div>
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-1">당월 매출</div>
+                    <p className="text-sm text-muted-foreground">
+                      선택한 월의 예치금 + 입원/외래 매출
+                    </p>
+                  </div>
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-1">평균 객단가</div>
+                    <p className="text-sm text-muted-foreground">환자 1인당 평균 매출액</p>
+                  </div>
+                </div>
               </div>
+
+              <Separator />
 
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-green-600" />
-                  관리 기간별 환자 현황
-                </h4>
-                <p className="text-gray-700 mb-2">환자의 관리 기간에 따라 분류됩니다:</p>
-                <ul className="space-y-1 text-gray-700 ml-4">
-                  <li>• <strong>1개월 이상 관리:</strong> 초진일로부터 1개월 이상 지속 관리 중인 환자</li>
-                  <li>• <strong>3개월 이상 관리:</strong> 초진일로부터 3개월 이상 지속 관리 중인 환자</li>
-                  <li>• <strong>6개월 이상 관리:</strong> 초진일로부터 6개월 이상 지속 관리 중인 환자</li>
-                </ul>
+                <h4 className="font-semibold mb-3">📈 추가 분석 지표</h4>
+                <div className="space-y-2">
+                  <div>• <strong>아웃 환자:</strong> 아웃 상태인 환자 수</div>
+                  <div>• <strong>유입률 (초진상담):</strong> 선택한 월 신규 유입 환자 수</div>
+                  <div>• <strong>재진관리비율:</strong> 전월 초진 환자 중 당월 활동한 비율</div>
+                  <div>• <strong>관리 기간별 환자:</strong> 1개월, 3개월, 6개월 이상 관리 환자 수</div>
+                </div>
               </div>
+
+              <Separator />
 
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                  <Filter className="w-4 h-4 text-purple-600" />
-                  기간/매니저 선택
-                </h4>
-                <ul className="space-y-2 text-gray-700 ml-4">
-                  <li>• <strong>월 선택:</strong> 최근 12개월 중 조회할 월 선택</li>
-                  <li>• <strong>매니저 선택 (마스터/관리자만):</strong>
-                    <ul className="ml-4 mt-1">
-                      <li>- "전체": 모든 매니저의 통합 통계</li>
-                      <li>- 개별 매니저: 특정 매니저의 통계만 조회</li>
-                    </ul>
-                  </li>
-                </ul>
+                <h4 className="font-semibold mb-3">🎯 필터 기능</h4>
+                <p className="mb-2">상단에서 다음 필터를 사용할 수 있습니다:</p>
+                <div className="space-y-1 ml-4">
+                  <div>• <strong>월 선택:</strong> 통계를 확인할 월 선택</div>
+                  <div>• <strong>담당자 선택:</strong> 특정 담당자의 통계만 보기 (마스터/관리자 전용)</div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 7. CRM 연동 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookMarked className="w-5 h-5 text-primary" />
+              7. CRM 연동
+            </CardTitle>
+            <CardDescription>병원 CRM 시스템과의 연동</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-3">🔗 북마클릿 설치</h4>
+                <ol className="space-y-2 ml-4">
+                  <li>1. CRM 연동 페이지로 이동</li>
+                  <li>2. <Badge>CRM 연동 북마클릿</Badge> 버튼을 브라우저 북마크바로 드래그</li>
+                  <li>3. 병원 CRM 시스템에 로그인 후 북마클릿 클릭</li>
+                  <li>4. 환자 정보가 자동으로 입력된 등록 창이 열립니다</li>
+                </ol>
               </div>
 
-              <div className="bg-purple-50 border-l-4 border-purple-500 p-4">
-                <p className="text-sm text-purple-900">
-                  <strong>📊 데이터 활용:</strong> 월별 통계를 비교하여 매출 추이와 
-                  환자 관리 효율성을 파악하고 개선점을 찾을 수 있습니다.
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
+                <p className="text-sm">
+                  <strong>💡 활용 팁:</strong> CRM에서 환자 정보를 일일이 복사-붙여넣기 할 필요 없이 
+                  북마클릿 한 번 클릭으로 빠르게 등록할 수 있습니다.
                 </p>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 8. 패키지 연동 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="w-5 h-5 text-primary" />
+              8. 패키지 연동
+            </CardTitle>
+            <CardDescription>패키지 및 매출 데이터 업로드</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-3">📤 엑셀 파일 업로드</h4>
+                <p className="mb-2">다음 3가지 엑셀 파일을 업로드할 수 있습니다:</p>
+                <div className="space-y-3">
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-1">1. 패키지 거래 내역</div>
+                    <p className="text-sm text-muted-foreground">
+                      예치금 입금, 예치금 사용, 리워드 적립/사용, 횟수권 등록/사용
+                    </p>
+                  </div>
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-1">2. 입원 매출</div>
+                    <p className="text-sm text-muted-foreground">
+                      입원 환자의 수납일자별 매출 금액
+                    </p>
+                  </div>
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-1">3. 외래 매출</div>
+                    <p className="text-sm text-muted-foreground">
+                      외래 환자의 수납일자별 매출 금액
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold mb-3">📋 업로드 절차</h4>
+                <ol className="space-y-2 ml-4">
+                  <li>1. 각 섹션의 <Badge variant="outline">엑셀 업로드</Badge> 버튼 클릭</li>
+                  <li>2. 병원 시스템에서 다운로드한 엑셀 파일 선택</li>
+                  <li>3. 자동으로 데이터 매칭 및 저장</li>
+                  <li>4. 업로드 결과 확인 (성공/실패 건수)</li>
+                </ol>
+              </div>
+
+              <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                <p className="text-sm">
+                  <strong>⚠️ 주의:</strong> 엑셀 파일의 차트번호가 시스템에 등록된 환자와 일치해야 
+                  정상적으로 연동됩니다. 차트번호가 없는 환자는 먼저 초진관리에서 등록해주세요.
+                </p>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold mb-3">💰 수납금액 계산</h4>
+                <div className="bg-primary/5 border-l-4 border-primary p-4">
+                  <p className="text-sm">
+                    <strong>수납금액 = 예치금 입금 + 입원 매출 + 외래 매출</strong>
+                  </p>
+                  <p className="text-sm mt-2 text-muted-foreground">
+                    • 환자 리스트의 수납금액은 이 세 가지를 합산하여 자동 계산됩니다<br/>
+                    • 각 거래 내역은 환자 상세 팝업에서 확인할 수 있습니다<br/>
+                    • 대시보드와 통계 관리의 매출도 이 데이터를 기준으로 집계됩니다
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 마스터 전용 메뉴 */}
+        <Card className="border-2 border-primary">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              시스템 관리 (마스터 전용)
+            </CardTitle>
+            <CardDescription>마스터 권한이 있는 사용자만 접근 가능</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-3">📊 마케팅 통계</h4>
+                <p className="mb-2">환자 유입 경로 및 마케팅 효과 분석:</p>
+                <div className="space-y-1 ml-4">
+                  <div>• 진단별 환자 분포</div>
+                  <div>• 이전 병원 통계</div>
+                  <div>• 보험 유형 분석</div>
+                  <div>• 월별/분기별 비교</div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold mb-3">👥 계정 관리</h4>
+                <p className="mb-2">시스템 사용자 권한 관리:</p>
+                <div className="space-y-2">
+                  <div>• <strong>신규 가입 승인:</strong> 대기 중인 가입 요청 승인/거부</div>
+                  <div>• <strong>역할 변경:</strong> 매니저/관리자 권한 부여</div>
+                  <div>• <strong>사용자 삭제:</strong> 퇴사자 계정 삭제</div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 자주 묻는 질문 */}
+        <Card className="bg-muted/30">
+          <CardHeader>
+            <CardTitle>💡 자주 묻는 질문 (FAQ)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-2">Q. 데이터가 저장되지 않아요</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  A. 모든 데이터는 실시간으로 자동 저장됩니다. 별도의 저장 버튼을 누를 필요가 없습니다. 
+                  만약 저장되지 않는다면 인터넷 연결을 확인해주세요.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2">Q. 아웃위기 환자를 다시 관리 중으로 바꾸려면?</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  A. 이탈 리스크 관리에서 재접촉을 기록한 후, 일별 환자 관리 현황에서 
+                  해당 환자의 실제 방문이나 전화 상담을 기록하면 자동으로 관리 중 상태로 변경됩니다.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2">Q. 패키지 엑셀 업로드가 실패해요</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  A. 엑셀 파일의 차트번호가 시스템에 등록된 환자와 일치하는지 확인하세요. 
+                  차트번호가 다르거나 없는 환자는 먼저 초진관리에서 등록이 필요합니다.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2">Q. 매출이 정확하게 계산되지 않아요</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  A. 패키지 연동 메뉴에서 패키지 거래 내역(예치금), 입원 매출, 외래 매출 
+                  엑셀 파일을 모두 업로드했는지 확인하세요. 세 가지를 합산하여 수납금액이 계산됩니다.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2">Q. 환자를 실수로 삭제했어요</h4>
+                <p className="text-sm text-muted-foreground ml-4">
+                  A. 삭제된 데이터는 복구가 어렵습니다. 
+                  마스터 관리자에게 문의하여 데이터베이스 백업에서 복구를 요청하세요.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 문의 안내 */}
+        <Card className="bg-primary/5 border-primary">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-2">
+              <AlertTriangle className="w-8 h-8 text-primary mx-auto" />
+              <h3 className="font-bold text-lg">추가 문의 사항</h3>
+              <p className="text-sm text-muted-foreground">
+                사용 중 문제가 발생하거나 추가 기능이 필요한 경우<br/>
+                시스템 관리자(마스터)에게 문의해주세요.
+              </p>
             </div>
           </CardContent>
         </Card>
