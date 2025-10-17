@@ -528,24 +528,29 @@ export default function PatientListManagement() {
         return;
       }
 
-      console.log('📊 엑셀 데이터 파싱:', jsonData.length, '행');
+      console.log('📊 엑셀 전체 데이터:', jsonData.length, '행');
       console.log('📋 첫 번째 데이터 행:', jsonData[0]);
+      console.log('📋 마지막 데이터 행:', jsonData[jsonData.length - 1]);
       console.log('📋 컬럼명들:', Object.keys(jsonData[0]));
 
       // 수납일자와 입금총액 추출
       const transactions: { date: string; amount: number }[] = [];
+      let skippedCount = 0;
+      let invalidDateCount = 0;
+      let invalidAmountCount = 0;
+
       jsonData.forEach((row: any, index: number) => {
         // 빈 행이거나 합계 행은 제외
         if (!row['수납일자'] || row['순서'] === '합계' || row['순서'] === '') {
+          skippedCount++;
           return;
         }
 
         const dateStr = row['수납일자'];
         const amountStr = row['입금총액'];
 
-        console.log(`[${index}] 📅 수납일자:`, dateStr, '| 💰 입금총액:', amountStr);
-
-        if (dateStr && amountStr !== undefined && amountStr !== '') {
+        // 입금총액이 빈 문자열이거나 undefined인 경우 0으로 처리
+        if (dateStr && (amountStr !== undefined || amountStr === '')) {
           // 날짜 파싱
           let date: Date;
           
@@ -563,24 +568,37 @@ export default function PatientListManagement() {
             date = new Date(dateStr);
           }
 
-          // 금액 파싱 (쉼표 제거, 0도 허용)
+          // 금액 파싱 (쉼표 제거, 빈 값은 0으로)
           let amount = 0;
-          if (typeof amountStr === 'number') {
+          if (amountStr === '' || amountStr === undefined || amountStr === null) {
+            amount = 0;
+          } else if (typeof amountStr === 'number') {
             amount = amountStr;
           } else if (typeof amountStr === 'string') {
-            amount = parseFloat(amountStr.replace(/,/g, ''));
+            const parsed = parseFloat(amountStr.replace(/,/g, ''));
+            amount = isNaN(parsed) ? 0 : parsed;
           }
 
-          if (!isNaN(date.getTime()) && !isNaN(amount) && amount >= 0) {
+          if (!isNaN(date.getTime())) {
             transactions.push({
               date: date.toISOString().split('T')[0],
               amount: amount
             });
+          } else {
+            invalidDateCount++;
           }
+        } else {
+          if (!dateStr) invalidDateCount++;
         }
       });
 
-      console.log(`✅ ${revenueType === 'inpatient' ? '입원' : '외래'} 거래 데이터 추출:`, transactions);
+      console.log(`📊 파싱 통계:`);
+      console.log(`- 전체 행: ${jsonData.length}개`);
+      console.log(`- 스킵된 행(빈 행/합계): ${skippedCount}개`);
+      console.log(`- 유효하지 않은 날짜: ${invalidDateCount}개`);
+      console.log(`- 추출된 거래: ${transactions.length}건`);
+      console.log(`- 금액 합계: ${transactions.reduce((sum, t) => sum + t.amount, 0).toLocaleString()}원`);
+      console.log(`✅ ${revenueType === 'inpatient' ? '입원' : '외래'} 거래 데이터 추출 완료:`, transactions.length, '건');
 
       if (transactions.length === 0) {
         toast({
