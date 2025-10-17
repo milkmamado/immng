@@ -534,7 +534,8 @@ export default function UserManual() {
                   <li>6. 환자가 다시 관리 가능한 경우 <Badge>관리 중으로 복귀</Badge> 버튼 클릭
                     <div className="mt-2 ml-4">
                       <p className="text-sm text-muted-foreground">
-                        → 자동으로 오늘 날짜로 일별 체크가 추가되고 "관리 중" 상태로 변경됩니다
+                        → 자동으로 "관리 중" 상태로 변경됩니다<br/>
+                        → 일별 환자 관리 현황에 오늘 날짜로 <Badge className="bg-purple-500">돌환</Badge> 상태가 추가됩니다
                       </p>
                     </div>
                   </li>
@@ -543,8 +544,8 @@ export default function UserManual() {
 
               <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
                 <p className="text-sm">
-                  <strong>💡 팁:</strong> "관리 중으로 복귀" 버튼을 누르면 자동으로 관리 중 상태가 되므로, 
-                  별도로 일별 환자 관리에서 상태를 입력할 필요가 없습니다.
+                  <strong>💡 팁:</strong> "관리 중으로 복귀" 버튼을 누르면 자동으로 관리 중 상태가 되고 
+                  일별 현황에 "돌환"으로 기록되므로, 별도로 입력할 필요가 없습니다.
                 </p>
               </div>
 
