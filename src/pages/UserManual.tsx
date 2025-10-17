@@ -524,20 +524,34 @@ export default function UserManual() {
               <Separator />
 
               <div>
-                <h4 className="font-semibold mb-3">🔄 재접촉 관리</h4>
+                <h4 className="font-semibold mb-3">🔄 재연락 관리</h4>
                 <ol className="space-y-2 ml-4">
-                  <li>1. 이탈 리스크 환자 목록에서 재접촉할 환자 선택</li>
-                  <li>2. <Badge variant="outline">재접촉 시도</Badge> 버튼 클릭</li>
-                  <li>3. 재접촉 메모 입력 (전화 내용, 응답 여부 등)</li>
-                  <li>4. 재접촉 성공 시 <Badge className="bg-green-600">재접속 완료</Badge> 체크</li>
-                  <li>5. 일별 환자 관리에서 해당 환자의 상태를 다시 기록하면 "관리 중" 상태로 복귀</li>
+                  <li>1. 이탈 리스크 환자 목록에서 재연락할 환자 확인</li>
+                  <li>2. 우측 상단 전화번호 버튼 클릭하여 전화 걸기</li>
+                  <li>3. <strong>담당자 메모</strong> 란에 재연락 상담 내용 기록 (전화 내용, 응답 여부 등)</li>
+                  <li>4. <Badge variant="outline">메모 저장</Badge> 버튼 클릭</li>
+                  <li>5. 재연락 성공 시 <Badge className="bg-green-600">재연락 완료</Badge> 체크박스 선택</li>
+                  <li>6. 환자가 다시 관리 가능한 경우 <Badge>관리 중으로 복귀</Badge> 버튼 클릭
+                    <div className="mt-2 ml-4">
+                      <p className="text-sm text-muted-foreground">
+                        → 자동으로 오늘 날짜로 일별 체크가 추가되고 "관리 중" 상태로 변경됩니다
+                      </p>
+                    </div>
+                  </li>
                 </ol>
               </div>
 
-              <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
                 <p className="text-sm">
-                  <strong>💡 중요:</strong> 재접촉만으로는 관리 중 상태로 돌아가지 않습니다. 
-                  일별 환자 관리 현황에서 실제 방문이나 전화 상담 기록을 입력해야 합니다.
+                  <strong>💡 팁:</strong> "관리 중으로 복귀" 버튼을 누르면 자동으로 관리 중 상태가 되므로, 
+                  별도로 일별 환자 관리에서 상태를 입력할 필요가 없습니다.
+                </p>
+              </div>
+
+              <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mt-3">
+                <p className="text-sm">
+                  <strong>⚠️ 주의:</strong> 재연락 완료 체크와 메모 저장만으로는 "관리 중" 상태로 변경되지 않습니다. 
+                  반드시 "관리 중으로 복귀" 버튼을 클릭해야 합니다.
                 </p>
               </div>
             </div>
