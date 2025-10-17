@@ -228,12 +228,12 @@ export default function UserManual() {
               <div>
                 <h4 className="font-semibold flex items-center gap-2 mb-3">
                   <CheckCircle className="w-4 h-4 text-green-600" />
-                  환자 정보 실시간 수정
+                  환자 정보 수정
                 </h4>
                 <ol className="space-y-2 ml-4">
                   <li>1. 환자 목록에서 수정할 환자 행 클릭</li>
                   <li>2. 상세 정보 팝업에서 각 필드를 직접 클릭하여 수정</li>
-                  <li>3. 수정 사항은 <strong className="text-green-600">실시간으로 자동 저장</strong>됩니다</li>
+                  <li>3. 수정 완료 후 <Badge>수정</Badge> 버튼을 클릭하여 저장</li>
                 </ol>
               </div>
 
