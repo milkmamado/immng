@@ -495,29 +495,54 @@ export default function PatientListManagement() {
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
+      
+      // 헤더가 10번째 행(A10)부터 시작하므로 range 옵션 사용
+      const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet, { 
+        range: 9, // 0-based index, 9 = 10번째 행
+        raw: false // 날짜를 문자열로 변환
+      });
 
       console.log('📊 엑셀 데이터 파싱:', jsonData);
+      console.log('📋 첫 번째 행 샘플:', jsonData[0]);
 
       // 수납일자와 입금총액 추출
       const transactions: { date: string; amount: number }[] = [];
       jsonData.forEach((row: any) => {
-        const dateStr = row['수납일자'] || row['날짜'];
-        const amountValue = row['입금총액'] || row['금액'];
+        // 빈 행이거나 합계 행은 제외
+        if (!row['수납일자'] || row['순서'] === '합계' || row['순서'] === '') {
+          return;
+        }
 
-        if (dateStr && amountValue) {
-          // 날짜 파싱 (엑셀 시리얼 날짜 또는 문자열 날짜)
+        const dateStr = row['수납일자'];
+        const amountStr = row['입금총액'];
+
+        console.log('📅 수납일자:', dateStr, '💰 입금총액:', amountStr);
+
+        if (dateStr && amountStr) {
+          // 날짜 파싱
           let date: Date;
-          if (typeof dateStr === 'number') {
-            // 엑셀 시리얼 날짜 (1900년 1월 1일부터의 일수)
+          
+          // YYYY-MM-DD 형식의 문자열
+          if (typeof dateStr === 'string' && dateStr.includes('-')) {
+            date = new Date(dateStr);
+          } 
+          // 엑셀 시리얼 날짜 (숫자)
+          else if (typeof dateStr === 'number') {
             const excelEpoch = new Date(1900, 0, 1);
             date = new Date(excelEpoch.getTime() + (dateStr - 2) * 24 * 60 * 60 * 1000);
-          } else {
-            // 문자열 날짜
+          }
+          // 다른 날짜 형식 시도
+          else {
             date = new Date(dateStr);
           }
 
-          const amount = typeof amountValue === 'number' ? amountValue : parseFloat(String(amountValue).replace(/[^0-9.-]/g, ''));
+          // 금액 파싱 (쉼표 제거)
+          let amount = 0;
+          if (typeof amountStr === 'number') {
+            amount = amountStr;
+          } else if (typeof amountStr === 'string') {
+            amount = parseFloat(amountStr.replace(/,/g, ''));
+          }
 
           if (!isNaN(date.getTime()) && !isNaN(amount) && amount > 0) {
             transactions.push({
