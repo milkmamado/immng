@@ -34,6 +34,7 @@ export default function StatisticsManagement() {
   const [totalStats, setTotalStats] = useState({
     totalPatients: 0,
     totalRevenue: 0,
+    monthlyRevenue: 0,
     avgRevenuePerPatient: 0
   });
   // 새로운 통계 state 추가
@@ -172,12 +173,30 @@ export default function StatisticsManagement() {
         stats.total_revenue += payment.treatment_amount || 0;
       });
 
-      // 패키지 예치금 입금 매출 추가 (환자별 payment_amount)
-      patients?.forEach(patient => {
+      // 당월 거래 매출 추가 (예치금 입금 + 입원/외래 매출)
+      const patientIds = patients?.map(p => p.id) || [];
+      
+      let monthlyTransactionsQuery = supabase
+        .from('package_transactions')
+        .select('amount, transaction_type, patient_id')
+        .in('transaction_type', ['deposit_in', 'inpatient_revenue', 'outpatient_revenue'])
+        .gte('transaction_date', startDate)
+        .lte('transaction_date', endDate);
+
+      if (patientIds.length > 0) {
+        monthlyTransactionsQuery = monthlyTransactionsQuery.in('patient_id', patientIds);
+      }
+
+      const { data: monthlyTransactions } = await monthlyTransactionsQuery;
+
+      monthlyTransactions?.forEach(transaction => {
+        const patient = patients?.find(p => p.id === transaction.patient_id);
+        if (!patient) return;
+
         const stats = managerMap.get(patient.assigned_manager);
         if (!stats) return;
 
-        stats.total_revenue += patient.payment_amount || 0;
+        stats.total_revenue += transaction.amount || 0;
       });
 
       // 상태별 일수 집계 (입원/재원, 외래, 낮병동, 전화F/U 각각의 총 일수)
@@ -207,15 +226,32 @@ export default function StatisticsManagement() {
           : 0
       }));
 
+      // 누적 매출 계산 (전체 기간)
+      let totalTransactionsQuery = supabase
+        .from('package_transactions')
+        .select('amount, transaction_type, patient_id')
+        .in('transaction_type', ['deposit_in', 'inpatient_revenue', 'outpatient_revenue']);
+
+      if (patientIds.length > 0) {
+        totalTransactionsQuery = totalTransactionsQuery.in('patient_id', patientIds);
+      }
+
+      const { data: totalTransactions } = await totalTransactionsQuery;
+
+      const cumulativeRevenue = totalTransactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
+
       // 전체 통계 계산
       const totals = statsArray.reduce((acc, stats) => ({
         totalPatients: acc.totalPatients + stats.total_patients,
         totalRevenue: acc.totalRevenue + stats.total_revenue,
+        monthlyRevenue: 0,
         avgRevenuePerPatient: 0
-      }), { totalPatients: 0, totalRevenue: 0, avgRevenuePerPatient: 0 });
+      }), { totalPatients: 0, totalRevenue: 0, monthlyRevenue: 0, avgRevenuePerPatient: 0 });
 
+      totals.monthlyRevenue = totals.totalRevenue; // 당월 매출은 이미 계산됨
+      totals.totalRevenue = cumulativeRevenue; // 누적 매출
       totals.avgRevenuePerPatient = totals.totalPatients > 0 
-        ? Math.round(totals.totalRevenue / totals.totalPatients) 
+        ? Math.round(totals.monthlyRevenue / totals.totalPatients) 
         : 0;
 
       setManagerStats(statsArray);
@@ -387,7 +423,7 @@ export default function StatisticsManagement() {
       </div>
 
       {/* 전체 통계 요약 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">총 관리 환자</CardTitle>
@@ -399,11 +435,22 @@ export default function StatisticsManagement() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">총 매출</CardTitle>
+            <CardTitle className="text-sm font-medium">누적 매출</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(totalStats.totalRevenue)}</div>
+            <p className="text-xs text-muted-foreground">전체 기간</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">당월 매출</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(totalStats.monthlyRevenue)}</div>
+            <p className="text-xs text-muted-foreground">선택한 월</p>
           </CardContent>
         </Card>
         <Card>

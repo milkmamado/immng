@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 interface DashboardStats {
   totalPatients: number;
   monthlyRevenue: number;
+  totalRevenue: number;
   riskPatients: Array<{
     id: string;
     name: string;
@@ -28,6 +29,7 @@ export function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalPatients: 0,
     monthlyRevenue: 0,
+    totalRevenue: 0,
     riskPatients: []
   });
   const [managerStats, setManagerStats] = useState<ManagerStat[]>([]);
@@ -81,10 +83,46 @@ export function Dashboard() {
 
       if (patientsError) throw patientsError;
 
-      // 당월 매출 계산
+      // 당월 매출 계산 (예치금 입금 + 입원/외래 매출)
       const now = new Date();
-      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      const monthlyRevenue = patients?.reduce((sum, p) => sum + (p.payment_amount || 0), 0) || 0;
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+      const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+      const lastDay = new Date(year, month, 0).getDate();
+      const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+      // 환자 ID 목록
+      const patientIds = patients?.map(p => p.id) || [];
+
+      // 당월 거래 데이터 가져오기
+      let monthlyTransactionsQuery = supabase
+        .from('package_transactions')
+        .select('amount, transaction_type')
+        .in('transaction_type', ['deposit_in', 'inpatient_revenue', 'outpatient_revenue'])
+        .gte('transaction_date', startDate)
+        .lte('transaction_date', endDate);
+
+      if (patientIds.length > 0) {
+        monthlyTransactionsQuery = monthlyTransactionsQuery.in('patient_id', patientIds);
+      }
+
+      const { data: monthlyTransactions } = await monthlyTransactionsQuery;
+
+      const monthlyRevenue = monthlyTransactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
+
+      // 누적 매출 계산 (전체 기간)
+      let totalTransactionsQuery = supabase
+        .from('package_transactions')
+        .select('amount, transaction_type')
+        .in('transaction_type', ['deposit_in', 'inpatient_revenue', 'outpatient_revenue']);
+
+      if (patientIds.length > 0) {
+        totalTransactionsQuery = totalTransactionsQuery.in('patient_id', patientIds);
+      }
+
+      const { data: totalTransactions } = await totalTransactionsQuery;
+
+      const totalRevenue = totalTransactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
 
       // 이탈 리스크 환자 계산 (이탈리스크관리 페이지와 동일한 로직)
       // daily_patient_status에서 마지막 체크 날짜 가져오기
@@ -120,6 +158,7 @@ export function Dashboard() {
       setStats({
         totalPatients: patients?.length || 0,
         monthlyRevenue,
+        totalRevenue,
         riskPatients
       });
 
@@ -189,7 +228,7 @@ export function Dashboard() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">전체 환자</CardTitle>
@@ -224,7 +263,20 @@ export function Dashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(stats.monthlyRevenue)}</div>
             <p className="text-xs text-muted-foreground">
-              {new Date().getMonth() + 1}월 매출
+              {new Date().getMonth() + 1}월 예치금+입원/외래
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">누적 매출</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
+            <p className="text-xs text-muted-foreground">
+              전체 기간 예치금+입원/외래
             </p>
           </CardContent>
         </Card>
