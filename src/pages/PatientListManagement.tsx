@@ -610,20 +610,23 @@ export default function PatientListManagement() {
         return;
       }
 
-      // 기존 거래 내역 조회 (중복 체크용)
+      // 기존 거래 내역 조회 (중복 체크용 - 예치금 입금과 현재 매출 타입만)
+      const transactionType = revenueType === 'inpatient' ? 'inpatient_revenue' : 'outpatient_revenue';
+      
       const { data: existingTransactions } = await supabase
         .from('package_transactions')
         .select('transaction_date, amount, transaction_type')
-        .eq('patient_id', selectedPatientDetail.id);
+        .eq('patient_id', selectedPatientDetail.id)
+        .in('transaction_type', ['deposit_in', transactionType]); // 예치금 입금과 현재 매출 타입만 조회
 
-      console.log('📋 기존 거래 내역:', existingTransactions);
+      console.log('📋 기존 거래 내역 (예치금 입금 + 현재 매출):', existingTransactions);
 
-      // 중복 체크: patient_id + transaction_date + amount 조합으로 비교
-      const transactionType = revenueType === 'inpatient' ? 'inpatient_revenue' : 'outpatient_revenue';
+      // 중복 체크: 예치금 입금(deposit_in) 또는 같은 매출 타입과 날짜+금액이 같으면 제외
       const newTransactions = transactions.filter(t => {
         const isDuplicate = existingTransactions?.some(existing => 
           existing.transaction_date === t.date && 
-          existing.amount === t.amount
+          existing.amount === t.amount &&
+          (existing.transaction_type === 'deposit_in' || existing.transaction_type === transactionType)
         );
         return !isDuplicate;
       });
