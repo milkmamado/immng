@@ -224,29 +224,25 @@ export default function DailyStatusTracking() {
       setDailyStatuses(fullStatusData || []);
 
       // 통계 계산: 당월 매출 및 누적 총매출
-      // 모든 수납 완료된 치료 계획 가져오기
-      const { data: treatmentPlans } = await supabase
-        .from('treatment_plans')
-        .select('treatment_amount, payment_date, is_paid')
-        .eq('is_paid', true);
+      // 패키지 거래 내역 가져오기 (예치금 입금, 입원매출, 외래매출)
+      const { data: packageTransactions } = await supabase
+        .from('package_transactions')
+        .select('transaction_date, amount, transaction_type')
+        .in('transaction_type', ['deposit_in', 'inpatient_revenue', 'outpatient_revenue']);
 
-      // 당월 매출 계산 (치료 계획)
-      const currentMonthRevenue = (treatmentPlans || [])
-        .filter(tp => tp.payment_date && tp.payment_date >= startDate && tp.payment_date <= endDate)
-        .reduce((sum, tp) => sum + (tp.treatment_amount || 0), 0);
+      // 당월 패키지 매출 계산 (거래일자 기준)
+      const currentMonthPackageRevenue = (packageTransactions || [])
+        .filter(tx => tx.transaction_date && tx.transaction_date >= startDate && tx.transaction_date <= endDate)
+        .reduce((sum, tx) => sum + (tx.amount || 0), 0);
 
-      // 누적 총매출 계산 (치료 계획)
-      const totalRevenue = (treatmentPlans || [])
-        .reduce((sum, tp) => sum + (tp.treatment_amount || 0), 0);
-
-      // 패키지 예치금 입금 매출 추가 (환자별 payment_amount)
-      const packageRevenue = (patientsData || [])
-        .reduce((sum, p) => sum + (p.payment_amount || 0), 0);
+      // 누적 패키지 매출 계산 (전체 기간)
+      const totalPackageRevenue = (packageTransactions || [])
+        .reduce((sum, tx) => sum + (tx.amount || 0), 0);
 
       setStats({
         당월총환자: patientsData?.length || 0,
-        당월매출: currentMonthRevenue + packageRevenue,
-        누적총매출: totalRevenue + packageRevenue
+        당월매출: currentMonthPackageRevenue,
+        누적총매출: totalPackageRevenue
       });
 
     } catch (error) {
