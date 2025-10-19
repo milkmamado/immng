@@ -440,7 +440,7 @@ export default function UserManual() {
                   <li>3. 드롭다운에서 해당 날짜 환자 상태 선택:
                     <div className="mt-2 space-y-1 ml-4">
                       <div><Badge className="bg-blue-500">입원</Badge> - 신규 입원</div>
-                      <div><Badge className="bg-indigo-500">재원</Badge> - 입원 중 (2일차 이후)</div>
+                      <div><Badge className="bg-indigo-500">재원</Badge> - 재입원 환자</div>
                       <div><Badge className="bg-green-500">외래</Badge> - 외래 진료</div>
                       <div><Badge className="bg-yellow-500">낮병동</Badge> - 낮병동 이용</div>
                       <div><Badge className="bg-orange-500">전화F/U</Badge> - 전화 상담</div>
