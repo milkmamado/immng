@@ -278,7 +278,7 @@ export default function UserManual() {
                     <li className="flex gap-2">
                       <span className="font-bold text-primary">3.</span>
                       <div>
-                        CRM에서 해당 환자의 패키지 관리 화면을 엽니다
+                        CRM에서 해당 지점의 패키지 관리 화면을 엽니다
                       </div>
                     </li>
                     <li className="flex gap-2">

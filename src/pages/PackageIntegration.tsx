@@ -129,7 +129,7 @@ export default function PackageIntegration() {
                       <div className="ml-6 text-xs text-gray-500">→ 새 탭에서 CRM 패키지 관리 페이지를 수동으로 열어줍니다</div>
                     </li>
                     <li>
-                      <strong>CRM에서 해당 환자의 패키지 관리 페이지로 이동</strong>
+                      <strong>CRM에서 해당 지점의 패키지 관리 페이지로 이동</strong>
                       <div className="ml-6 text-xs text-gray-500">→ 환자를 검색하고 패키지 관리 화면을 엽니다</div>
                     </li>
                     <li>
