@@ -328,6 +328,14 @@ export default function RiskManagement() {
           .eq("id", existingData.id);
 
         if (error) throw error;
+
+        // 로컬 상태도 업데이트하여 체크박스 상태 유지
+        const newMap = new Map(reconnectData);
+        newMap.set(patientId, {
+          ...existingData,
+          reconnect_notes: notes
+        });
+        setReconnectData(newMap);
       } else {
         // 새로 생성
         const { data, error } = await supabase
