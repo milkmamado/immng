@@ -137,9 +137,9 @@ export default function CRMBookmarklet() {
                       <div className="ml-6 text-xs text-gray-500">→ 자동으로 정보가 추출되어 원래 창에 전달됩니다</div>
                     </li>
                   </ol>
-                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
-                    <p className="text-green-900 text-xs font-semibold">
-                      ✨ 새 버전: 확인 버튼 없이 자동으로 처리됩니다! (오류 발생 시에만 브라우저 콘솔에 로그 표시)
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                    <p className="text-blue-900 text-xs font-semibold">
+                      ⚠️ 중요: 북마크 클릭 전에 미리 CRM 프로그램에 로그인해 두어야 합니다. 로그인이 안 되어 있으면 데이터를 가져올 수 없습니다!
                     </p>
                   </div>
                 </div>

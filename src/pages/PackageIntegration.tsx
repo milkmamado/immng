@@ -141,9 +141,9 @@ export default function PackageIntegration() {
                       <div className="ml-6 text-xs text-gray-500">→ 예수금, 적립금, 횟수 정보가 업데이트됩니다</div>
                     </li>
                   </ol>
-                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
-                    <p className="text-green-900 text-xs font-semibold">
-                      ✨ 자동 처리: 6개 그리드(예수금 입금/사용, 적립금 입금/사용, 횟수 입력/사용)에서 합계를 자동으로 계산합니다!
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                    <p className="text-blue-900 text-xs font-semibold">
+                      ⚠️ 중요: 북마크 클릭 전에 미리 CRM 프로그램에 로그인해 두어야 합니다. 로그인이 안 되어 있으면 데이터를 가져올 수 없습니다!
                     </p>
                   </div>
                 </div>

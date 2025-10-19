@@ -153,8 +153,8 @@ export default function UserManual() {
                       </ul>
                       <div className="mt-2 bg-blue-50 border-l-4 border-blue-500 p-3">
                         <p className="text-xs">
-                          <strong>💡 참고:</strong> CRM 연동 북마크 설정은 
-                          <strong className="text-blue-600"> CRM 연동</strong> 메뉴에서 확인하세요.
+                          <strong>⚠️ 중요:</strong> 북마크 클릭 전에 미리 CRM 프로그램에 로그인해 두어야 합니다. 
+                          로그인이 안 되어 있으면 데이터를 가져올 수 없습니다!
                         </p>
                       </div>
                     </div>
@@ -293,8 +293,8 @@ export default function UserManual() {
                   </ol>
                   <div className="bg-purple-50 border-l-4 border-purple-500 p-3">
                     <p className="text-xs">
-                      <strong>💡 참고:</strong> 패키지 연동 북마크 설정은 
-                      <strong className="text-purple-600"> 패키지 연동</strong> 메뉴에서 확인하세요.
+                      <strong>⚠️ 중요:</strong> 북마크 클릭 전에 미리 CRM 프로그램에 로그인해 두어야 합니다. 
+                      로그인이 안 되어 있으면 데이터를 가져올 수 없습니다!
                     </p>
                   </div>
                 </div>
