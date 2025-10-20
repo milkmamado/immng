@@ -62,6 +62,12 @@ export default function FirstVisitManagement() {
     // postMessage로 CRM 데이터 수신 (window.opener에서 전송)
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'crm-patient-data' && event.data?.data) {
+        // 업데이트 모드인 경우 무시 (PatientBasicForm에서 처리)
+        const updateMode = localStorage.getItem('crm_update_mode');
+        if (updateMode) {
+          return;
+        }
+
         handleProceedToRegistration(event.data.data);
         setShowLookupDialog(false);
         toast({

@@ -220,6 +220,9 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
 
     setSyncing(true);
 
+    // 업데이트 모드 플래그 설정 (새 환자 등록과 구분)
+    localStorage.setItem('crm_update_mode', patient.id);
+
     const searchData = {
       name: patient.name,
       phone: patient.phone || '',
@@ -235,6 +238,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     setTimeout(() => {
       if (syncing) {
         setSyncing(false);
+        localStorage.removeItem('crm_update_mode');
         toast({
           title: "타임아웃",
           description: "CRM 데이터를 받지 못했습니다. 다시 시도해주세요.",
@@ -246,9 +250,16 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
   };
 
   const handleCRMDataReceived = async (crmData: any) => {
-    setSyncing(false);
+    // 업데이트 모드 확인
+    const updatePatientId = localStorage.getItem('crm_update_mode');
+    
+    // 업데이트 모드가 아니거나 현재 환자가 아니면 무시
+    if (!updatePatientId || !patient || updatePatientId !== patient.id) {
+      return;
+    }
 
-    if (!patient) return;
+    setSyncing(false);
+    localStorage.removeItem('crm_update_mode');
 
     try {
       // 변경된 필드만 추출
