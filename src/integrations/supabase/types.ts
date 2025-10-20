@@ -659,6 +659,10 @@ export type Database = {
           payment_amount: number | null
           phone: string | null
           resident_number_masked: string | null
+          special_note_1: string | null
+          special_note_2: string | null
+          treatment_memo_1: string | null
+          treatment_memo_2: string | null
           treatment_plan: string | null
           updated_at: string
           visit_motivation: string | null
@@ -702,6 +706,10 @@ export type Database = {
           payment_amount?: number | null
           phone?: string | null
           resident_number_masked?: string | null
+          special_note_1?: string | null
+          special_note_2?: string | null
+          treatment_memo_1?: string | null
+          treatment_memo_2?: string | null
           treatment_plan?: string | null
           updated_at?: string
           visit_motivation?: string | null
@@ -745,6 +753,10 @@ export type Database = {
           payment_amount?: number | null
           phone?: string | null
           resident_number_masked?: string | null
+          special_note_1?: string | null
+          special_note_2?: string | null
+          treatment_memo_1?: string | null
+          treatment_memo_2?: string | null
           treatment_plan?: string | null
           updated_at?: string
           visit_motivation?: string | null

@@ -35,6 +35,10 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     hospital_branch: '',        // 이전병원 중분류 (API)
     address: '',                // 주소 (API)
     crm_memo: '',               // CRM메모 (API)
+    special_note_1: '',         // 특이사항1 (API)
+    special_note_2: '',         // 특이사항2 (API)
+    treatment_memo_1: '',       // 진료메모1 (API)
+    treatment_memo_2: '',       // 진료메모2 (API)
     
     // 수동 입력 필드
     patient_or_guardian: '환자', // 환자 or 보호자
@@ -80,6 +84,10 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         hospital_branch: patient.hospital_branch || '',
         address: patient.address || '',
         crm_memo: patient.crm_memo || '',
+        special_note_1: patient.special_note_1 || '',
+        special_note_2: patient.special_note_2 || '',
+        treatment_memo_1: patient.treatment_memo_1 || '',
+        treatment_memo_2: patient.treatment_memo_2 || '',
         patient_or_guardian: patient.patient_or_guardian || '환자',
         diet_info: patient.diet_info || '',
         inflow_status: patient.inflow_status || '유입',
@@ -207,6 +215,10 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         hospital_branch: formData.hospital_branch || null,
         address: formData.address || null,
         crm_memo: formData.crm_memo || null,
+        special_note_1: formData.special_note_1 || null,
+        special_note_2: formData.special_note_2 || null,
+        treatment_memo_1: formData.treatment_memo_1 || null,
+        treatment_memo_2: formData.treatment_memo_2 || null,
         patient_or_guardian: formData.patient_or_guardian || null,
         diet_info: formData.diet_info || null,
         inflow_status: formData.inflow_status,
@@ -262,6 +274,10 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         hospital_branch: '',
         address: '',
         crm_memo: '',
+        special_note_1: '',
+        special_note_2: '',
+        treatment_memo_1: '',
+        treatment_memo_2: '',
         patient_or_guardian: '환자',
         diet_info: '',
         inflow_status: '유입',
@@ -472,6 +488,66 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               id="crm_memo"
               name="crm_memo"
               value={formData.crm_memo}
+              onChange={handleInputChange}
+              placeholder="API에서 자동 입력"
+              rows={3}
+              disabled
+              className="bg-muted"
+            />
+          </div>
+
+          {/* 특이사항1 */}
+          <div className="md:col-span-2 lg:col-span-3">
+            <Label htmlFor="special_note_1">특이사항1</Label>
+            <Textarea
+              id="special_note_1"
+              name="special_note_1"
+              value={formData.special_note_1}
+              onChange={handleInputChange}
+              placeholder="API에서 자동 입력"
+              rows={3}
+              disabled
+              className="bg-muted"
+            />
+          </div>
+
+          {/* 특이사항2 */}
+          <div className="md:col-span-2 lg:col-span-3">
+            <Label htmlFor="special_note_2">특이사항2</Label>
+            <Textarea
+              id="special_note_2"
+              name="special_note_2"
+              value={formData.special_note_2}
+              onChange={handleInputChange}
+              placeholder="API에서 자동 입력"
+              rows={3}
+              disabled
+              className="bg-muted"
+            />
+          </div>
+
+          {/* 진료메모1 */}
+          <div className="md:col-span-2 lg:col-span-3">
+            <Label htmlFor="treatment_memo_1">진료메모1</Label>
+            <Textarea
+              id="treatment_memo_1"
+              name="treatment_memo_1"
+              value={formData.treatment_memo_1}
+              onChange={handleInputChange}
+              placeholder="API에서 자동 입력"
+              rows={3}
+              disabled
+              className="bg-muted"
+            />
+          </div>
+
+          {/* 진료메모2 */}
+          <div className="md:col-span-2 lg:col-span-3">
+            <Label htmlFor="treatment_memo_2">진료메모2</Label>
+            <Textarea
+              id="treatment_memo_2"
+              name="treatment_memo_2"
+              value={formData.treatment_memo_2}
               onChange={handleInputChange}
               placeholder="API에서 자동 입력"
               rows={3}
