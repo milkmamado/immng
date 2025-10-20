@@ -481,21 +481,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
             />
           </div>
 
-          {/* CRM메모 */}
-          <div className="md:col-span-2 lg:col-span-3">
-            <Label htmlFor="crm_memo">CRM메모</Label>
-            <Textarea
-              id="crm_memo"
-              name="crm_memo"
-              value={formData.crm_memo}
-              onChange={handleInputChange}
-              placeholder="API에서 자동 입력"
-              rows={3}
-              disabled
-              className="bg-muted"
-            />
-          </div>
-
           {/* 특이사항1 */}
           <div className="md:col-span-2 lg:col-span-3">
             <Label htmlFor="special_note_1">특이사항1</Label>
@@ -548,6 +533,21 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               id="treatment_memo_2"
               name="treatment_memo_2"
               value={formData.treatment_memo_2}
+              onChange={handleInputChange}
+              placeholder="API에서 자동 입력"
+              rows={3}
+              disabled
+              className="bg-muted"
+            />
+          </div>
+
+          {/* CRM메모 */}
+          <div className="md:col-span-2 lg:col-span-3">
+            <Label htmlFor="crm_memo">CRM메모</Label>
+            <Textarea
+              id="crm_memo"
+              name="crm_memo"
+              value={formData.crm_memo}
               onChange={handleInputChange}
               placeholder="API에서 자동 입력"
               rows={3}
