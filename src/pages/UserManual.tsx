@@ -34,26 +34,10 @@ const ExcelGuideModal = () => {
   const [currentStep, setCurrentStep] = useState(0);
   
   const steps = [
-    {
-      title: "1단계: 통계 메뉴 선택",
-      description: "좌측 메뉴에서 '2) 약국통계 > 수입금 통계(환자별)' 선택",
-      image: excelStep1
-    },
-    {
-      title: "2단계: 날짜 및 조회 설정",
-      description: "날짜를 선택하고 '수납일자' 탭을 선택한 후 '인원' 탭을 클릭하고 '조회' 버튼 클릭",
-      image: excelStep2
-    },
-    {
-      title: "3단계: 진료과 선택",
-      description: "결과조회에서 '척추과' 선택",
-      image: excelStep3
-    },
-    {
-      title: "4단계: 환자별 수납일자 조회",
-      description: "결과조회에서 '척추과' 선택 후 엑셀 다운로드",
-      image: excelStep4
-    }
+    { image: excelStep1 },
+    { image: excelStep2 },
+    { image: excelStep3 },
+    { image: excelStep4 }
   ];
 
   const handlePrevious = () => {
@@ -77,15 +61,10 @@ const ExcelGuideModal = () => {
           <DialogTitle>입원/외래 매출 엑셀 파일 준비 방법</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="text-center">
-            <h3 className="font-semibold text-lg mb-2">{steps[currentStep].title}</h3>
-            <p className="text-sm text-muted-foreground mb-4">{steps[currentStep].description}</p>
-          </div>
-          
           <div className="relative bg-muted rounded-lg overflow-hidden">
             <img 
               src={steps[currentStep].image} 
-              alt={steps[currentStep].title}
+              alt={`엑셀 준비 방법 ${currentStep + 1}단계`}
               className="w-full h-auto"
             />
           </div>
