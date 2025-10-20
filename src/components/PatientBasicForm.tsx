@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { RefreshCw } from "lucide-react";
 
 interface PatientBasicFormProps {
   patient?: any;
@@ -56,10 +57,23 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
   const [loading, setLoading] = useState(false);
   const [diagnosisCategoryOptions, setDiagnosisCategoryOptions] = useState<Option[]>([]);
   const [hospitalCategoryOptions, setHospitalCategoryOptions] = useState<Option[]>([]);
+  const [syncing, setSyncing] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchOptions();
+
+    // postMessage로 CRM 데이터 수신
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'crm-patient-data' && event.data?.data) {
+        handleCRMDataReceived(event.data.data);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
   }, []);
 
   // 환자 데이터 로드 및 설정
@@ -193,6 +207,114 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     }));
   };
 
+  const handleSyncCRM = () => {
+    if (!patient?.customer_number) {
+      toast({
+        title: "오류",
+        description: "고객번호가 없어 CRM 정보를 가져올 수 없습니다.",
+        variant: "destructive",
+        duration: 2000,
+      });
+      return;
+    }
+
+    setSyncing(true);
+
+    const searchData = {
+      name: patient.name,
+      phone: patient.phone || '',
+      appUrl: window.location.origin + '/first-visit'
+    };
+
+    const encoded = btoa(encodeURIComponent(JSON.stringify(searchData)));
+    const crmUrl = `http://192.168.1.101/html/MEDI20/main.html#crm_data=${encoded}`;
+
+    window.open(crmUrl, '_blank');
+
+    // 30초 타임아웃
+    setTimeout(() => {
+      if (syncing) {
+        setSyncing(false);
+        toast({
+          title: "타임아웃",
+          description: "CRM 데이터를 받지 못했습니다. 다시 시도해주세요.",
+          variant: "destructive",
+          duration: 2000,
+        });
+      }
+    }, 30000);
+  };
+
+  const handleCRMDataReceived = async (crmData: any) => {
+    setSyncing(false);
+
+    if (!patient) return;
+
+    try {
+      // 변경된 필드만 추출
+      const updatedFields: any = {};
+      const apiFields = [
+        'name', 'customer_number', 'resident_number_masked', 'phone', 
+        'gender', 'age', 'visit_motivation', 'diagnosis_category', 
+        'diagnosis_detail', 'hospital_category', 'hospital_branch', 
+        'address', 'crm_memo', 'special_note_1', 'special_note_2', 
+        'treatment_memo_1', 'treatment_memo_2'
+      ];
+
+      apiFields.forEach(field => {
+        const crmValue = crmData[field];
+        const currentValue = patient[field as keyof typeof patient];
+        
+        // 값이 다르면 업데이트 대상에 추가
+        if (crmValue !== undefined && crmValue !== null && crmValue !== currentValue) {
+          if (field === 'age' && crmValue) {
+            updatedFields[field] = parseInt(crmValue);
+          } else {
+            updatedFields[field] = crmValue;
+          }
+        }
+      });
+
+      if (Object.keys(updatedFields).length === 0) {
+        toast({
+          title: "최신 상태",
+          description: "변경된 정보가 없습니다.",
+          duration: 2000,
+        });
+        return;
+      }
+
+      // DB 업데이트
+      const { error } = await supabase
+        .from('patients')
+        .update(updatedFields)
+        .eq('id', patient.id);
+
+      if (error) throw error;
+
+      // 폼 데이터 업데이트
+      setFormData(prev => ({
+        ...prev,
+        ...updatedFields
+      }));
+
+      toast({
+        title: "최신화 완료",
+        description: `${Object.keys(updatedFields).length}개 필드가 업데이트되었습니다.`,
+        duration: 2000,
+      });
+
+    } catch (error) {
+      console.error('Error updating patient data:', error);
+      toast({
+        title: "오류",
+        description: "환자 정보 업데이트에 실패했습니다.",
+        variant: "destructive",
+        duration: 2000,
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -308,9 +430,24 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* API 자동입력 정보 섹션 */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b">
-          <h3 className="text-lg font-semibold">API 자동입력 정보</h3>
-          <Badge variant="secondary">자동</Badge>
+        <div className="flex items-center justify-between gap-2 pb-2 border-b">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">API 자동입력 정보</h3>
+            <Badge variant="secondary">자동</Badge>
+          </div>
+          {patient && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleSyncCRM}
+              disabled={syncing || !patient.customer_number}
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? '최신화 중...' : '기본 정보 최신화'}
+            </Button>
+          )}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* 고객명 */}
