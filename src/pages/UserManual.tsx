@@ -1,6 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { 
   BookOpen, 
   Home, 
@@ -17,8 +20,119 @@ import {
   DollarSign,
   AlertTriangle,
   CheckCircle,
-  Info
+  Info,
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon
 } from "lucide-react";
+import excelStep1 from "@/assets/manual/excel-step1.png";
+import excelStep2 from "@/assets/manual/excel-step2.png";
+import excelStep3 from "@/assets/manual/excel-step3.png";
+import excelStep4 from "@/assets/manual/excel-step4.png";
+
+const ExcelGuideModal = () => {
+  const [currentStep, setCurrentStep] = useState(0);
+  
+  const steps = [
+    {
+      title: "1단계: 통계 메뉴 선택",
+      description: "좌측 메뉴에서 '2) 약국통계 > 수입금 통계(환자별)' 선택",
+      image: excelStep1
+    },
+    {
+      title: "2단계: 날짜 및 조회 설정",
+      description: "날짜를 선택하고 '수납일자' 탭을 선택한 후 '인원' 탭을 클릭하고 '조회' 버튼 클릭",
+      image: excelStep2
+    },
+    {
+      title: "3단계: 진료과 선택",
+      description: "결과조회에서 '척추과' 선택",
+      image: excelStep3
+    },
+    {
+      title: "4단계: 환자별 수납일자 조회",
+      description: "결과조회에서 '척추과' 선택 후 엑셀 다운로드",
+      image: excelStep4
+    }
+  ];
+
+  const handlePrevious = () => {
+    setCurrentStep((prev) => (prev > 0 ? prev - 1 : steps.length - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentStep((prev) => (prev < steps.length - 1 ? prev + 1 : 0));
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-2">
+          <ImageIcon className="w-4 h-4" />
+          엑셀 준비 방법 보기
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>입원/외래 매출 엑셀 파일 준비 방법</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="text-center">
+            <h3 className="font-semibold text-lg mb-2">{steps[currentStep].title}</h3>
+            <p className="text-sm text-muted-foreground mb-4">{steps[currentStep].description}</p>
+          </div>
+          
+          <div className="relative bg-muted rounded-lg overflow-hidden">
+            <img 
+              src={steps[currentStep].image} 
+              alt={steps[currentStep].title}
+              className="w-full h-auto"
+            />
+          </div>
+
+          <div className="flex items-center justify-between pt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrevious}
+              className="gap-2"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              이전
+            </Button>
+            
+            <div className="flex gap-2">
+              {steps.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentStep(index)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    index === currentStep ? 'bg-primary' : 'bg-muted-foreground/30'
+                  }`}
+                  aria-label={`${index + 1}단계로 이동`}
+                />
+              ))}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleNext}
+              className="gap-2"
+            >
+              다음
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+
+          <div className="text-center text-sm text-muted-foreground">
+            {currentStep + 1} / {steps.length}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export default function UserManual() {
   return (
@@ -675,16 +789,24 @@ export default function UserManual() {
                     </p>
                   </div>
                   <div className="border rounded-lg p-3">
-                    <div className="font-medium mb-1">2. 입원 매출</div>
-                    <p className="text-sm text-muted-foreground">
-                      입원 환자의 수납일자별 매출 금액
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-medium">2. 입원/외래 매출</div>
+                      <ExcelGuideModal />
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      입원 및 외래 환자의 수납일자별 매출 금액
                     </p>
-                  </div>
-                  <div className="border rounded-lg p-3">
-                    <div className="font-medium mb-1">3. 외래 매출</div>
-                    <p className="text-sm text-muted-foreground">
-                      외래 환자의 수납일자별 매출 금액
-                    </p>
+                    <div className="bg-blue-50 border-l-4 border-blue-500 p-3 mt-2">
+                      <p className="text-sm font-medium mb-1">📋 엑셀 파일 준비 방법:</p>
+                      <ol className="text-sm space-y-1 ml-4">
+                        <li>1. 닥터스 통계마감</li>
+                        <li>2. 수입금 통계(환자별)</li>
+                        <li>3. 환자별 수납일자 조회</li>
+                      </ol>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        자세한 단계별 스크린샷은 위의 "엑셀 준비 방법 보기" 버튼을 클릭하세요.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
