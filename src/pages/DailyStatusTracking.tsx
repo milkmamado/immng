@@ -41,6 +41,10 @@ interface Patient {
   visit_motivation?: string;
   address?: string;
   crm_memo?: string;
+  special_note_1?: string;
+  special_note_2?: string;
+  treatment_memo_1?: string;
+  treatment_memo_2?: string;
   last_visit_date?: string;
   diet_info?: string;
   patient_or_guardian?: string;
@@ -138,7 +142,8 @@ export default function DailyStatusTracking() {
           id, name, customer_number, diagnosis_category, diagnosis_detail, 
           korean_doctor, western_doctor, manager_name, hospital_category, hospital_branch,
           management_status, created_at, resident_number_masked, phone, gender, age,
-          visit_motivation, address, crm_memo, last_visit_date, diet_info,
+          visit_motivation, address, crm_memo, special_note_1, special_note_2,
+          treatment_memo_1, treatment_memo_2, last_visit_date, diet_info,
           patient_or_guardian, inflow_status, visit_type, guardian_name,
           guardian_relationship, guardian_phone, insurance_type, hospital_treatment,
           examination_schedule, payment_amount, memo1,
