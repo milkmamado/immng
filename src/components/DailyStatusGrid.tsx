@@ -39,6 +39,10 @@ interface Patient {
   visit_motivation?: string;
   address?: string;
   crm_memo?: string;
+  special_note_1?: string;
+  special_note_2?: string;
+  treatment_memo_1?: string;
+  treatment_memo_2?: string;
   last_visit_date?: string;
   diagnosis_category?: string;
   diagnosis_detail?: string;
@@ -1375,6 +1379,50 @@ export function DailyStatusGrid({
                       value={selectedPatientDetail?.address || ''}
                       disabled
                       className="bg-muted"
+                    />
+                  </div>
+
+                  {/* 특이사항1 */}
+                  <div className="md:col-span-2 lg:col-span-3">
+                    <Label>특이사항1</Label>
+                    <Textarea
+                      value={selectedPatientDetail?.special_note_1 || ''}
+                      disabled
+                      className="bg-muted"
+                      rows={3}
+                    />
+                  </div>
+
+                  {/* 특이사항2 */}
+                  <div className="md:col-span-2 lg:col-span-3">
+                    <Label>특이사항2</Label>
+                    <Textarea
+                      value={selectedPatientDetail?.special_note_2 || ''}
+                      disabled
+                      className="bg-muted"
+                      rows={3}
+                    />
+                  </div>
+
+                  {/* 진료메모1 */}
+                  <div className="md:col-span-2 lg:col-span-3">
+                    <Label>진료메모1</Label>
+                    <Textarea
+                      value={selectedPatientDetail?.treatment_memo_1 || ''}
+                      disabled
+                      className="bg-muted"
+                      rows={3}
+                    />
+                  </div>
+
+                  {/* 진료메모2 */}
+                  <div className="md:col-span-2 lg:col-span-3">
+                    <Label>진료메모2</Label>
+                    <Textarea
+                      value={selectedPatientDetail?.treatment_memo_2 || ''}
+                      disabled
+                      className="bg-muted"
+                      rows={3}
                     />
                   </div>
 
