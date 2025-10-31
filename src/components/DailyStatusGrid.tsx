@@ -1125,7 +1125,7 @@ export function DailyStatusGrid({
                           </div>
                         </TooltipTrigger>
                         {patient.memo1 && (
-                          <TooltipContent className="max-w-[300px] whitespace-pre-wrap">
+                          <TooltipContent className="max-w-[300px] max-h-[200px] overflow-y-auto whitespace-pre-wrap">
                             <p>{patient.memo1}</p>
                           </TooltipContent>
                         )}
