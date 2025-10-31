@@ -60,6 +60,24 @@ export default function FirstVisitManagement() {
   useEffect(() => {
     fetchPatients();
 
+    // Realtime 구독 설정 - patients 테이블 변경 감지
+    const channel = supabase
+      .channel('first-visit-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // INSERT, UPDATE, DELETE 모두 감지
+          schema: 'public',
+          table: 'patients'
+        },
+        (payload) => {
+          console.log('Patient data changed:', payload);
+          // 데이터 변경 시 자동으로 다시 불러오기
+          fetchPatients();
+        }
+      )
+      .subscribe();
+
     // postMessage로 CRM 데이터 수신 (window.opener에서 전송)
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'crm-patient-data' && event.data?.data) {
@@ -133,6 +151,7 @@ export default function FirstVisitManagement() {
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);
+      supabase.removeChannel(channel);
     };
   }, []);
 

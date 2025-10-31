@@ -58,6 +58,54 @@ export default function StatisticsManagement() {
     if (user && (isMasterOrAdmin || selectedManager !== 'all')) {
       fetchStatistics();
     }
+
+    // Realtime 구독 설정 - 관련 테이블 변경 감지
+    const channel = supabase
+      .channel('statistics-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'patients'
+        },
+        () => {
+          if (user && (isMasterOrAdmin || selectedManager !== 'all')) {
+            fetchStatistics();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'daily_patient_status'
+        },
+        () => {
+          if (user && (isMasterOrAdmin || selectedManager !== 'all')) {
+            fetchStatistics();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'package_transactions'
+        },
+        () => {
+          if (user && (isMasterOrAdmin || selectedManager !== 'all')) {
+            fetchStatistics();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [selectedMonth, selectedManager, user, isMasterOrAdmin]);
 
   const checkUserRole = async () => {

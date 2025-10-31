@@ -140,6 +140,47 @@ export default function PatientListManagement() {
     fetchOptions();
     fetchCurrentUserName();
     
+    // Realtime 구독 설정 - patients 및 패키지 테이블 변경 감지
+    const channel = supabase
+      .channel('patient-list-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'patients'
+        },
+        (payload) => {
+          console.log('Patient data changed:', payload);
+          fetchPatients();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'package_management'
+        },
+        (payload) => {
+          console.log('Package management changed:', payload);
+          fetchPatients();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'package_transactions'
+        },
+        (payload) => {
+          console.log('Package transactions changed:', payload);
+          fetchPatients();
+        }
+      )
+      .subscribe();
+    
     // CRM에서 postMessage로 패키지 데이터 수신
     const handleMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === 'crm-package-data') {
@@ -151,6 +192,7 @@ export default function PatientListManagement() {
     
     return () => {
       window.removeEventListener('message', handleMessage);
+      supabase.removeChannel(channel);
     };
   }, []);
 
