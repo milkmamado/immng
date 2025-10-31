@@ -1880,8 +1880,12 @@ export function DailyStatusGrid({
                     <Label>유입일</Label>
                     <div className="p-2 bg-muted rounded-md h-10 flex items-center">
                       <span className="text-sm">
-                        {selectedPatientDetail?.created_at ? 
-                          new Date(selectedPatientDetail.created_at).toLocaleDateString('ko-KR') : '-'}
+                        {selectedPatientDetail?.inflow_date 
+                          ? new Date(selectedPatientDetail.inflow_date).toLocaleDateString('ko-KR')
+                          : selectedPatientDetail?.created_at 
+                            ? new Date(selectedPatientDetail.created_at).toLocaleDateString('ko-KR') 
+                            : '-'
+                        }
                       </span>
                     </div>
                   </div>
