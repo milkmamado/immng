@@ -143,7 +143,7 @@ export default function DailyStatusTracking() {
         .select(`
           id, name, customer_number, diagnosis_category, diagnosis_detail, 
           korean_doctor, western_doctor, manager_name, hospital_category, hospital_branch,
-          management_status, created_at, resident_number_masked, phone, gender, age,
+          management_status, created_at, inflow_date, resident_number_masked, phone, gender, age,
           visit_motivation, address, crm_memo, special_note_1, special_note_2,
           treatment_memo_1, treatment_memo_2, last_visit_date, diet_info,
           patient_or_guardian, inflow_status, visit_type, guardian_name,
