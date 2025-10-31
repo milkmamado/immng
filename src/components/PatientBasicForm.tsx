@@ -357,9 +357,14 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
 
       // 진단명 대분류가 업데이트되는 경우 중분류 옵션 로드
       if (updatedFields.diagnosis_category) {
+        console.log('🔍 CRM 진단명 대분류:', updatedFields.diagnosis_category);
+        console.log('🔍 CRM 진단명 중분류:', updatedFields.diagnosis_detail);
+        
         const parentOption = diagnosisCategoryOptions.find(
           opt => opt.name === updatedFields.diagnosis_category
         );
+        console.log('🔍 찾은 대분류 옵션:', parentOption);
+        
         if (parentOption) {
           const { data } = await supabase
             .from('diagnosis_options')
@@ -367,8 +372,36 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
             .eq('parent_id', parentOption.id)
             .order('name');
           
+          console.log('🔍 로드된 중분류 옵션들:', data);
+          
           if (data) {
             setDiagnosisDetailOptions(data);
+          }
+        }
+      } else if (updatedFields.diagnosis_detail && !updatedFields.diagnosis_category) {
+        // 중분류만 업데이트되는 경우 (대분류는 그대로)
+        console.log('🔍 기존 대분류 유지, 중분류만 업데이트:', updatedFields.diagnosis_detail);
+        
+        const currentCategory = crmData.diagnosis_category || patient.diagnosis_category;
+        console.log('🔍 현재 대분류:', currentCategory);
+        
+        if (currentCategory) {
+          const parentOption = diagnosisCategoryOptions.find(
+            opt => opt.name === currentCategory
+          );
+          
+          if (parentOption) {
+            const { data } = await supabase
+              .from('diagnosis_options')
+              .select('*')
+              .eq('parent_id', parentOption.id)
+              .order('name');
+            
+            console.log('🔍 로드된 중분류 옵션들:', data);
+            
+            if (data) {
+              setDiagnosisDetailOptions(data);
+            }
           }
         }
       }
