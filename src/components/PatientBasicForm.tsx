@@ -418,7 +418,20 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
           .from('patients')
           .insert([patientData]);
 
-        if (error) throw error;
+        if (error) {
+          // 중복 키 오류 처리
+          if (error.code === '23505') {
+            toast({
+              title: "등록 실패",
+              description: `고객번호 "${formData.customer_number}"는 이미 다른 환자에게 등록되어 있습니다. 고객번호를 확인해주세요.`,
+              variant: "destructive",
+              duration: 5000,
+            });
+            setLoading(false);
+            return;
+          }
+          throw error;
+        }
 
         toast({
           title: "등록 완료",
