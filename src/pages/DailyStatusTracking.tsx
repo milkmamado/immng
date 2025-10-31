@@ -146,12 +146,13 @@ export default function DailyStatusTracking() {
           treatment_memo_1, treatment_memo_2, last_visit_date, diet_info,
           patient_or_guardian, inflow_status, visit_type, guardian_name,
           guardian_relationship, guardian_phone, insurance_type, hospital_treatment,
-          examination_schedule, payment_amount, memo1,
+          examination_schedule, payment_amount, memo1, display_order,
           admission_cycles (
             id, admission_date, discharge_date, admission_type, status
           )
         `)
         .eq('inflow_status', '유입')
+        .order('display_order', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false });
 
       // 최종 상태(사망, 상태악화, 치료종료) 및 "아웃", "아웃위기" 환자 제외
@@ -428,6 +429,40 @@ export default function DailyStatusTracking() {
     setCalendarDate(newDate);
   };
 
+  const handleOrderUpdate = async (newOrder: string[]) => {
+    try {
+      // 각 환자의 display_order 업데이트
+      const updates = newOrder.map((patientId, index) => 
+        supabase
+          .from('patients')
+          .update({ display_order: index })
+          .eq('id', patientId)
+      );
+
+      await Promise.all(updates);
+
+      // 로컬 상태도 업데이트
+      const updatedPatients = [...patients].sort((a, b) => {
+        const aIndex = newOrder.indexOf(a.id);
+        const bIndex = newOrder.indexOf(b.id);
+        return aIndex - bIndex;
+      });
+      setPatients(updatedPatients);
+
+      toast({
+        title: "성공",
+        description: "환자 순서가 저장되었습니다.",
+      });
+    } catch (error) {
+      console.error('Error updating order:', error);
+      toast({
+        title: "오류",
+        description: "순서 저장에 실패했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return <div className="flex justify-center items-center h-64">로딩 중...</div>;
   }
@@ -547,6 +582,7 @@ export default function DailyStatusTracking() {
         onStatusUpdate={handleStatusUpdate}
         onMemoUpdate={handleMemoUpdate}
         onManagementStatusUpdate={handleManagementStatusUpdate}
+        onOrderUpdate={handleOrderUpdate}
         onPreviousMonth={handlePreviousMonth}
         onNextMonth={handleNextMonth}
       />

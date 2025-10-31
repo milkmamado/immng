@@ -638,6 +638,7 @@ export type Database = {
           diagnosis_detail: string | null
           diet_info: string | null
           discharge_date: string | null
+          display_order: number | null
           emergency_contact: string | null
           examination_schedule: string | null
           failure_reason: string | null
@@ -686,6 +687,7 @@ export type Database = {
           diagnosis_detail?: string | null
           diet_info?: string | null
           discharge_date?: string | null
+          display_order?: number | null
           emergency_contact?: string | null
           examination_schedule?: string | null
           failure_reason?: string | null
@@ -734,6 +736,7 @@ export type Database = {
           diagnosis_detail?: string | null
           diet_info?: string | null
           discharge_date?: string | null
+          display_order?: number | null
           emergency_contact?: string | null
           examination_schedule?: string | null
           failure_reason?: string | null
