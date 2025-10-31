@@ -271,7 +271,7 @@ export default function FirstVisitManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>고객번호</TableHead>
-                  <TableHead>등록일</TableHead>
+                  <TableHead>유입일</TableHead>
                   <TableHead>유입/실패</TableHead>
                   <TableHead>입원/외래</TableHead>
                   <TableHead>내원동기</TableHead>
