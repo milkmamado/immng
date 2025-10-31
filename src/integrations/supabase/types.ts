@@ -123,6 +123,7 @@ export type Database = {
           id: string
           name: string
           parent_id: string | null
+          sort_order: number | null
         }
         Insert: {
           created_at?: string
@@ -130,6 +131,7 @@ export type Database = {
           id?: string
           name: string
           parent_id?: string | null
+          sort_order?: number | null
         }
         Update: {
           created_at?: string
@@ -137,6 +139,7 @@ export type Database = {
           id?: string
           name?: string
           parent_id?: string | null
+          sort_order?: number | null
         }
         Relationships: [
           {
