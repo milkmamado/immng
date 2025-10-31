@@ -195,7 +195,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     try {
       // 대분류만 가져오기 (parent_id가 null인 것)
       const [diagnosisCategories, hospitalCategories] = await Promise.all([
-        supabase.from('diagnosis_options').select('*').is('parent_id', null).order('sort_order', { nullsFirst: false }).order('name'),
+        supabase.from('diagnosis_options').select('*').is('parent_id', null).order('sort_order', { ascending: true, nullsFirst: false }),
         supabase.from('hospital_options').select('*').is('parent_id', null).order('name')
       ]);
 
