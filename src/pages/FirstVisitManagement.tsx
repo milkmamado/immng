@@ -23,6 +23,7 @@ interface Patient {
   age?: number;
   address?: string;
   inflow_status?: string;
+  inflow_date?: string;
   first_visit_date?: string;
   visit_type?: string;
   visit_motivation?: string;
@@ -296,7 +297,9 @@ export default function FirstVisitManagement() {
                   >
                     <TableCell>{patient.customer_number || '-'}</TableCell>
                     <TableCell>
-                      {new Date(patient.created_at).toLocaleDateString('ko-KR')}
+                      {patient.inflow_date 
+                        ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
+                        : new Date(patient.created_at).toLocaleDateString('ko-KR')}
                     </TableCell>
                     <TableCell>
                       <Badge variant={getInflowStatusColor(patient.inflow_status)}>

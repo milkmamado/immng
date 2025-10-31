@@ -651,6 +651,7 @@ export type Database = {
           hospital_category: string | null
           hospital_treatment: string | null
           id: string
+          inflow_date: string | null
           inflow_status: string | null
           insurance_type: string | null
           korean_doctor: string | null
@@ -700,6 +701,7 @@ export type Database = {
           hospital_category?: string | null
           hospital_treatment?: string | null
           id?: string
+          inflow_date?: string | null
           inflow_status?: string | null
           insurance_type?: string | null
           korean_doctor?: string | null
@@ -749,6 +751,7 @@ export type Database = {
           hospital_category?: string | null
           hospital_treatment?: string | null
           id?: string
+          inflow_date?: string | null
           inflow_status?: string | null
           insurance_type?: string | null
           korean_doctor?: string | null

@@ -26,6 +26,7 @@ interface Patient {
   address?: string;
   last_visit_date?: string;
   inflow_status?: string;
+  inflow_date?: string;
   visit_type?: string;
   visit_motivation?: string;
   diagnosis_category?: string;
@@ -1923,7 +1924,9 @@ export default function PatientListManagement() {
                       {patient.diagnosis_category || '-'}
                     </TableCell>
                     <TableCell>
-                      {new Date(patient.created_at).toLocaleDateString('ko-KR')}
+                      {patient.inflow_date 
+                        ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
+                        : new Date(patient.created_at).toLocaleDateString('ko-KR')}
                     </TableCell>
                     <TableCell>{patient.insurance_type || '-'}</TableCell>
                     <TableCell className="max-w-32 truncate">

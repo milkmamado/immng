@@ -7,6 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { ko } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import { RefreshCw } from "lucide-react";
 
 interface PatientBasicFormProps {
@@ -53,6 +59,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     manager_name: '',           // 담당자(상담실장)
     korean_doctor: '',          // 한방주치의
     western_doctor: '',         // 양방주치의
+    inflow_date: '',            // 유입일
   });
 
   const [loading, setLoading] = useState(false);
@@ -113,7 +120,8 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         guardian_phone: patient.guardian_phone || '',
         manager_name: patient.manager_name || '',
         korean_doctor: patient.korean_doctor || '',
-        western_doctor: patient.western_doctor || ''
+        western_doctor: patient.western_doctor || '',
+        inflow_date: patient.inflow_date || ''
       });
       
       // manager_name이 없으면 현재 사용자 이름 가져오기
@@ -388,6 +396,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         manager_name: formData.manager_name || null,
         korean_doctor: formData.korean_doctor || null,
         western_doctor: formData.western_doctor || null,
+        inflow_date: formData.inflow_date || null,
         assigned_manager: user.id
       };
 
@@ -447,7 +456,8 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         guardian_phone: '',
         manager_name: '',
         korean_doctor: '',
-        western_doctor: ''
+        western_doctor: '',
+        inflow_date: ''
       });
 
       onClose();
@@ -882,6 +892,45 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               onChange={handleInputChange}
               placeholder="양방주치의"
             />
+          </div>
+
+          {/* 유입일 */}
+          <div>
+            <Label htmlFor="inflow_date">유입일</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !formData.inflow_date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.inflow_date ? (
+                    format(new Date(formData.inflow_date), "PPP", { locale: ko })
+                  ) : (
+                    <span>날짜 선택</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={formData.inflow_date ? new Date(formData.inflow_date) : undefined}
+                  onSelect={(date) => {
+                    if (date) {
+                      const formatted = format(date, 'yyyy-MM-dd');
+                      setFormData(prev => ({ ...prev, inflow_date: formatted }));
+                    } else {
+                      setFormData(prev => ({ ...prev, inflow_date: '' }));
+                    }
+                  }}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </div>
