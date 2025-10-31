@@ -9,10 +9,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ChevronLeft, ChevronRight, RefreshCw, GripVertical } from "lucide-react";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { ChevronLeft, ChevronRight, RefreshCw, ChevronUp, ChevronDown } from "lucide-react";
 
 interface AdmissionCycle {
   id: string;
@@ -87,34 +84,6 @@ interface DailyStatusGridProps {
   onNextMonth: () => void;
 }
 
-interface SortableRowProps {
-  id: string;
-  children: React.ReactNode;
-  listeners: any;
-  attributes: any;
-}
-
-function SortableRow({ id, children, listeners, attributes }: SortableRowProps) {
-  const {
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <tr ref={setNodeRef} style={style} className="hover:bg-muted/50">
-      {children}
-    </tr>
-  );
-}
-
 export function DailyStatusGrid({
   patients,
   dailyStatuses,
@@ -176,23 +145,18 @@ export function DailyStatusGrid({
 
   const statusTypes = ['입원', '퇴원', '재원', '낮병동', '외래', '기타', '전화F/U'];
   
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+  const handleMoveUp = (index: number) => {
+    if (index === 0) return;
+    const newOrder = [...patients];
+    [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+    onOrderUpdate(newOrder.map(p => p.id));
+  };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      const oldIndex = patients.findIndex((p) => p.id === active.id);
-      const newIndex = patients.findIndex((p) => p.id === over.id);
-      
-      const newOrder = arrayMove(patients, oldIndex, newIndex);
-      onOrderUpdate(newOrder.map(p => p.id));
-    }
+  const handleMoveDown = (index: number) => {
+    if (index === patients.length - 1) return;
+    const newOrder = [...patients];
+    [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+    onOrderUpdate(newOrder.map(p => p.id));
   };
 
   // 옵션 데이터 및 사용자 정보 가져오기
@@ -1131,54 +1095,30 @@ export function DailyStatusGrid({
               {renderDayHeaders()}
             </tr>
           </thead>
-          <DndContext 
-            sensors={sensors} 
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext 
-              items={patients.map(p => p.id)} 
-              strategy={verticalListSortingStrategy}
-            >
-              <tbody>
-                {patients.map((patient) => {
-                  const sortable = useSortable({ id: patient.id });
-                  return (
-                    <SortableRow 
-                      key={patient.id} 
-                      id={patient.id} 
-                      listeners={sortable.listeners} 
-                      attributes={sortable.attributes}
-                    >
-                      <td className="p-2 border sticky left-0 bg-background">
-                        <div className="space-y-0.5">
-                          <div className="flex items-center gap-2">
-                            <div 
-                              {...sortable.listeners} 
-                              {...sortable.attributes} 
-                              className="cursor-grab active:cursor-grabbing"
-                            >
-                              <GripVertical className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                            <div 
-                              className="font-medium cursor-pointer hover:text-primary transition-colors"
-                              onClick={() => {
-                                setSelectedPatientDetail(patient);
-                                setEditingManagementStatus(patient.management_status || '관리 중');
-                                calculatePatientStats(patient.id);
-                                fetchPackageData(patient.id);
-                              }}
-                            >
-                              {patient.name}
-                            </div>
-                          </div>
+          <tbody>
+            {patients.map((patient, index) => {
+              return (
+                <tr key={patient.id} className="hover:bg-muted/50">
+                  <td className="p-2 border sticky left-0 bg-background">
+                    <div className="space-y-0.5">
+                      <div 
+                        className="font-medium cursor-pointer hover:text-primary transition-colors"
+                        onClick={() => {
+                          setSelectedPatientDetail(patient);
+                          setEditingManagementStatus(patient.management_status || '관리 중');
+                          calculatePatientStats(patient.id);
+                          fetchPackageData(patient.id);
+                        }}
+                      >
+                        {patient.name}
+                      </div>
                       <div className="text-[10px] text-muted-foreground">
                         담당: {patient.manager_name || '-'}
                       </div>
                       <div className="text-[10px] text-muted-foreground">
                         진단: {patient.diagnosis || '-'}
                       </div>
-                      <div className="text-[10px]">
+                      <div className="flex items-center gap-1">
                         <Badge variant={
                           patient.management_status === '아웃' ? 'destructive' :
                           patient.management_status === '아웃위기' ? 'default' :
@@ -1186,6 +1126,26 @@ export function DailyStatusGrid({
                         } className="text-[9px] px-1 py-0">
                           {patient.management_status || '관리 중'}
                         </Badge>
+                        <div className="flex flex-col gap-0.5">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-3 w-3 p-0"
+                            onClick={() => handleMoveUp(index)}
+                            disabled={index === 0}
+                          >
+                            <ChevronUp className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-3 w-3 p-0"
+                            onClick={() => handleMoveDown(index)}
+                            disabled={index === patients.length - 1}
+                          >
+                            <ChevronDown className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -1215,12 +1175,10 @@ export function DailyStatusGrid({
                     {patient.previous_hospital || '-'}
                   </td>
                   {renderPatientRow(patient)}
-                    </SortableRow>
-                  );
-                })}
-              </tbody>
-            </SortableContext>
-          </DndContext>
+                </tr>
+              );
+            })}
+          </tbody>
         </table>
         </div>
 
