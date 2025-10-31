@@ -71,6 +71,19 @@ export default function RiskManagement() {
         {
           event: '*',
           schema: 'public',
+          table: 'patients'
+        },
+        () => {
+          if (user) {
+            fetchRiskPatients();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
           table: 'daily_patient_status'
         },
         () => {

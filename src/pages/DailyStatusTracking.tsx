@@ -92,7 +92,7 @@ export default function DailyStatusTracking() {
   useEffect(() => {
     fetchData();
 
-    // Realtime 구독 설정 - patients 테이블 변경 감지
+    // Realtime 구독 설정 - patients 및 daily_patient_status 테이블 변경 감지
     const channel = supabase
       .channel('patient-changes')
       .on(
@@ -104,6 +104,19 @@ export default function DailyStatusTracking() {
         },
         (payload) => {
           console.log('Patient data changed:', payload);
+          // 데이터 변경 시 자동으로 다시 불러오기
+          fetchData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'daily_patient_status'
+        },
+        (payload) => {
+          console.log('Daily patient status changed:', payload);
           // 데이터 변경 시 자동으로 다시 불러오기
           fetchData();
         }
