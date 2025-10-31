@@ -1042,22 +1042,10 @@ export type Database = {
         Args: { admission_date: string; discharge_date?: string }
         Returns: number
       }
-      can_manage_accounts: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      check_master_access: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      generate_patient_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_next_cycle_number: {
-        Args: { patient_uuid: string }
-        Returns: number
-      }
+      can_manage_accounts: { Args: { _user_id: string }; Returns: boolean }
+      check_master_access: { Args: { _user_id: string }; Returns: boolean }
+      generate_patient_number: { Args: never; Returns: string }
+      get_next_cycle_number: { Args: { patient_uuid: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["user_role"]
@@ -1065,18 +1053,9 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_master_user: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      is_user_approved: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      setup_super_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      is_master_user: { Args: { _user_id: string }; Returns: boolean }
+      is_user_approved: { Args: { _user_id: string }; Returns: boolean }
+      setup_super_admin: { Args: never; Returns: undefined }
     }
     Enums: {
       approval_status: "pending" | "approved" | "rejected"
