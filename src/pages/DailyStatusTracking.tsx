@@ -4,13 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DailyStatusGrid } from "@/components/DailyStatusGrid";
-import { Calendar as CalendarIcon, Users, Activity, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar as CalendarIcon, Users, Activity, Search, ChevronLeft, ChevronRight, FileDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { ko } from "date-fns/locale";
 import { calculateDaysSinceLastCheck, calculateAutoManagementStatus, shouldAutoUpdateStatus } from "@/utils/patientStatusUtils";
+import * as XLSX from 'xlsx';
 
 interface AdmissionCycle {
   id: string;
@@ -463,6 +464,78 @@ export default function DailyStatusTracking() {
     }
   };
 
+  const handleExportToExcel = () => {
+    try {
+      const [year, month] = selectedMonth.split('-');
+      const daysInMonth = getDaysInMonth(selectedMonth);
+      
+      // 헤더 행 만들기
+      const headers = ['환자명', '담당자', '진단', '관리상태', '메모', '주치의', '이전병원'];
+      for (let day = 1; day <= daysInMonth; day++) {
+        headers.push(`${day}일`);
+      }
+      
+      // 데이터 행 만들기
+      const data = filteredPatients.map(patient => {
+        const row: any = {
+          '환자명': patient.name || '-',
+          '담당자': patient.manager_name || '-',
+          '진단': patient.diagnosis_category || patient.diagnosis_detail || '-',
+          '관리상태': patient.management_status || '관리 중',
+          '메모': patient.memo1 || '-',
+          '주치의': [patient.korean_doctor, patient.western_doctor].filter(Boolean).join(', ') || '-',
+          '이전병원': patient.hospital_category || '-'
+        };
+        
+        // 각 날짜별 상태 추가
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateStr = `${year}-${month}-${String(day).padStart(2, '0')}`;
+          const status = dailyStatuses.find(
+            s => s.patient_id === patient.id && s.status_date === dateStr
+          );
+          row[`${day}일`] = status ? status.status_type : '';
+        }
+        
+        return row;
+      });
+      
+      // 워크북 생성
+      const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, `${year}년 ${month}월`);
+      
+      // 컬럼 너비 설정
+      const colWidths = [
+        { wch: 12 }, // 환자명
+        { wch: 12 }, // 담당자
+        { wch: 15 }, // 진단
+        { wch: 12 }, // 관리상태
+        { wch: 20 }, // 메모
+        { wch: 15 }, // 주치의
+        { wch: 15 }, // 이전병원
+      ];
+      for (let i = 0; i < daysInMonth; i++) {
+        colWidths.push({ wch: 10 }); // 날짜 컬럼
+      }
+      ws['!cols'] = colWidths;
+      
+      // 파일 다운로드
+      XLSX.writeFile(wb, `환자_상태_추적_${year}년_${month}월.xlsx`);
+      
+      toast({
+        title: "성공",
+        description: "엑셀 파일이 다운로드되었습니다.",
+      });
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      toast({
+        title: "오류",
+        description: "엑셀 내보내기에 실패했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return <div className="flex justify-center items-center h-64">로딩 중...</div>;
   }
@@ -472,6 +545,14 @@ export default function DailyStatusTracking() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">일별 환자 상태 추적</h1>
         <div className="flex items-center gap-4">
+          <Button 
+            variant="outline"
+            onClick={handleExportToExcel}
+            className="gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            엑셀 내보내기
+          </Button>
           <div className="relative w-80">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
