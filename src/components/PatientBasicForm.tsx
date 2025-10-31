@@ -367,6 +367,25 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         ...updatedFields
       }));
 
+      // 진단명 대분류가 업데이트된 경우, 중분류 옵션 자동 로드
+      if (updatedFields.diagnosis_category) {
+        const selectedCategory = diagnosisCategoryOptions.find(
+          opt => opt.name === updatedFields.diagnosis_category
+        );
+        if (selectedCategory) {
+          const { data: detailOptions } = await supabase
+            .from('diagnosis_options')
+            .select('*')
+            .eq('parent_id', selectedCategory.id)
+            .order('sort_order', { nullsFirst: false })
+            .order('name');
+          
+          if (detailOptions) {
+            setDiagnosisDetailOptions(detailOptions);
+          }
+        }
+      }
+
       toast({
         title: "최신화 완료",
         description: `${Object.keys(updatedFields).length}개 필드가 업데이트되었습니다.`,
