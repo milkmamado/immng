@@ -56,7 +56,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
 
   const [loading, setLoading] = useState(false);
   const [diagnosisCategoryOptions, setDiagnosisCategoryOptions] = useState<Option[]>([]);
-  const [diagnosisDetailOptions, setDiagnosisDetailOptions] = useState<Option[]>([]);
   const [hospitalCategoryOptions, setHospitalCategoryOptions] = useState<Option[]>([]);
   const [syncing, setSyncing] = useState(false);
   const { toast } = useToast();
@@ -115,24 +114,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         western_doctor: patient.western_doctor || ''
       });
       
-      // 진단명 대분류가 있으면 중분류 옵션 로드
-      if (patient.diagnosis_category) {
-        const selectedCategory = diagnosisCategoryOptions.find(
-          opt => opt.name === patient.diagnosis_category
-        );
-        if (selectedCategory) {
-          supabase
-            .from('diagnosis_options')
-            .select('*')
-            .eq('parent_id', selectedCategory.id)
-            .order('sort_order', { nullsFirst: false })
-            .order('name')
-            .then(({ data }) => {
-              if (data) setDiagnosisDetailOptions(data);
-            });
-        }
-      }
-      
       // manager_name이 없으면 현재 사용자 이름 가져오기
       if (!patient.manager_name) {
         fetchCurrentUserName();
@@ -146,24 +127,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         // manager_name은 현재 사용자로 덮어쓰기 위해 제외
         manager_name: prev.manager_name
       }));
-
-      // 초기 데이터에 진단명 대분류가 있으면 중분류 옵션 로드
-      if (initialData.diagnosis_category) {
-        const selectedCategory = diagnosisCategoryOptions.find(
-          opt => opt.name === initialData.diagnosis_category
-        );
-        if (selectedCategory) {
-          supabase
-            .from('diagnosis_options')
-            .select('*')
-            .eq('parent_id', selectedCategory.id)
-            .order('sort_order', { nullsFirst: false })
-            .order('name')
-            .then(({ data }) => {
-              if (data) setDiagnosisDetailOptions(data);
-            });
-        }
-      }
     } else {
       fetchCurrentUserName();
     }
@@ -195,7 +158,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     try {
       // 대분류만 가져오기 (parent_id가 null인 것)
       const [diagnosisCategories, hospitalCategories] = await Promise.all([
-        supabase.from('diagnosis_options').select('*').is('parent_id', null).order('sort_order', { ascending: true, nullsFirst: false }),
+        supabase.from('diagnosis_options').select('*').is('parent_id', null).order('name'),
         supabase.from('hospital_options').select('*').is('parent_id', null).order('name')
       ]);
 
@@ -242,27 +205,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
       ...prev,
       [name]: value
     }));
-
-    // 진단명 대분류 선택 시 중분류 옵션 가져오기
-    if (name === 'diagnosis_category' && value) {
-      try {
-        const selectedCategory = diagnosisCategoryOptions.find(opt => opt.name === value);
-        if (selectedCategory) {
-          const { data } = await supabase
-            .from('diagnosis_options')
-            .select('*')
-            .eq('parent_id', selectedCategory.id)
-            .order('sort_order', { nullsFirst: false })
-            .order('name');
-          
-          if (data) {
-            setDiagnosisDetailOptions(data);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching diagnosis details:', error);
-      }
-    }
   };
 
   const handleSyncCRM = () => {
@@ -366,25 +308,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         ...prev,
         ...updatedFields
       }));
-
-      // 진단명 대분류가 업데이트된 경우, 중분류 옵션 자동 로드
-      if (updatedFields.diagnosis_category) {
-        const selectedCategory = diagnosisCategoryOptions.find(
-          opt => opt.name === updatedFields.diagnosis_category
-        );
-        if (selectedCategory) {
-          const { data: detailOptions } = await supabase
-            .from('diagnosis_options')
-            .select('*')
-            .eq('parent_id', selectedCategory.id)
-            .order('sort_order', { nullsFirst: false })
-            .order('name');
-          
-          if (detailOptions) {
-            setDiagnosisDetailOptions(detailOptions);
-          }
-        }
-      }
 
       toast({
         title: "최신화 완료",
@@ -643,44 +566,27 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
           {/* 진단명 대분류 */}
           <div>
             <Label htmlFor="diagnosis_category">진단명 (대분류)</Label>
-            <Select 
-              name="diagnosis_category" 
-              value={formData.diagnosis_category} 
-              onValueChange={(value) => handleSelectChange('diagnosis_category', value)}
-            >
-              <SelectTrigger className="bg-background">
-                <SelectValue placeholder="진단명 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {diagnosisCategoryOptions.map((option) => (
-                  <SelectItem key={option.id} value={option.name}>
-                    {option.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input
+              id="diagnosis_category"
+              name="diagnosis_category"
+              value={formData.diagnosis_category}
+              placeholder="API에서 자동 입력"
+              disabled
+              className="bg-muted"
+            />
           </div>
 
           {/* 진단명 중분류 */}
           <div>
             <Label htmlFor="diagnosis_detail">진단명 (중분류)</Label>
-            <Select 
-              name="diagnosis_detail" 
-              value={formData.diagnosis_detail} 
-              onValueChange={(value) => handleSelectChange('diagnosis_detail', value)}
-              disabled={!formData.diagnosis_category}
-            >
-              <SelectTrigger className="bg-background">
-                <SelectValue placeholder={formData.diagnosis_category ? "세부 진단명 선택" : "먼저 대분류를 선택하세요"} />
-              </SelectTrigger>
-              <SelectContent>
-                {diagnosisDetailOptions.map((option) => (
-                  <SelectItem key={option.id} value={option.name}>
-                    {option.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input
+              id="diagnosis_detail"
+              name="diagnosis_detail"
+              value={formData.diagnosis_detail}
+              placeholder="API에서 자동 입력"
+              disabled
+              className="bg-muted"
+            />
           </div>
 
           {/* 이전병원 대분류 */}
