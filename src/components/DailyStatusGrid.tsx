@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 
 interface AdmissionCycle {
@@ -1116,7 +1117,20 @@ export function DailyStatusGrid({
                     className="p-2 border text-xs cursor-pointer hover:bg-muted/50"
                     onDoubleClick={() => handleMemoDoubleClick(patient.id, 'memo1', patient.memo1 || '')}
                   >
-                    {patient.memo1 || '-'}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="truncate max-w-[120px]">
+                            {patient.memo1 || '-'}
+                          </div>
+                        </TooltipTrigger>
+                        {patient.memo1 && (
+                          <TooltipContent className="max-w-[300px] whitespace-pre-wrap">
+                            <p>{patient.memo1}</p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
                   </td>
                   <td className="p-2 border text-xs">
                     {[patient.korean_doctor, patient.western_doctor].filter(Boolean).join(', ') || '-'}
