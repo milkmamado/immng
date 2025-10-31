@@ -45,6 +45,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     patient_or_guardian: '환자', // 환자 or 보호자
     diet_info: '',              // 식이
     inflow_status: '유입',      // 유입/실패
+    failure_reason: '',         // 실패 사유
     visit_type: '',             // 입원/외래
     guardian_name: '',          // 보호자 이름
     guardian_relationship: '', // 보호자 관계
@@ -105,6 +106,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         patient_or_guardian: patient.patient_or_guardian || '환자',
         diet_info: patient.diet_info || '',
         inflow_status: patient.inflow_status || '유입',
+        failure_reason: patient.failure_reason || '',
         visit_type: patient.visit_type || '',
         guardian_name: patient.guardian_name || '',
         guardian_relationship: patient.guardian_relationship || '',
@@ -355,6 +357,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         patient_or_guardian: formData.patient_or_guardian || null,
         diet_info: formData.diet_info || null,
         inflow_status: formData.inflow_status,
+        failure_reason: formData.failure_reason || null,
         visit_type: formData.visit_type || null,
         guardian_name: formData.guardian_name || null,
         guardian_relationship: formData.guardian_relationship || null,
@@ -414,6 +417,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         patient_or_guardian: '환자',
         diet_info: '',
         inflow_status: '유입',
+        failure_reason: '',
         visit_type: '',
         guardian_name: '',
         guardian_relationship: '',
@@ -752,6 +756,21 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               </SelectContent>
             </Select>
           </div>
+
+          {/* 실패 사유 (유입상태가 실패일 때만 표시) */}
+          {formData.inflow_status === '실패' && (
+            <div className="md:col-span-2 lg:col-span-3">
+              <Label htmlFor="failure_reason">실패 사유</Label>
+              <Textarea
+                id="failure_reason"
+                name="failure_reason"
+                value={formData.failure_reason}
+                onChange={handleInputChange}
+                placeholder="실패 사유를 입력하세요"
+                rows={2}
+              />
+            </div>
+          )}
 
           {/* 입원/외래 */}
           <div>
