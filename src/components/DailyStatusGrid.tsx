@@ -9,8 +9,13 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ChevronLeft, ChevronRight, RefreshCw, ChevronUp, ChevronDown, CalendarDays } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { ChevronLeft, ChevronRight, RefreshCw, ChevronUp, ChevronDown, CalendarDays, CalendarIcon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { format } from "date-fns";
+import { ko } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface AdmissionCycle {
   id: string;
@@ -40,6 +45,7 @@ interface Patient {
   age?: number;
   visit_motivation?: string;
   address?: string;
+  inflow_date?: string;
   crm_memo?: string;
   special_note_1?: string;
   special_note_2?: string;
@@ -1699,6 +1705,43 @@ export function DailyStatusGrid({
                       onChange={(e) => updateEditingField('western_doctor', e.target.value)}
                       placeholder="양방주치의"
                     />
+                  </div>
+
+                  {/* 유입일 */}
+                  <div>
+                    <Label htmlFor="inflow_date">유입일</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !selectedPatientDetail?.inflow_date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {selectedPatientDetail?.inflow_date ? (
+                            format(new Date(selectedPatientDetail.inflow_date), "PPP", { locale: ko })
+                          ) : (
+                            <span>날짜 선택</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 z-[100]" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={selectedPatientDetail?.inflow_date ? new Date(selectedPatientDetail.inflow_date) : undefined}
+                          onSelect={(date) => {
+                            if (date) {
+                              const formatted = format(date, 'yyyy-MM-dd');
+                              updateEditingField('inflow_date', formatted);
+                            }
+                          }}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
               </div>

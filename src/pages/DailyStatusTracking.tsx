@@ -41,6 +41,7 @@ interface Patient {
   age?: number;
   visit_motivation?: string;
   address?: string;
+  inflow_date?: string;
   crm_memo?: string;
   special_note_1?: string;
   special_note_2?: string;
