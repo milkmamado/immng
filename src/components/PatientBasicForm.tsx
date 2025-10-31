@@ -355,6 +355,24 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         return;
       }
 
+      // 진단명 대분류가 업데이트되는 경우 중분류 옵션 로드
+      if (updatedFields.diagnosis_category) {
+        const parentOption = diagnosisCategoryOptions.find(
+          opt => opt.name === updatedFields.diagnosis_category
+        );
+        if (parentOption) {
+          const { data } = await supabase
+            .from('diagnosis_options')
+            .select('*')
+            .eq('parent_id', parentOption.id)
+            .order('name');
+          
+          if (data) {
+            setDiagnosisDetailOptions(data);
+          }
+        }
+      }
+
       // DB 업데이트
       const { error } = await supabase
         .from('patients')
