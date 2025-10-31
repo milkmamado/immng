@@ -336,6 +336,29 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('로그인이 필요합니다.');
 
+      // 고객번호 중복 체크 (신규 등록 또는 고객번호가 변경된 경우)
+      if (formData.customer_number) {
+        const { data: existingPatient, error: checkError } = await supabase
+          .from('patients')
+          .select('id, name')
+          .eq('customer_number', formData.customer_number)
+          .maybeSingle();
+
+        if (checkError) throw checkError;
+
+        // 신규 등록이거나 다른 환자의 고객번호인 경우
+        if (existingPatient && (!patient || existingPatient.id !== patient.id)) {
+          toast({
+            title: "중복된 고객번호",
+            description: `고객번호 ${formData.customer_number}는 이미 환자 "${existingPatient.name}"에게 등록되어 있습니다.`,
+            variant: "destructive",
+            duration: 3000,
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
       const patientData: any = {
         name: formData.name,
         customer_number: formData.customer_number || null,
