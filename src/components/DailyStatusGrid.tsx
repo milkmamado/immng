@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ChevronLeft, ChevronRight, RefreshCw, ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, RefreshCw, ChevronUp, ChevronDown, CalendarDays } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface AdmissionCycle {
   id: string;
@@ -112,6 +113,16 @@ export function DailyStatusGrid({
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<any | null>(null);
   const [editingManagementStatus, setEditingManagementStatus] = useState<string>('');
   const [savedScrollPosition, setSavedScrollPosition] = useState<number>(0);
+  
+  // 일괄 스케줄 등록 관련 state
+  const [bulkScheduleDialog, setBulkScheduleDialog] = useState<{
+    open: boolean;
+    patient: Patient | null;
+  }>({ open: false, patient: null });
+  const [selectedDates, setSelectedDates] = useState<Set<number>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState<string>('');
+  const [bulkNotes, setBulkNotes] = useState<string>('');
+  
   const [patientStats, setPatientStats] = useState<{
     currentMonth: {
       admissionDays: number;
@@ -158,6 +169,58 @@ export function DailyStatusGrid({
     [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
     onOrderUpdate(newOrder.map(p => p.id));
   };
+
+  // 일괄 스케줄 등록 다이얼로그 열기
+  const handleOpenBulkSchedule = (patient: Patient) => {
+    setBulkScheduleDialog({ open: true, patient });
+    setSelectedDates(new Set());
+    setBulkStatus('');
+    setBulkNotes('');
+  };
+
+  // 일괄 스케줄 등록 다이얼로그 닫기
+  const handleCloseBulkSchedule = () => {
+    setBulkScheduleDialog({ open: false, patient: null });
+    setSelectedDates(new Set());
+    setBulkStatus('');
+    setBulkNotes('');
+  };
+
+  // 날짜 체크박스 토글
+  const handleToggleDate = (day: number) => {
+    const newDates = new Set(selectedDates);
+    if (newDates.has(day)) {
+      newDates.delete(day);
+    } else {
+      newDates.add(day);
+    }
+    setSelectedDates(newDates);
+  };
+
+  // 일괄 스케줄 등록 실행
+  const handleBulkScheduleSubmit = async () => {
+    if (!bulkScheduleDialog.patient || selectedDates.size === 0 || !bulkStatus) {
+      return;
+    }
+
+    try {
+      const [year, month] = yearMonth.split('-');
+      const dateArray = Array.from(selectedDates).map(day => {
+        const dateStr = `${year}-${month}-${String(day).padStart(2, '0')}`;
+        return { date: dateStr, patientId: bulkScheduleDialog.patient!.id };
+      });
+
+      // 각 날짜에 대해 상태 업데이트
+      for (const { date, patientId } of dateArray) {
+        await onStatusUpdate(patientId, date, bulkStatus, bulkNotes || undefined);
+      }
+
+      handleCloseBulkSchedule();
+    } catch (error) {
+      console.error('Bulk schedule error:', error);
+    }
+  };
+
 
   // 옵션 데이터 및 사용자 정보 가져오기
   useEffect(() => {
@@ -1101,16 +1164,30 @@ export function DailyStatusGrid({
                 <tr key={patient.id} className="hover:bg-muted/50">
                   <td className="p-2 border sticky left-0 bg-background">
                     <div className="space-y-0.5">
-                      <div 
-                        className="font-medium cursor-pointer hover:text-primary transition-colors"
-                        onClick={() => {
-                          setSelectedPatientDetail(patient);
-                          setEditingManagementStatus(patient.management_status || '관리 중');
-                          calculatePatientStats(patient.id);
-                          fetchPackageData(patient.id);
-                        }}
-                      >
-                        {patient.name}
+                      <div className="flex items-center gap-1">
+                        <div 
+                          className="font-medium cursor-pointer hover:text-primary transition-colors"
+                          onClick={() => {
+                            setSelectedPatientDetail(patient);
+                            setEditingManagementStatus(patient.management_status || '관리 중');
+                            calculatePatientStats(patient.id);
+                            fetchPackageData(patient.id);
+                          }}
+                        >
+                          {patient.name}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-4 w-4 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenBulkSchedule(patient);
+                          }}
+                          title="일괄 스케줄 등록"
+                        >
+                          <CalendarDays className="h-3 w-3" />
+                        </Button>
                       </div>
                       <div className="text-[10px] text-muted-foreground">
                         담당: {patient.manager_name || '-'}
@@ -2081,6 +2158,90 @@ export function DailyStatusGrid({
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 일괄 스케줄 등록 다이얼로그 */}
+      <Dialog open={bulkScheduleDialog.open} onOpenChange={handleCloseBulkSchedule}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {bulkScheduleDialog.patient?.name} - 일괄 스케줄 등록
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* 상태 선택 */}
+            <div>
+              <Label>상태 선택</Label>
+              <Select value={bulkStatus} onValueChange={setBulkStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="상태를 선택하세요" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusTypes.map(type => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 날짜 선택 */}
+            <div>
+              <Label>날짜 선택 (여러 개 선택 가능)</Label>
+              <div className="grid grid-cols-7 gap-2 mt-2 p-4 border rounded-lg max-h-[300px] overflow-y-auto">
+                {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
+                  const isSelected = selectedDates.has(day);
+                  return (
+                    <div key={day} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`day-${day}`}
+                        checked={isSelected}
+                        onCheckedChange={() => handleToggleDate(day)}
+                      />
+                      <label
+                        htmlFor={`day-${day}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        {day}일
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="text-sm text-muted-foreground mt-2">
+                선택된 날짜: {selectedDates.size}개
+              </div>
+            </div>
+
+            {/* 메모 입력 (선택사항) */}
+            {(bulkStatus === '기타' || bulkStatus === '전화F/U') && (
+              <div>
+                <Label>메모 (선택사항)</Label>
+                <Textarea
+                  value={bulkNotes}
+                  onChange={(e) => setBulkNotes(e.target.value)}
+                  placeholder="메모를 입력하세요"
+                  rows={3}
+                />
+              </div>
+            )}
+
+            {/* 버튼 */}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={handleCloseBulkSchedule}>
+                취소
+              </Button>
+              <Button 
+                onClick={handleBulkScheduleSubmit}
+                disabled={selectedDates.size === 0 || !bulkStatus}
+              >
+                선택한 날짜에 모두 적용
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
