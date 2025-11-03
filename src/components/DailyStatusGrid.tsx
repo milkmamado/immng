@@ -1160,12 +1160,6 @@ export function DailyStatusGrid({
               <th className="min-w-[120px] p-2 text-left font-medium border">
                 메모
               </th>
-              <th className="min-w-[100px] p-2 text-left font-medium border">
-                주치의
-              </th>
-              <th className="min-w-[100px] p-2 text-left font-medium border">
-                이전병원
-              </th>
               {renderDayHeaders()}
             </tr>
           </thead>
@@ -1255,12 +1249,6 @@ export function DailyStatusGrid({
                         )}
                       </Tooltip>
                     </TooltipProvider>
-                  </td>
-                  <td className="p-2 border text-xs">
-                    {[patient.korean_doctor, patient.western_doctor].filter(Boolean).join(', ') || '-'}
-                  </td>
-                  <td className="p-2 border text-xs">
-                    {patient.previous_hospital || '-'}
                   </td>
                   {renderPatientRow(patient)}
                 </tr>
