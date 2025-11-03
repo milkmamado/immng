@@ -1126,7 +1126,7 @@ export function DailyStatusGrid({
         ))}
       </div>
 
-      <div className="sticky top-0 z-20 bg-background py-4 border-b shadow-sm flex items-center gap-2">
+      <div className="flex items-center gap-2">
         <Button 
           variant="outline" 
           size="icon"

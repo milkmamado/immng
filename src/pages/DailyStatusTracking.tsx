@@ -576,6 +576,54 @@ export default function DailyStatusTracking() {
               className="pl-10"
             />
           </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={handlePreviousMonth}
+              aria-label="이전 월"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <CalendarIcon className="h-5 w-5" />
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-48">
+                  {selectedMonth.split('-')[0]}년 {selectedMonth.split('-')[1]}월
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={calendarDate}
+                  onSelect={(date) => {
+                    if (date) {
+                      setCalendarDate(date);
+                      const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                      setSelectedMonth(yearMonth);
+                      setIsCalendarOpen(false);
+                    }
+                  }}
+                  locale={ko}
+                  captionLayout="dropdown"
+                  fromYear={2020}
+                  toYear={2035}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+            
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={handleNextMonth}
+              aria-label="다음 월"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
