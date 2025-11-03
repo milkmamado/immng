@@ -555,81 +555,87 @@ export default function DailyStatusTracking() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-3xl font-bold">일별 환자 상태 추적</h1>
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="outline"
-            onClick={handleExportToExcel}
-            className="gap-2"
-          >
-            <FileDown className="h-4 w-4" />
-            엑셀 내보내기
-          </Button>
-          <div className="relative w-80">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="환자명, 등록번호, 담당자, 주치의, 이전병원으로 검색..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+    <div>
+      <div className="container mx-auto p-6 pb-4">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">일별 환자 상태 추적</h1>
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="outline"
+              onClick={handleExportToExcel}
+              className="gap-2"
+            >
+              <FileDown className="h-4 w-4" />
+              엑셀 내보내기
+            </Button>
+            <div className="relative w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="환자명, 등록번호, 담당자, 주치의, 이전병원으로 검색..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
         </div>
       </div>
 
       {/* 월 네비게이션 - sticky */}
-      <div className="sticky top-0 z-10 bg-background py-4 border-b shadow-sm">
-        <div className="flex items-center justify-center gap-2">
-          <Button 
-            variant="outline" 
-            size="icon"
-            onClick={handlePreviousMonth}
-            aria-label="이전 월"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          
-          <CalendarIcon className="h-5 w-5" />
-          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-48">
-                {selectedMonth.split('-')[0]}년 {selectedMonth.split('-')[1]}월
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="center">
-              <Calendar
-                mode="single"
-                selected={calendarDate}
-                onSelect={(date) => {
-                  if (date) {
-                    setCalendarDate(date);
-                    const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                    setSelectedMonth(yearMonth);
-                    setIsCalendarOpen(false);
-                  }
-                }}
-                locale={ko}
-                captionLayout="dropdown"
-                fromYear={2020}
-                toYear={2035}
-                initialFocus
-                className="pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
-          
-          <Button 
-            variant="outline" 
-            size="icon"
-            onClick={handleNextMonth}
-            aria-label="다음 월"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+      <div className="sticky top-0 z-10 bg-background py-4 border-y shadow-sm">
+        <div className="container mx-auto">
+          <div className="flex items-center justify-center gap-2">
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={handlePreviousMonth}
+              aria-label="이전 월"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <CalendarIcon className="h-5 w-5" />
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-48">
+                  {selectedMonth.split('-')[0]}년 {selectedMonth.split('-')[1]}월
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="center">
+                <Calendar
+                  mode="single"
+                  selected={calendarDate}
+                  onSelect={(date) => {
+                    if (date) {
+                      setCalendarDate(date);
+                      const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                      setSelectedMonth(yearMonth);
+                      setIsCalendarOpen(false);
+                    }
+                  }}
+                  locale={ko}
+                  captionLayout="dropdown"
+                  fromYear={2020}
+                  toYear={2035}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+            
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={handleNextMonth}
+              aria-label="다음 월"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
+
+      <div className="container mx-auto px-6 pt-6 space-y-6">
 
       {/* 통계 카드 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -687,6 +693,7 @@ export default function DailyStatusTracking() {
       />
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
