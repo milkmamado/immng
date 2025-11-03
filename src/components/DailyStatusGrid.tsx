@@ -1067,9 +1067,14 @@ export function DailyStatusGrid({
           <Button
             variant="ghost"
             size="sm"
-            className="h-10 w-full p-0.5 text-xs bg-transparent hover:bg-black/5 dark:hover:bg-white/5"
+            className="h-10 w-full p-0.5 text-xs bg-transparent hover:bg-black/5 dark:hover:bg-white/5 relative"
             onClick={() => handleCellClick(patient.id, day, patient)}
           >
+            {/* 날짜 표시 (왼쪽 상단에 옅게) */}
+            <span className="absolute top-0.5 left-0.5 text-[8px] text-muted-foreground/40">
+              {day}
+            </span>
+            
             {shouldShowStatus && (
               <div className="flex flex-col items-center gap-0.5">
                 {status.status_type === '관리 중' ? (
