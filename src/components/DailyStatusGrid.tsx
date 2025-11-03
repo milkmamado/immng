@@ -1141,33 +1141,36 @@ export function DailyStatusGrid({
     <div className="space-y-4 relative">
       {/* 스크롤 시 나타나는 고정 헤더 */}
       {showStickyHeader && (
-        <div 
-          ref={stickyHeaderRef}
-          className="fixed top-[68px] left-0 right-0 z-30 bg-background border-b shadow-md overflow-x-auto scrollbar-hide"
-          style={{ paddingLeft: '48px', paddingRight: '48px' }}
-        >
-          <div className="flex items-center gap-2" style={{ paddingLeft: '0px' }}>
-            <div className="w-10 flex-shrink-0"></div>
-            <table className="min-w-full border-collapse text-sm">
-              <thead>
-                <tr className="bg-muted">
-                  <th className="min-w-[100px] p-2 text-left font-medium border sticky left-0 bg-muted z-10">
-                    환자명
-                  </th>
-                  <th className="min-w-[120px] p-2 text-left font-medium border">
-                    메모
-                  </th>
-                  <th className="min-w-[100px] p-2 text-left font-medium border">
-                    주치의
-                  </th>
-                  <th className="min-w-[100px] p-2 text-left font-medium border">
-                    이전병원
-                  </th>
-                  {renderDayHeaders()}
-                </tr>
-              </thead>
-            </table>
-            <div className="w-10 flex-shrink-0"></div>
+        <div className="fixed top-[68px] left-0 right-0 z-30 bg-background border-b shadow-md">
+          <div className="container mx-auto px-6">
+            <div className="flex items-center gap-2">
+              <div className="w-10 flex-shrink-0"></div>
+              <div 
+                ref={stickyHeaderRef}
+                className="overflow-x-auto scrollbar-hide flex-1"
+              >
+                <table className="min-w-full border-collapse text-sm">
+                  <thead>
+                    <tr className="bg-muted">
+                      <th className="min-w-[100px] p-2 text-left font-medium border sticky left-0 bg-muted z-10">
+                        환자명
+                      </th>
+                      <th className="min-w-[120px] p-2 text-left font-medium border">
+                        메모
+                      </th>
+                      <th className="min-w-[100px] p-2 text-left font-medium border">
+                        주치의
+                      </th>
+                      <th className="min-w-[100px] p-2 text-left font-medium border">
+                        이전병원
+                      </th>
+                      {renderDayHeaders()}
+                    </tr>
+                  </thead>
+                </table>
+              </div>
+              <div className="w-10 flex-shrink-0"></div>
+            </div>
           </div>
         </div>
       )}
