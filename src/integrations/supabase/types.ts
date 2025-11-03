@@ -204,6 +204,30 @@ export type Database = {
         }
         Relationships: []
       }
+      manager_supervisors: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          manager_id: string
+          supervisor_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          manager_id: string
+          supervisor_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          manager_id?: string
+          supervisor_id?: string
+        }
+        Relationships: []
+      }
       medical_info: {
         Row: {
           admission_cycle_id: string | null
