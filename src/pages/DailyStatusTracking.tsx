@@ -497,7 +497,7 @@ export default function DailyStatusTracking() {
       const daysInMonth = getDaysInMonth(selectedMonth);
       
       // 헤더 행 만들기
-      const headers = ['환자명', '담당자', '진단', '관리상태', '메모', '주치의', '이전병원'];
+      const headers = ['환자명', '담당자', '진단', '관리상태', '메모'];
       for (let day = 1; day <= daysInMonth; day++) {
         headers.push(`${day}일`);
       }
@@ -509,9 +509,7 @@ export default function DailyStatusTracking() {
           '담당자': patient.manager_name || '-',
           '진단': patient.diagnosis_category || patient.diagnosis_detail || '-',
           '관리상태': patient.management_status || '관리 중',
-          '메모': patient.memo1 || '-',
-          '주치의': [patient.korean_doctor, patient.western_doctor].filter(Boolean).join(', ') || '-',
-          '이전병원': patient.hospital_category || '-'
+          '메모': patient.memo1 || '-'
         };
         
         // 각 날짜별 상태 추가
@@ -538,8 +536,6 @@ export default function DailyStatusTracking() {
         { wch: 15 }, // 진단
         { wch: 12 }, // 관리상태
         { wch: 20 }, // 메모
-        { wch: 15 }, // 주치의
-        { wch: 15 }, // 이전병원
       ];
       for (let i = 0; i < daysInMonth; i++) {
         colWidths.push({ wch: 10 }); // 날짜 컬럼
