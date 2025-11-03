@@ -1147,18 +1147,18 @@ export function DailyStatusGrid({
           onMouseMove={handleMouseMove}
         >
           <table className="min-w-full border-collapse border text-sm">
-          <thead className="sticky top-[68px] z-10">
+          <thead>
             <tr className="bg-muted">
-              <th className="min-w-[100px] p-2 text-left font-medium border sticky left-0 bg-muted z-20">
+              <th className="min-w-[100px] p-2 text-left font-medium border sticky left-0 bg-muted z-10">
                 환자명
               </th>
-              <th className="min-w-[120px] p-2 text-left font-medium border bg-muted">
+              <th className="min-w-[120px] p-2 text-left font-medium border">
                 메모
               </th>
-              <th className="min-w-[100px] p-2 text-left font-medium border bg-muted">
+              <th className="min-w-[100px] p-2 text-left font-medium border">
                 주치의
               </th>
-              <th className="min-w-[100px] p-2 text-left font-medium border bg-muted">
+              <th className="min-w-[100px] p-2 text-left font-medium border">
                 이전병원
               </th>
               {renderDayHeaders()}
