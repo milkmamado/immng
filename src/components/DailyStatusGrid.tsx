@@ -965,7 +965,7 @@ export function DailyStatusGrid({
     const days = [];
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(
-        <th key={day} className="min-w-[60px] p-2 text-center text-xs font-medium border bg-muted sticky top-[72px] z-10">
+        <th key={day} className="min-w-[60px] p-2 text-center text-xs font-medium border bg-muted">
           {day}({getDayOfWeek(day)})
         </th>
       );
@@ -1147,18 +1147,18 @@ export function DailyStatusGrid({
           onMouseMove={handleMouseMove}
         >
           <table className="min-w-full border-collapse border text-sm">
-          <thead>
+          <thead className="sticky top-[68px] z-10">
             <tr className="bg-muted">
-              <th className="min-w-[100px] p-2 text-left font-medium border sticky left-0 top-[72px] bg-muted z-20">
+              <th className="min-w-[100px] p-2 text-left font-medium border sticky left-0 bg-muted z-20">
                 환자명
               </th>
-              <th className="min-w-[120px] p-2 text-left font-medium border sticky top-[72px] bg-muted z-10">
+              <th className="min-w-[120px] p-2 text-left font-medium border bg-muted">
                 메모
               </th>
-              <th className="min-w-[100px] p-2 text-left font-medium border sticky top-[72px] bg-muted z-10">
+              <th className="min-w-[100px] p-2 text-left font-medium border bg-muted">
                 주치의
               </th>
-              <th className="min-w-[100px] p-2 text-left font-medium border sticky top-[72px] bg-muted z-10">
+              <th className="min-w-[100px] p-2 text-left font-medium border bg-muted">
                 이전병원
               </th>
               {renderDayHeaders()}
