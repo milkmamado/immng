@@ -156,9 +156,11 @@ export function DailyStatusGrid({
   const [syncingPackage, setSyncingPackage] = useState(false);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
+  const theadRef = useRef<HTMLTableSectionElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+  const [showStickyHeader, setShowStickyHeader] = useState(false);
 
   const statusTypes = ['입원', '퇴원', '재원', '낮병동', '외래', '기타', '전화F/U'];
   
@@ -244,6 +246,26 @@ export function DailyStatusGrid({
     
     return () => {
       window.removeEventListener('message', handleMessage);
+    };
+  }, []);
+
+  // 스크롤 감지하여 고정 헤더 표시/숨김
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowStickyHeader(!entry.isIntersecting);
+      },
+      { threshold: 0, rootMargin: '-68px 0px 0px 0px' } // 월 선택 바 높이만큼 offset
+    );
+
+    if (theadRef.current) {
+      observer.observe(theadRef.current);
+    }
+
+    return () => {
+      if (theadRef.current) {
+        observer.unobserve(theadRef.current);
+      }
     };
   }, []);
 
@@ -1100,7 +1122,34 @@ export function DailyStatusGrid({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
+      {/* 스크롤 시 나타나는 고정 헤더 */}
+      {showStickyHeader && (
+        <div className="fixed top-[68px] left-0 right-0 z-30 bg-background border-b shadow-md overflow-x-auto scrollbar-hide">
+          <div className="container mx-auto px-6">
+            <table className="min-w-full border-collapse text-sm">
+              <thead>
+                <tr className="bg-muted">
+                  <th className="min-w-[100px] p-2 text-left font-medium border sticky left-0 bg-muted z-10">
+                    환자명
+                  </th>
+                  <th className="min-w-[120px] p-2 text-left font-medium border">
+                    메모
+                  </th>
+                  <th className="min-w-[100px] p-2 text-left font-medium border">
+                    주치의
+                  </th>
+                  <th className="min-w-[100px] p-2 text-left font-medium border">
+                    이전병원
+                  </th>
+                  {renderDayHeaders()}
+                </tr>
+              </thead>
+            </table>
+          </div>
+        </div>
+      )}
+      
       <div className="flex flex-wrap gap-2 mb-4">
         <span className="text-sm font-medium">상태 범례:</span>
         <div className="flex items-center gap-1">
@@ -1147,7 +1196,7 @@ export function DailyStatusGrid({
           onMouseMove={handleMouseMove}
         >
           <table className="min-w-full border-collapse border text-sm">
-          <thead>
+          <thead ref={theadRef}>
             <tr className="bg-muted">
               <th className="min-w-[100px] p-2 text-left font-medium border sticky left-0 bg-muted z-10">
                 환자명
