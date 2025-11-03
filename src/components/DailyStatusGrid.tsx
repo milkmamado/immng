@@ -158,10 +158,12 @@ export function DailyStatusGrid({
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const theadRef = useRef<HTMLTableSectionElement>(null);
   const stickyHeaderRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [showStickyHeader, setShowStickyHeader] = useState(false);
+  const [stickyHeaderStyle, setStickyHeaderStyle] = useState<{ left: string; width: string }>({ left: '0px', width: '100%' });
 
   const statusTypes = ['입원', '퇴원', '재원', '낮병동', '외래', '기타', '전화F/U'];
   
@@ -250,23 +252,41 @@ export function DailyStatusGrid({
     };
   }, []);
 
-  // 스크롤 감지하여 고정 헤더 표시/숨김
+  // 스크롤 감지하여 고정 헤더 표시/숨김 및 위치 계산
   useEffect(() => {
+    const updateStickyHeaderPosition = () => {
+      if (tableScrollRef.current && containerRef.current) {
+        const rect = tableScrollRef.current.getBoundingClientRect();
+        const containerRect = containerRef.current.getBoundingClientRect();
+        setStickyHeaderStyle({
+          left: `${rect.left}px`,
+          width: `${rect.width}px`
+        });
+      }
+    };
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         setShowStickyHeader(!entry.isIntersecting);
+        if (!entry.isIntersecting) {
+          updateStickyHeaderPosition();
+        }
       },
-      { threshold: 0, rootMargin: '-68px 0px 0px 0px' } // 월 선택 바 높이만큼 offset
+      { threshold: 0, rootMargin: '-68px 0px 0px 0px' }
     );
 
     if (theadRef.current) {
       observer.observe(theadRef.current);
     }
 
+    window.addEventListener('resize', updateStickyHeaderPosition);
+    updateStickyHeaderPosition();
+
     return () => {
       if (theadRef.current) {
         observer.unobserve(theadRef.current);
       }
+      window.removeEventListener('resize', updateStickyHeaderPosition);
     };
   }, []);
 
@@ -283,7 +303,7 @@ export function DailyStatusGrid({
       tableElement.addEventListener('scroll', handleScroll);
       return () => tableElement.removeEventListener('scroll', handleScroll);
     }
-  }, []);
+  }, [showStickyHeader]);
 
   const fetchOptions = async () => {
     try {
@@ -1138,40 +1158,36 @@ export function DailyStatusGrid({
   };
 
   return (
-    <div className="space-y-4 relative">
+    <div ref={containerRef} className="space-y-4 relative">
       {/* 스크롤 시 나타나는 고정 헤더 */}
       {showStickyHeader && (
-        <div className="fixed top-[68px] left-0 right-0 z-30 bg-background border-b shadow-md">
-          <div className="container mx-auto px-6">
-            <div className="flex items-center gap-2">
-              <div className="w-10 flex-shrink-0"></div>
-              <div 
-                ref={stickyHeaderRef}
-                className="overflow-x-auto scrollbar-hide flex-1"
-              >
-                <table className="min-w-full border-collapse text-sm">
-                  <thead>
-                    <tr className="bg-muted">
-                      <th className="min-w-[100px] p-2 text-left font-medium border sticky left-0 bg-muted z-10">
-                        환자명
-                      </th>
-                      <th className="min-w-[120px] p-2 text-left font-medium border">
-                        메모
-                      </th>
-                      <th className="min-w-[100px] p-2 text-left font-medium border">
-                        주치의
-                      </th>
-                      <th className="min-w-[100px] p-2 text-left font-medium border">
-                        이전병원
-                      </th>
-                      {renderDayHeaders()}
-                    </tr>
-                  </thead>
-                </table>
-              </div>
-              <div className="w-10 flex-shrink-0"></div>
-            </div>
-          </div>
+        <div 
+          ref={stickyHeaderRef}
+          className="fixed top-[68px] z-30 bg-background border-b shadow-md overflow-x-auto scrollbar-hide"
+          style={{ 
+            left: stickyHeaderStyle.left, 
+            width: stickyHeaderStyle.width,
+          }}
+        >
+          <table className="min-w-full border-collapse text-sm">
+            <thead>
+              <tr className="bg-muted">
+                <th className="min-w-[100px] p-2 text-left font-medium border sticky left-0 bg-muted z-10">
+                  환자명
+                </th>
+                <th className="min-w-[120px] p-2 text-left font-medium border">
+                  메모
+                </th>
+                <th className="min-w-[100px] p-2 text-left font-medium border">
+                  주치의
+                </th>
+                <th className="min-w-[100px] p-2 text-left font-medium border">
+                  이전병원
+                </th>
+                {renderDayHeaders()}
+              </tr>
+            </thead>
+          </table>
         </div>
       )}
       
