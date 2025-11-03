@@ -157,6 +157,7 @@ export function DailyStatusGrid({
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const theadRef = useRef<HTMLTableSectionElement>(null);
+  const stickyHeaderRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
@@ -267,6 +268,21 @@ export function DailyStatusGrid({
         observer.unobserve(theadRef.current);
       }
     };
+  }, []);
+
+  // 테이블 스크롤과 고정 헤더 스크롤 동기화
+  useEffect(() => {
+    const handleScroll = () => {
+      if (tableScrollRef.current && stickyHeaderRef.current) {
+        stickyHeaderRef.current.scrollLeft = tableScrollRef.current.scrollLeft;
+      }
+    };
+
+    const tableElement = tableScrollRef.current;
+    if (tableElement) {
+      tableElement.addEventListener('scroll', handleScroll);
+      return () => tableElement.removeEventListener('scroll', handleScroll);
+    }
   }, []);
 
   const fetchOptions = async () => {
@@ -1125,8 +1141,13 @@ export function DailyStatusGrid({
     <div className="space-y-4 relative">
       {/* 스크롤 시 나타나는 고정 헤더 */}
       {showStickyHeader && (
-        <div className="fixed top-[68px] left-0 right-0 z-30 bg-background border-b shadow-md overflow-x-auto scrollbar-hide">
-          <div className="container mx-auto px-6">
+        <div 
+          ref={stickyHeaderRef}
+          className="fixed top-[68px] left-0 right-0 z-30 bg-background border-b shadow-md overflow-x-auto scrollbar-hide"
+          style={{ paddingLeft: '48px', paddingRight: '48px' }}
+        >
+          <div className="flex items-center gap-2" style={{ paddingLeft: '0px' }}>
+            <div className="w-10 flex-shrink-0"></div>
             <table className="min-w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-muted">
@@ -1146,6 +1167,7 @@ export function DailyStatusGrid({
                 </tr>
               </thead>
             </table>
+            <div className="w-10 flex-shrink-0"></div>
           </div>
         </div>
       )}
