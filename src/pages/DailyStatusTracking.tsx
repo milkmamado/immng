@@ -556,7 +556,7 @@ export default function DailyStatusTracking() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold">일별 환자 상태 추적</h1>
         <div className="flex items-center gap-4">
           <Button 
@@ -576,54 +576,58 @@ export default function DailyStatusTracking() {
               className="pl-10"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={handlePreviousMonth}
-              aria-label="이전 월"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            
-            <CalendarIcon className="h-5 w-5" />
-            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-48">
-                  {selectedMonth.split('-')[0]}년 {selectedMonth.split('-')[1]}월
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                  mode="single"
-                  selected={calendarDate}
-                  onSelect={(date) => {
-                    if (date) {
-                      setCalendarDate(date);
-                      const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                      setSelectedMonth(yearMonth);
-                      setIsCalendarOpen(false);
-                    }
-                  }}
-                  locale={ko}
-                  captionLayout="dropdown"
-                  fromYear={2020}
-                  toYear={2035}
-                  initialFocus
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
-            
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={handleNextMonth}
-              aria-label="다음 월"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+        </div>
+      </div>
+
+      {/* 월 네비게이션 - sticky */}
+      <div className="sticky top-0 z-10 bg-background py-4 border-b shadow-sm">
+        <div className="flex items-center justify-center gap-2">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={handlePreviousMonth}
+            aria-label="이전 월"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <CalendarIcon className="h-5 w-5" />
+          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-48">
+                {selectedMonth.split('-')[0]}년 {selectedMonth.split('-')[1]}월
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="center">
+              <Calendar
+                mode="single"
+                selected={calendarDate}
+                onSelect={(date) => {
+                  if (date) {
+                    setCalendarDate(date);
+                    const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    setSelectedMonth(yearMonth);
+                    setIsCalendarOpen(false);
+                  }
+                }}
+                locale={ko}
+                captionLayout="dropdown"
+                fromYear={2020}
+                toYear={2035}
+                initialFocus
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+          
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={handleNextMonth}
+            aria-label="다음 월"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
