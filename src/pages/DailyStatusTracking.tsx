@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -88,6 +88,8 @@ export default function DailyStatusTracking() {
     누적총매출: 0
   });
   const { toast } = useToast();
+  const scrollPositionRef = useRef<number>(0);
+  const shouldRestoreScrollRef = useRef<boolean>(false);
 
   useEffect(() => {
     fetchData();
@@ -275,6 +277,13 @@ export default function DailyStatusTracking() {
       });
     } finally {
       setLoading(false);
+      // 스크롤 위치 복원
+      if (shouldRestoreScrollRef.current) {
+        setTimeout(() => {
+          window.scrollTo(0, scrollPositionRef.current);
+          shouldRestoreScrollRef.current = false;
+        }, 0);
+      }
     }
   };
 
@@ -427,6 +436,8 @@ export default function DailyStatusTracking() {
   };
 
   const handlePreviousMonth = () => {
+    scrollPositionRef.current = window.scrollY;
+    shouldRestoreScrollRef.current = true;
     const [year, month] = selectedMonth.split('-').map(Number);
     const newDate = new Date(year, month - 1, 1);
     newDate.setMonth(newDate.getMonth() - 1);
@@ -436,6 +447,8 @@ export default function DailyStatusTracking() {
   };
 
   const handleNextMonth = () => {
+    scrollPositionRef.current = window.scrollY;
+    shouldRestoreScrollRef.current = true;
     const [year, month] = selectedMonth.split('-').map(Number);
     const newDate = new Date(year, month - 1, 1);
     newDate.setMonth(newDate.getMonth() + 1);
