@@ -12,11 +12,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Search, RefreshCw, Package as PackageIcon, Upload, FileSpreadsheet, Trash2, Download } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Users, Search, RefreshCw, Package as PackageIcon, Upload, FileSpreadsheet, Trash2, Download, CalendarIcon } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { DateRangeFilter } from "@/components/TableFilters/DateRangeFilter";
 import { VisitTypeFilter } from "@/components/TableFilters/VisitTypeFilter";
 import { DiagnosisFilter } from "@/components/TableFilters/DiagnosisFilter";
+import { format } from "date-fns";
+import { ko } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface Patient {
   id: string;
@@ -2512,6 +2517,80 @@ export default function PatientListManagement() {
                       onChange={(e) => updateEditingField('western_doctor', e.target.value)}
                       placeholder="양방주치의"
                     />
+                  </div>
+
+                  {/* 상담일 */}
+                  <div>
+                    <Label htmlFor="consultation_date">상담일</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !selectedPatientDetail?.consultation_date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {selectedPatientDetail?.consultation_date ? (
+                            format(new Date(selectedPatientDetail.consultation_date), "PPP", { locale: ko })
+                          ) : (
+                            <span>날짜 선택</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 z-[100]" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={selectedPatientDetail?.consultation_date ? new Date(selectedPatientDetail.consultation_date) : undefined}
+                          onSelect={(date) => {
+                            if (date) {
+                              const formatted = format(date, 'yyyy-MM-dd');
+                              updateEditingField('consultation_date', formatted);
+                            }
+                          }}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* 유입일 */}
+                  <div>
+                    <Label htmlFor="inflow_date">유입일</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !selectedPatientDetail?.inflow_date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {selectedPatientDetail?.inflow_date ? (
+                            format(new Date(selectedPatientDetail.inflow_date), "PPP", { locale: ko })
+                          ) : (
+                            <span>날짜 선택</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 z-[100]" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={selectedPatientDetail?.inflow_date ? new Date(selectedPatientDetail.inflow_date) : undefined}
+                          onSelect={(date) => {
+                            if (date) {
+                              const formatted = format(date, 'yyyy-MM-dd');
+                              updateEditingField('inflow_date', formatted);
+                            }
+                          }}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
               </div>
