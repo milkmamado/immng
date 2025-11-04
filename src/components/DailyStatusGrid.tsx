@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ChevronLeft, ChevronRight, RefreshCw, ChevronUp, ChevronDown, CalendarDays, CalendarIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, RefreshCw, ChevronUp, ChevronDown, CalendarDays, CalendarIcon, Filter } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
@@ -162,6 +162,9 @@ export function DailyStatusGrid({
   const [scrollLeft, setScrollLeft] = useState(0);
 
   const statusTypes = ['입원', '퇴원', '재원', '낮병동', '외래', '기타', '전화F/U'];
+  
+  // 날짜별 필터 상태: { 날짜(1-31): [선택된 상태 타입들] }
+  const [dateFilters, setDateFilters] = useState<Record<number, string[]>>({});
   
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
@@ -965,9 +968,97 @@ export function DailyStatusGrid({
   const renderDayHeaders = () => {
     const days = [];
     for (let day = 1; day <= daysInMonth; day++) {
+      const hasFilter = dateFilters[day] && dateFilters[day].length > 0;
+      
       days.push(
-        <th key={day} className="min-w-[60px] p-2 text-center text-xs font-medium border bg-muted">
-          {day}({getDayOfWeek(day)})
+        <th key={day} className="min-w-[60px] p-1 text-center text-xs font-medium border bg-muted">
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center gap-1">
+              <span>{day}({getDayOfWeek(day)})</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "h-5 w-5 p-0",
+                      hasFilter && "text-primary"
+                    )}
+                    title="필터"
+                  >
+                    <Filter className="h-3 w-3" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-3 z-50" align="start">
+                  <div className="space-y-2">
+                    <div className="font-medium text-sm mb-2">
+                      {day}일 상태 필터
+                    </div>
+                    <div className="space-y-2">
+                      {statusTypes.map((statusType) => {
+                        const isChecked = dateFilters[day]?.includes(statusType) || false;
+                        return (
+                          <div key={statusType} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`filter-${day}-${statusType}`}
+                              checked={isChecked}
+                              onCheckedChange={(checked) => {
+                                setDateFilters(prev => {
+                                  const current = prev[day] || [];
+                                  if (checked) {
+                                    return {
+                                      ...prev,
+                                      [day]: [...current, statusType]
+                                    };
+                                  } else {
+                                    const filtered = current.filter(s => s !== statusType);
+                                    if (filtered.length === 0) {
+                                      const { [day]: _, ...rest } = prev;
+                                      return rest;
+                                    }
+                                    return {
+                                      ...prev,
+                                      [day]: filtered
+                                    };
+                                  }
+                                });
+                              }}
+                            />
+                            <label
+                              htmlFor={`filter-${day}-${statusType}`}
+                              className="text-sm cursor-pointer"
+                            >
+                              {statusType}
+                            </label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {hasFilter && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full mt-2"
+                        onClick={() => {
+                          setDateFilters(prev => {
+                            const { [day]: _, ...rest } = prev;
+                            return rest;
+                          });
+                        }}
+                      >
+                        필터 초기화
+                      </Button>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+            {hasFilter && (
+              <Badge variant="secondary" className="text-[9px] px-1 py-0">
+                {dateFilters[day].length}개
+              </Badge>
+            )}
+          </div>
         </th>
       );
     }
@@ -1165,7 +1256,40 @@ export function DailyStatusGrid({
             </tr>
           </thead>
           <tbody>
-            {patients.map((patient, index) => {
+            {patients.filter((patient) => {
+              // 필터가 하나라도 설정되어 있으면 필터링 적용
+              if (Object.keys(dateFilters).length === 0) return true;
+              
+              // 각 필터링된 날짜에 대해 체크
+              for (const [dayStr, selectedStatuses] of Object.entries(dateFilters)) {
+                const day = parseInt(dayStr);
+                const date = `${yearMonth}-${String(day).padStart(2, '0')}`;
+                const status = getStatusForDate(patient.id, date);
+                const admissionStatus = getAdmissionStatusForDate(patient, date);
+                
+                // 해당 날짜에 선택된 상태 중 하나라도 있으면 표시
+                for (const selectedStatus of selectedStatuses) {
+                  // 직접 입력된 상태 체크
+                  if (status && status.status_type === selectedStatus) {
+                    return true;
+                  }
+                  
+                  // 입원 기간 기반 상태 체크 (입원/재원)
+                  if (!status || !['입원', '재원'].includes(status.status_type)) {
+                    if (admissionStatus) {
+                      if (selectedStatus === '입원' && admissionStatus.type === '입원') {
+                        return true;
+                      }
+                      if (selectedStatus === '재원' && admissionStatus.type === '재원') {
+                        return true;
+                      }
+                    }
+                  }
+                }
+              }
+              
+              return false;
+            }).map((patient, index) => {
               return (
                 <tr key={patient.id} className="hover:bg-muted/50">
                   <td className="p-2 border sticky left-0 bg-background">
