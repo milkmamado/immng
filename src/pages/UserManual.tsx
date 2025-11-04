@@ -303,6 +303,56 @@ export default function UserManual() {
                   </ul>
                 </div>
               </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold flex items-center gap-2 mb-3">
+                  <Info className="w-4 h-4 text-blue-600" />
+                  유입상태 분류 기준
+                </h4>
+                <div className="space-y-3">
+                  <div className="bg-red-50 border-2 border-red-500 p-4 rounded-lg">
+                    <div className="flex items-start gap-3 mb-3">
+                      <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold text-red-900 mb-2">⚠️ 필수 확인 사항</p>
+                        <p className="text-sm text-red-800 leading-relaxed">
+                          유입상태는 <strong>유입, 전화상담, 방문상담, 실패</strong> 4가지로 분류됩니다. 
+                          각 상태는 통계에 별도로 집계되므로 정확한 분류가 매우 중요합니다.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex justify-center mt-4">
+                      <Button 
+                        className="gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 h-auto"
+                        onClick={() => window.open('https://shell-brow-024.notion.site/2a166b31b17580f488f4e0c0244e46a0', '_blank')}
+                      >
+                        <BookMarked className="w-5 h-5" />
+                        📋 유입상태 분류 기준 상세 가이드 보기
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="border-2 border-green-500 rounded-lg p-3 bg-green-50">
+                      <div className="font-bold text-green-900 mb-2">✅ 유입 (초진상담)</div>
+                      <p className="text-sm text-green-800">정식으로 등록하여 관리 중인 환자</p>
+                    </div>
+                    <div className="border-2 border-purple-500 rounded-lg p-3 bg-purple-50">
+                      <div className="font-bold text-purple-900 mb-2">📞 전화상담</div>
+                      <p className="text-sm text-purple-800">전화로만 상담한 환자</p>
+                    </div>
+                    <div className="border-2 border-orange-500 rounded-lg p-3 bg-orange-50">
+                      <div className="font-bold text-orange-900 mb-2">🚶 방문상담</div>
+                      <p className="text-sm text-orange-800">병원에 방문하여 상담한 환자</p>
+                    </div>
+                    <div className="border-2 border-gray-500 rounded-lg p-3 bg-gray-50">
+                      <div className="font-bold text-gray-900 mb-2">❌ 실패</div>
+                      <p className="text-sm text-gray-800">유입에 실패한 환자</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
