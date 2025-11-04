@@ -41,6 +41,8 @@ export default function StatisticsManagement() {
   const [additionalStats, setAdditionalStats] = useState({
     outPatients: 0,
     newPatientsThisMonth: 0,
+    phoneConsultPatientsThisMonth: 0,
+    visitConsultPatientsThisMonth: 0,
     retentionRate: 0,
     patients1MonthPlus: 0,
     patients3MonthPlus: 0,
@@ -331,6 +333,42 @@ export default function StatisticsManagement() {
         return inflowYearMonth === selectedMonth;
       }).length || 0;
 
+      // 전화상담 환자 수 (해당 월)
+      let phoneConsultQuery = supabase
+        .from('patients')
+        .select('id, created_at, first_visit_date')
+        .eq('inflow_status', '전화상담');
+      
+      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
+        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
+        phoneConsultQuery = phoneConsultQuery.eq('assigned_manager', targetManager);
+      }
+      
+      const { data: phoneConsultPatients } = await phoneConsultQuery;
+      const phoneConsultCount = phoneConsultPatients?.filter(p => {
+        const inflowDate = new Date(p.first_visit_date || p.created_at);
+        const inflowYearMonth = `${inflowDate.getFullYear()}-${String(inflowDate.getMonth() + 1).padStart(2, '0')}`;
+        return inflowYearMonth === selectedMonth;
+      }).length || 0;
+
+      // 방문상담 환자 수 (해당 월)
+      let visitConsultQuery = supabase
+        .from('patients')
+        .select('id, created_at, first_visit_date')
+        .eq('inflow_status', '방문상담');
+      
+      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
+        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
+        visitConsultQuery = visitConsultQuery.eq('assigned_manager', targetManager);
+      }
+      
+      const { data: visitConsultPatients } = await visitConsultQuery;
+      const visitConsultCount = visitConsultPatients?.filter(p => {
+        const inflowDate = new Date(p.first_visit_date || p.created_at);
+        const inflowYearMonth = `${inflowDate.getFullYear()}-${String(inflowDate.getMonth() + 1).padStart(2, '0')}`;
+        return inflowYearMonth === selectedMonth;
+      }).length || 0;
+
       // 3. 재진관리비율 계산
       const [prevYear, prevMonth] = selectedMonth.split('-').map(Number);
       const prevMonthDate = new Date(prevYear, prevMonth - 2, 1);
@@ -380,6 +418,8 @@ export default function StatisticsManagement() {
       setAdditionalStats({
         outPatients: outPatientsCount,
         newPatientsThisMonth: newPatientsCount,
+        phoneConsultPatientsThisMonth: phoneConsultCount,
+        visitConsultPatientsThisMonth: visitConsultCount,
         retentionRate,
         patients1MonthPlus,
         patients3MonthPlus,
@@ -513,7 +553,7 @@ export default function StatisticsManagement() {
       </div>
 
       {/* 새로운 통계 카드 섹션 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">아웃 환자</CardTitle>
@@ -531,6 +571,26 @@ export default function StatisticsManagement() {
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{additionalStats.newPatientsThisMonth}명</div>
             <p className="text-xs text-muted-foreground mt-1">선택한 월 신규 유입</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">전화상담 비율</CardTitle>
+            <TrendingUp className="h-4 w-4 text-purple-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">{additionalStats.phoneConsultPatientsThisMonth}명</div>
+            <p className="text-xs text-muted-foreground mt-1">선택한 월 전화상담</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">방문상담 비율</CardTitle>
+            <TrendingUp className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{additionalStats.visitConsultPatientsThisMonth}명</div>
+            <p className="text-xs text-muted-foreground mt-1">선택한 월 방문상담</p>
           </CardContent>
         </Card>
         <Card>
