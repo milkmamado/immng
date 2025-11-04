@@ -333,24 +333,6 @@ export default function UserManual() {
                       </Button>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="border-2 border-green-500 rounded-lg p-3 bg-green-50">
-                      <div className="font-bold text-green-900 mb-2">✅ 유입 (초진상담)</div>
-                      <p className="text-sm text-green-800">정식으로 등록하여 관리 중인 환자</p>
-                    </div>
-                    <div className="border-2 border-purple-500 rounded-lg p-3 bg-purple-50">
-                      <div className="font-bold text-purple-900 mb-2">📞 전화상담</div>
-                      <p className="text-sm text-purple-800">전화로만 상담한 환자</p>
-                    </div>
-                    <div className="border-2 border-orange-500 rounded-lg p-3 bg-orange-50">
-                      <div className="font-bold text-orange-900 mb-2">🚶 방문상담</div>
-                      <p className="text-sm text-orange-800">병원에 방문하여 상담한 환자</p>
-                    </div>
-                    <div className="border-2 border-gray-500 rounded-lg p-3 bg-gray-50">
-                      <div className="font-bold text-gray-900 mb-2">❌ 실패</div>
-                      <p className="text-sm text-gray-800">유입에 실패한 환자</p>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
