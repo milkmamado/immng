@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertCircle, AlertTriangle, Phone, Calendar, Filter as FilterIcon } from "lucide-react";
+import { AlertCircle, AlertTriangle, Phone, Calendar, Filter as FilterIcon, Download } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { format } from "date-fns";
 import { calculateDaysSinceLastCheck, calculateAutoManagementStatus, shouldAutoUpdateStatus } from "@/utils/patientStatusUtils";
 import { Input } from "@/components/ui/input";
@@ -465,6 +466,66 @@ export default function RiskManagement() {
     );
   };
 
+  const handleExportToExcel = () => {
+    try {
+      // 엑셀로 내보낼 데이터 준비
+      const exportData = filteredRiskPatients.map(patient => {
+        const trackingData = reconnectData.get(patient.id);
+        return {
+          '고객번호': patient.customer_number || '-',
+          '이름': patient.name,
+          '전화번호': patient.phone || '-',
+          '나이': patient.age || '-',
+          '성별': patient.gender || '-',
+          '리스크레벨': patient.risk_level,
+          '경과일수': patient.days_since_last_check,
+          '마지막체크일': patient.last_status_date 
+            ? new Date(patient.last_status_date).toLocaleDateString('ko-KR')
+            : '-',
+          '유입일': new Date(patient.created_at).toLocaleDateString('ko-KR'),
+          '입원/외래': patient.visit_type || '-',
+          '진단명': patient.diagnosis_category || '-',
+          '세부진단명': patient.diagnosis_detail || '-',
+          '담당자': patient.manager_name || '-',
+          '한방주치의': patient.korean_doctor || '-',
+          '양방주치의': patient.western_doctor || '-',
+          '이전병원': patient.hospital_category || '-',
+          '재연결여부': trackingData?.is_reconnected ? 'O' : 'X',
+          '재연결날짜': trackingData?.reconnected_at 
+            ? new Date(trackingData.reconnected_at).toLocaleDateString('ko-KR')
+            : '-',
+          '재연결메모': trackingData?.reconnect_notes || '-',
+        };
+      });
+
+      // 워크시트 생성
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      
+      // 워크북 생성
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, '이탈리스크관리');
+
+      // 파일명 생성 (현재 날짜 포함)
+      const fileName = `이탈리스크관리_${new Date().toLocaleDateString('ko-KR').replace(/\. /g, '-').replace('.', '')}.xlsx`;
+
+      // 엑셀 파일 다운로드
+      XLSX.writeFile(workbook, fileName);
+
+      toast({
+        title: "엑셀 내보내기 완료",
+        description: `${filteredRiskPatients.length}명의 이탈 리스크 환자 정보를 내보냈습니다.`,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      toast({
+        title: "오류",
+        description: "엑셀 파일 생성에 실패했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // 필터링된 환자 목록
   const filteredRiskPatients = riskPatients.filter(patient => {
     // 유입일 필터
@@ -515,6 +576,14 @@ export default function RiskManagement() {
           </p>
         </div>
         <div className="flex gap-4 items-center">
+          <Button
+            onClick={handleExportToExcel}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            엑셀 내보내기
+          </Button>
           {(userRole === 'master' || userRole === 'admin') && (
             <Select value={selectedManager} onValueChange={setSelectedManager}>
               <SelectTrigger className="w-48">
