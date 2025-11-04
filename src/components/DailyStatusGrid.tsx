@@ -46,6 +46,7 @@ interface Patient {
   visit_motivation?: string;
   address?: string;
   inflow_date?: string;
+  consultation_date?: string;
   crm_memo?: string;
   special_note_1?: string;
   special_note_2?: string;
@@ -1698,6 +1699,43 @@ export function DailyStatusGrid({
                       onChange={(e) => updateEditingField('western_doctor', e.target.value)}
                       placeholder="양방주치의"
                     />
+                  </div>
+
+                  {/* 상담일 */}
+                  <div>
+                    <Label htmlFor="consultation_date">상담일</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !selectedPatientDetail?.consultation_date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {selectedPatientDetail?.consultation_date ? (
+                            format(new Date(selectedPatientDetail.consultation_date), "PPP", { locale: ko })
+                          ) : (
+                            <span>날짜 선택</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 z-[100]" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={selectedPatientDetail?.consultation_date ? new Date(selectedPatientDetail.consultation_date) : undefined}
+                          onSelect={(date) => {
+                            if (date) {
+                              const formatted = format(date, 'yyyy-MM-dd');
+                              updateEditingField('consultation_date', formatted);
+                            }
+                          }}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   {/* 유입일 */}
