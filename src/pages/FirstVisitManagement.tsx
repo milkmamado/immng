@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Heart, Plus, Eye, Trash2, Search } from "lucide-react";
+import { Heart, Plus, Eye, Trash2, Search, Download } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DateRangeFilter } from "@/components/TableFilters/DateRangeFilter";
@@ -236,6 +237,57 @@ export default function FirstVisitManagement() {
     }
   };
 
+  const handleExportToExcel = () => {
+    try {
+      // 엑셀로 내보낼 데이터 준비
+      const exportData = filteredPatients.map(patient => ({
+        '고객번호': patient.customer_number || '-',
+        '유입일': patient.inflow_date 
+          ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
+          : new Date(patient.created_at).toLocaleDateString('ko-KR'),
+        '유입/실패': patient.inflow_status || '-',
+        '입원/외래': patient.visit_type || '-',
+        '내원동기': patient.visit_motivation || '-',
+        '이름': patient.name,
+        '진단명': patient.diagnosis_category || '-',
+        '세부진단명': patient.diagnosis_detail || '-',
+        '환자 or 보호자': patient.patient_or_guardian || '-',
+        '이전병원': patient.hospital_category || '-',
+        '식이': patient.diet_info || '-',
+        '한방주치의': patient.korean_doctor || '-',
+        '담당자(상담실장)': patient.manager_name || '-',
+        '양방주치의': patient.western_doctor || '-',
+        'CRM메모': patient.crm_memo || '-',
+      }));
+
+      // 워크시트 생성
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      
+      // 워크북 생성
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, '초진관리');
+
+      // 파일명 생성 (현재 날짜 포함)
+      const fileName = `초진관리_${new Date().toLocaleDateString('ko-KR').replace(/\. /g, '-').replace('.', '')}.xlsx`;
+
+      // 엑셀 파일 다운로드
+      XLSX.writeFile(workbook, fileName);
+
+      toast({
+        title: "엑셀 내보내기 완료",
+        description: `${filteredPatients.length}명의 환자 정보를 내보냈습니다.`,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      toast({
+        title: "오류",
+        description: "엑셀 파일 생성에 실패했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getInflowStatusColor = (status?: string) => {
     switch (status) {
       case '유입':
@@ -321,14 +373,24 @@ export default function FirstVisitManagement() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>등록된 환자 목록 ({filteredPatients.length}명)</CardTitle>
-            <div className="relative w-80">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="환자명, 등록번호, 담당자, 주치의, 입원/외래, 이전병원으로 검색..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+            <div className="flex items-center gap-2">
+              <div className="relative w-80">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="환자명, 등록번호, 담당자, 주치의, 입원/외래, 이전병원으로 검색..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Button
+                onClick={handleExportToExcel}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                엑셀 내보내기
+              </Button>
             </div>
           </div>
         </CardHeader>
