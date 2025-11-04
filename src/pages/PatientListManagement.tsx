@@ -2081,9 +2081,6 @@ export default function PatientListManagement() {
                       />
                     </div>
                   </TableHead>
-                  <TableHead>실비보험유형</TableHead>
-                  <TableHead>본병원치료</TableHead>
-                  <TableHead>본병원검사일정</TableHead>
                   <TableHead>우리병원치료계획</TableHead>
                   <TableHead>월평균입원일수</TableHead>
                   <TableHead>월평균외래일수</TableHead>
@@ -2121,13 +2118,6 @@ export default function PatientListManagement() {
                       {patient.inflow_date 
                         ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
                         : new Date(patient.created_at).toLocaleDateString('ko-KR')}
-                    </TableCell>
-                    <TableCell>{patient.insurance_type || '-'}</TableCell>
-                    <TableCell className="max-w-32 truncate">
-                      {patient.hospital_treatment || '-'}
-                    </TableCell>
-                    <TableCell className="max-w-32 truncate">
-                      {patient.examination_schedule || '-'}
                     </TableCell>
                     <TableCell className="max-w-32">
                       <div className="flex items-center gap-2">
@@ -2602,27 +2592,6 @@ export default function PatientListManagement() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="insurance-type">실비보험유형</Label>
-                    <Select 
-                      value={selectedPatientDetail?.insurance_type || ''} 
-                      onValueChange={(value) => {
-                        updateEditingField('insurance_type', value);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="실비보험유형을 선택하세요" />
-                      </SelectTrigger>
-                      <SelectContent className="z-[100] bg-background">
-                        {insuranceTypeOptions.map(option => (
-                          <SelectItem key={option.id} value={option.name}>
-                            {option.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
                     <Label>관리 상태</Label>
                     <Select 
                       value={selectedPatientDetail?.management_status || '관리 중'} 
@@ -2685,28 +2654,6 @@ export default function PatientListManagement() {
                      <p className="text-xs text-muted-foreground mt-1">
                        패키지 관리에서 자동 계산
                      </p>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <Label htmlFor="hospital-treatment">본병원 치료</Label>
-                    <Textarea
-                      id="hospital-treatment"
-                      placeholder="본병원 치료 내용을 입력하세요"
-                      value={selectedPatientDetail?.hospital_treatment || ''}
-                      onChange={(e) => updateEditingField('hospital_treatment', e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <Label htmlFor="examination-schedule">본병원 검사일정</Label>
-                    <Textarea
-                      id="examination-schedule"
-                      placeholder="본병원 검사일정을 입력하세요"
-                      value={selectedPatientDetail?.examination_schedule || ''}
-                      onChange={(e) => updateEditingField('examination_schedule', e.target.value)}
-                      rows={3}
-                    />
                   </div>
 
                   {/* 담당자 메모 */}
