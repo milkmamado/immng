@@ -9,9 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertCircle, AlertTriangle, Phone } from "lucide-react";
+import { AlertCircle, AlertTriangle, Phone, Calendar, Filter as FilterIcon } from "lucide-react";
 import { format } from "date-fns";
 import { calculateDaysSinceLastCheck, calculateAutoManagementStatus, shouldAutoUpdateStatus } from "@/utils/patientStatusUtils";
+import { Input } from "@/components/ui/input";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface Patient {
   id: string;
@@ -55,6 +59,13 @@ export default function RiskManagement() {
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const [selectedManager, setSelectedManager] = useState<string>('all');
   const [managers, setManagers] = useState<{ id: string; name: string }[]>([]);
+  
+  // 필터 상태
+  const [inflowDateStart, setInflowDateStart] = useState<Date | undefined>();
+  const [inflowDateEnd, setInflowDateEnd] = useState<Date | undefined>();
+  const [selectedVisitTypes, setSelectedVisitTypes] = useState<string[]>([]);
+  const [diagnosisSearch, setDiagnosisSearch] = useState('');
+  
   const { user, userRole } = useAuth();
   const { toast } = useToast();
 
@@ -454,6 +465,35 @@ export default function RiskManagement() {
     );
   };
 
+  // 필터링된 환자 목록
+  const filteredRiskPatients = riskPatients.filter(patient => {
+    // 유입일 필터
+    if (inflowDateStart || inflowDateEnd) {
+      const patientDate = new Date(patient.created_at);
+      if (inflowDateStart && patientDate < inflowDateStart) return false;
+      if (inflowDateEnd && patientDate > inflowDateEnd) return false;
+    }
+
+    // 입원/외래 필터
+    if (selectedVisitTypes.length > 0) {
+      if (!patient.visit_type || !selectedVisitTypes.includes(patient.visit_type)) {
+        return false;
+      }
+    }
+
+    // 진단명 필터
+    if (diagnosisSearch.trim()) {
+      const diagnosisText = diagnosisSearch.toLowerCase();
+      const matchesDiagnosis = 
+        (patient.diagnosis_category && patient.diagnosis_category.toLowerCase().includes(diagnosisText)) ||
+        (patient.diagnosis_detail && patient.diagnosis_detail.toLowerCase().includes(diagnosisText));
+      
+      if (!matchesDiagnosis) return false;
+    }
+
+    return true;
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -511,15 +551,125 @@ export default function RiskManagement() {
         </div>
       </div>
 
-      {riskPatients.length === 0 ? (
+      {/* 필터 바 */}
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium mb-2 block">유입일 범위</label>
+              <div className="flex gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !inflowDateStart && "text-muted-foreground"
+                      )}
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {inflowDateStart ? format(inflowDateStart, "yyyy-MM-dd") : "시작일"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-50 bg-background" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={inflowDateStart}
+                      onSelect={setInflowDateStart}
+                      className="pointer-events-auto"
+                      disabled={(date) => inflowDateEnd ? date > inflowDateEnd : false}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !inflowDateEnd && "text-muted-foreground"
+                      )}
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {inflowDateEnd ? format(inflowDateEnd, "yyyy-MM-dd") : "종료일"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-50 bg-background" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={inflowDateEnd}
+                      onSelect={setInflowDateEnd}
+                      className="pointer-events-auto"
+                      disabled={(date) => inflowDateStart ? date < inflowDateStart : false}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium mb-2 block">입원/외래</label>
+              <Select
+                value={selectedVisitTypes.length === 1 ? selectedVisitTypes[0] : "all"}
+                onValueChange={(value) => {
+                  if (value === "all") {
+                    setSelectedVisitTypes([]);
+                  } else {
+                    setSelectedVisitTypes([value]);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="전체" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">전체</SelectItem>
+                  <SelectItem value="입원">입원</SelectItem>
+                  <SelectItem value="외래">외래</SelectItem>
+                  <SelectItem value="재원">재원</SelectItem>
+                  <SelectItem value="낮병동">낮병동</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium mb-2 block">진단명 검색</label>
+              <Input
+                placeholder="진단명 입력..."
+                value={diagnosisSearch}
+                onChange={(e) => setDiagnosisSearch(e.target.value)}
+              />
+            </div>
+
+            <Button
+              variant="outline"
+              onClick={() => {
+                setInflowDateStart(undefined);
+                setInflowDateEnd(undefined);
+                setSelectedVisitTypes([]);
+                setDiagnosisSearch('');
+              }}
+            >
+              <FilterIcon className="h-4 w-4 mr-2" />
+              필터 초기화
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {filteredRiskPatients.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
-            <p className="text-muted-foreground">이탈 리스크 환자가 없습니다.</p>
+            <p className="text-muted-foreground">
+              {riskPatients.length === 0 
+                ? "이탈 리스크 환자가 없습니다." 
+                : "필터 조건에 맞는 환자가 없습니다."}
+            </p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
-          {riskPatients.map((patient) => {
+          {filteredRiskPatients.map((patient) => {
             const trackingData = reconnectData.get(patient.id);
             return (
               <Card key={patient.id} className="hover:shadow-md transition-shadow">

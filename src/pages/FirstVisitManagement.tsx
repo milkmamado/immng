@@ -12,6 +12,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Heart, Plus, Eye, Trash2, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { DateRangeFilter } from "@/components/TableFilters/DateRangeFilter";
+import { InflowStatusFilter } from "@/components/TableFilters/InflowStatusFilter";
+import { VisitTypeFilter } from "@/components/TableFilters/VisitTypeFilter";
+import { DiagnosisFilter } from "@/components/TableFilters/DiagnosisFilter";
 
 interface Patient {
   id: string;
@@ -54,6 +58,14 @@ export default function FirstVisitManagement() {
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // 필터 상태
+  const [inflowDateStart, setInflowDateStart] = useState<Date | undefined>();
+  const [inflowDateEnd, setInflowDateEnd] = useState<Date | undefined>();
+  const [selectedInflowStatuses, setSelectedInflowStatuses] = useState<string[]>([]);
+  const [selectedVisitTypes, setSelectedVisitTypes] = useState<string[]>([]);
+  const [diagnosisSearch, setDiagnosisSearch] = useState('');
+  
   const { toast } = useToast();
   const { userRole } = useAuth();
 
@@ -235,19 +247,55 @@ export default function FirstVisitManagement() {
     }
   };
 
-  // 검색 필터링
+  // 검색 및 필터링
   const filteredPatients = patients.filter((patient) => {
-    if (!searchTerm.trim()) return true;
-    const search = searchTerm.toLowerCase();
-    return (
-      patient.name.toLowerCase().includes(search) ||
-      (patient.customer_number && patient.customer_number.toLowerCase().includes(search)) ||
-      (patient.manager_name && patient.manager_name.toLowerCase().includes(search)) ||
-      (patient.visit_type && patient.visit_type.toLowerCase().includes(search)) ||
-      (patient.korean_doctor && patient.korean_doctor.toLowerCase().includes(search)) ||
-      (patient.western_doctor && patient.western_doctor.toLowerCase().includes(search)) ||
-      (patient.hospital_category && patient.hospital_category.toLowerCase().includes(search))
-    );
+    // 기존 검색 필터
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      const matchesSearch = 
+        patient.name.toLowerCase().includes(search) ||
+        (patient.customer_number && patient.customer_number.toLowerCase().includes(search)) ||
+        (patient.manager_name && patient.manager_name.toLowerCase().includes(search)) ||
+        (patient.visit_type && patient.visit_type.toLowerCase().includes(search)) ||
+        (patient.korean_doctor && patient.korean_doctor.toLowerCase().includes(search)) ||
+        (patient.western_doctor && patient.western_doctor.toLowerCase().includes(search)) ||
+        (patient.hospital_category && patient.hospital_category.toLowerCase().includes(search));
+      
+      if (!matchesSearch) return false;
+    }
+
+    // 유입일 필터
+    if (inflowDateStart || inflowDateEnd) {
+      const patientDate = patient.inflow_date ? new Date(patient.inflow_date) : new Date(patient.created_at);
+      if (inflowDateStart && patientDate < inflowDateStart) return false;
+      if (inflowDateEnd && patientDate > inflowDateEnd) return false;
+    }
+
+    // 유입상태 필터
+    if (selectedInflowStatuses.length > 0) {
+      if (!patient.inflow_status || !selectedInflowStatuses.includes(patient.inflow_status)) {
+        return false;
+      }
+    }
+
+    // 입원/외래 필터
+    if (selectedVisitTypes.length > 0) {
+      if (!patient.visit_type || !selectedVisitTypes.includes(patient.visit_type)) {
+        return false;
+      }
+    }
+
+    // 진단명 필터
+    if (diagnosisSearch.trim()) {
+      const diagnosisText = diagnosisSearch.toLowerCase();
+      const matchesDiagnosis = 
+        (patient.diagnosis_category && patient.diagnosis_category.toLowerCase().includes(diagnosisText)) ||
+        (patient.diagnosis_detail && patient.diagnosis_detail.toLowerCase().includes(diagnosisText));
+      
+      if (!matchesDiagnosis) return false;
+    }
+
+    return true;
   });
 
   if (loading) {
@@ -290,12 +338,48 @@ export default function FirstVisitManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>고객번호</TableHead>
-                  <TableHead>유입일</TableHead>
-                  <TableHead>유입/실패</TableHead>
-                  <TableHead>입원/외래</TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      유입일
+                      <DateRangeFilter
+                        startDate={inflowDateStart}
+                        endDate={inflowDateEnd}
+                        onDateChange={(start, end) => {
+                          setInflowDateStart(start);
+                          setInflowDateEnd(end);
+                        }}
+                      />
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      유입/실패
+                      <InflowStatusFilter
+                        selectedStatuses={selectedInflowStatuses}
+                        onStatusChange={setSelectedInflowStatuses}
+                      />
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      입원/외래
+                      <VisitTypeFilter
+                        selectedTypes={selectedVisitTypes}
+                        onTypeChange={setSelectedVisitTypes}
+                      />
+                    </div>
+                  </TableHead>
                   <TableHead>내원동기</TableHead>
                   <TableHead>이름</TableHead>
-                  <TableHead>진단명</TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      진단명
+                      <DiagnosisFilter
+                        searchText={diagnosisSearch}
+                        onSearchChange={setDiagnosisSearch}
+                      />
+                    </div>
+                  </TableHead>
                   <TableHead>세부진단명</TableHead>
                   <TableHead>환자 or 보호자</TableHead>
                   <TableHead>이전병원</TableHead>

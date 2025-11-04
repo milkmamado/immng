@@ -14,6 +14,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, Search, RefreshCw, Package as PackageIcon, Upload, FileSpreadsheet, Trash2 } from "lucide-react";
 import * as XLSX from 'xlsx';
+import { DateRangeFilter } from "@/components/TableFilters/DateRangeFilter";
+import { VisitTypeFilter } from "@/components/TableFilters/VisitTypeFilter";
+import { DiagnosisFilter } from "@/components/TableFilters/DiagnosisFilter";
 
 interface Patient {
   id: string;
@@ -132,6 +135,12 @@ export default function PatientListManagement() {
   const [uploadingInpatient, setUploadingInpatient] = useState(false);
   const [uploadingOutpatient, setUploadingOutpatient] = useState(false);
   
+  // 필터 상태
+  const [inflowDateStart, setInflowDateStart] = useState<Date | undefined>();
+  const [inflowDateEnd, setInflowDateEnd] = useState<Date | undefined>();
+  const [selectedVisitTypes, setSelectedVisitTypes] = useState<string[]>([]);
+  const [diagnosisSearch, setDiagnosisSearch] = useState('');
+  
   const { toast } = useToast();
   const { userRole } = useAuth();
 
@@ -197,18 +206,52 @@ export default function PatientListManagement() {
   }, []);
 
   useEffect(() => {
-    const filtered = patients.filter(patient =>
-      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (patient.customer_number && patient.customer_number.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (patient.phone && patient.phone.includes(searchTerm)) ||
-      (patient.manager_name && patient.manager_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (patient.western_doctor && patient.western_doctor.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (patient.korean_doctor && patient.korean_doctor.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (patient.visit_type && patient.visit_type.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (patient.hospital_category && patient.hospital_category.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    // 기존 검색 + 필터 로직 통합
+    const filtered = patients.filter(patient => {
+      // 기존 검색 필터
+      if (searchTerm.trim()) {
+        const search = searchTerm.toLowerCase();
+        const matchesSearch = 
+          patient.name.toLowerCase().includes(search) ||
+          (patient.customer_number && patient.customer_number.toLowerCase().includes(search)) ||
+          (patient.phone && patient.phone.includes(search)) ||
+          (patient.manager_name && patient.manager_name.toLowerCase().includes(search)) ||
+          (patient.western_doctor && patient.western_doctor.toLowerCase().includes(search)) ||
+          (patient.korean_doctor && patient.korean_doctor.toLowerCase().includes(search)) ||
+          (patient.visit_type && patient.visit_type.toLowerCase().includes(search)) ||
+          (patient.hospital_category && patient.hospital_category.toLowerCase().includes(search));
+        
+        if (!matchesSearch) return false;
+      }
+
+      // 유입일 필터
+      if (inflowDateStart || inflowDateEnd) {
+        const patientDate = patient.inflow_date ? new Date(patient.inflow_date) : new Date(patient.created_at);
+        if (inflowDateStart && patientDate < inflowDateStart) return false;
+        if (inflowDateEnd && patientDate > inflowDateEnd) return false;
+      }
+
+      // 입원/외래 필터
+      if (selectedVisitTypes.length > 0) {
+        if (!patient.visit_type || !selectedVisitTypes.includes(patient.visit_type)) {
+          return false;
+        }
+      }
+
+      // 진단명 필터
+      if (diagnosisSearch.trim()) {
+        const diagnosisText = diagnosisSearch.toLowerCase();
+        const matchesDiagnosis = 
+          (patient.diagnosis_category && patient.diagnosis_category.toLowerCase().includes(diagnosisText)) ||
+          (patient.diagnosis_detail && patient.diagnosis_detail.toLowerCase().includes(diagnosisText));
+        
+        if (!matchesDiagnosis) return false;
+      }
+
+      return true;
+    });
     setFilteredPatients(filtered);
-  }, [patients, searchTerm]);
+  }, [patients, searchTerm, inflowDateStart, inflowDateEnd, selectedVisitTypes, diagnosisSearch]);
 
   const fetchPatients = async () => {
     setLoading(true);
@@ -1929,11 +1972,39 @@ export default function PatientListManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>고객번호</TableHead>
-                  <TableHead>외래/입원구분</TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      외래/입원구분
+                      <VisitTypeFilter
+                        selectedTypes={selectedVisitTypes}
+                        onTypeChange={setSelectedVisitTypes}
+                      />
+                    </div>
+                  </TableHead>
                   <TableHead>담당실장</TableHead>
                   <TableHead>환자명</TableHead>
-                  <TableHead>진단명</TableHead>
-                  <TableHead>유입일</TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      진단명
+                      <DiagnosisFilter
+                        searchText={diagnosisSearch}
+                        onSearchChange={setDiagnosisSearch}
+                      />
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      유입일
+                      <DateRangeFilter
+                        startDate={inflowDateStart}
+                        endDate={inflowDateEnd}
+                        onDateChange={(start, end) => {
+                          setInflowDateStart(start);
+                          setInflowDateEnd(end);
+                        }}
+                      />
+                    </div>
+                  </TableHead>
                   <TableHead>실비보험유형</TableHead>
                   <TableHead>본병원치료</TableHead>
                   <TableHead>본병원검사일정</TableHead>
