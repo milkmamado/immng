@@ -433,12 +433,12 @@ export default function PatientListManagement() {
         '전화번호': patient.phone || '-',
         '나이': patient.age || '-',
         '성별': patient.gender || '-',
-        '유입일': patient.inflow_date 
-          ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
-          : new Date(patient.created_at).toLocaleDateString('ko-KR'),
         '상담일': patient.consultation_date 
           ? new Date(patient.consultation_date).toLocaleDateString('ko-KR')
           : '-',
+        '유입일': patient.inflow_date 
+          ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
+          : new Date(patient.created_at).toLocaleDateString('ko-KR'),
         '입원/외래': patient.visit_type || '-',
         '진단명': patient.diagnosis_category || '-',
         '세부진단명': patient.diagnosis_detail || '-',
@@ -2062,6 +2062,7 @@ export default function PatientListManagement() {
                       />
                     </div>
                   </TableHead>
+                  <TableHead>상담일</TableHead>
                   <TableHead>
                     <div className="flex items-center gap-1">
                       유입일
@@ -2075,7 +2076,6 @@ export default function PatientListManagement() {
                       />
                     </div>
                   </TableHead>
-                  <TableHead>상담일</TableHead>
                   <TableHead>실비보험유형</TableHead>
                   <TableHead>본병원치료</TableHead>
                   <TableHead>본병원검사일정</TableHead>
@@ -2108,14 +2108,14 @@ export default function PatientListManagement() {
                       {patient.diagnosis_category || '-'}
                     </TableCell>
                     <TableCell>
-                      {patient.inflow_date 
-                        ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
-                        : new Date(patient.created_at).toLocaleDateString('ko-KR')}
-                    </TableCell>
-                    <TableCell>
                       {patient.consultation_date 
                         ? new Date(patient.consultation_date).toLocaleDateString('ko-KR')
                         : '-'}
+                    </TableCell>
+                    <TableCell>
+                      {patient.inflow_date 
+                        ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
+                        : new Date(patient.created_at).toLocaleDateString('ko-KR')}
                     </TableCell>
                     <TableCell>{patient.insurance_type || '-'}</TableCell>
                     <TableCell className="max-w-32 truncate">

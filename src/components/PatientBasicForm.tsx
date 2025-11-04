@@ -913,45 +913,6 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
             />
           </div>
 
-          {/* 유입일 */}
-          <div>
-            <Label htmlFor="inflow_date">유입일</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !formData.inflow_date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.inflow_date ? (
-                    format(new Date(formData.inflow_date), "PPP", { locale: ko })
-                  ) : (
-                    <span>날짜 선택</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={formData.inflow_date ? new Date(formData.inflow_date) : undefined}
-                  onSelect={(date) => {
-                    if (date) {
-                      const formatted = format(date, 'yyyy-MM-dd');
-                      setFormData(prev => ({ ...prev, inflow_date: formatted }));
-                    } else {
-                      setFormData(prev => ({ ...prev, inflow_date: '' }));
-                    }
-                  }}
-                  initialFocus
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
           {/* 상담일 */}
           <div>
             <Label htmlFor="consultation_date">상담일</Label>
@@ -982,6 +943,45 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
                       setFormData(prev => ({ ...prev, consultation_date: formatted }));
                     } else {
                       setFormData(prev => ({ ...prev, consultation_date: '' }));
+                    }
+                  }}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* 유입일 */}
+          <div>
+            <Label htmlFor="inflow_date">유입일</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !formData.inflow_date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.inflow_date ? (
+                    format(new Date(formData.inflow_date), "PPP", { locale: ko })
+                  ) : (
+                    <span>날짜 선택</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={formData.inflow_date ? new Date(formData.inflow_date) : undefined}
+                  onSelect={(date) => {
+                    if (date) {
+                      const formatted = format(date, 'yyyy-MM-dd');
+                      setFormData(prev => ({ ...prev, inflow_date: formatted }));
+                    } else {
+                      setFormData(prev => ({ ...prev, inflow_date: '' }));
                     }
                   }}
                   initialFocus
