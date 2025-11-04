@@ -798,6 +798,8 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="유입">유입</SelectItem>
+                <SelectItem value="전화상담">전화상담</SelectItem>
+                <SelectItem value="방문상담">방문상담</SelectItem>
                 <SelectItem value="실패">실패</SelectItem>
               </SelectContent>
             </Select>
