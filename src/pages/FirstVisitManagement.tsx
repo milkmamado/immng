@@ -257,7 +257,6 @@ export default function FirstVisitManagement() {
         '세부진단명': patient.diagnosis_detail || '-',
         '환자 or 보호자': patient.patient_or_guardian || '-',
         '이전병원': patient.hospital_category || '-',
-        '식이': patient.diet_info || '-',
         '한방주치의': patient.korean_doctor || '-',
         '담당자(상담실장)': patient.manager_name || '-',
         '양방주치의': patient.western_doctor || '-',
@@ -450,7 +449,6 @@ export default function FirstVisitManagement() {
                   <TableHead>세부진단명</TableHead>
                   <TableHead>환자 or 보호자</TableHead>
                   <TableHead>이전병원</TableHead>
-                  <TableHead>식이</TableHead>
                   <TableHead>한방주치의</TableHead>
                   <TableHead>담당자(상담실장)</TableHead>
                   <TableHead>양방주치의</TableHead>
@@ -492,7 +490,6 @@ export default function FirstVisitManagement() {
                     </TableCell>
                     <TableCell>{patient.patient_or_guardian || '-'}</TableCell>
                     <TableCell>{patient.hospital_category || '-'}</TableCell>
-                    <TableCell className="max-w-32 truncate">{patient.diet_info || '-'}</TableCell>
                     <TableCell>{patient.korean_doctor || '-'}</TableCell>
                     <TableCell>{patient.manager_name || '-'}</TableCell>
                     <TableCell>{patient.western_doctor || '-'}</TableCell>
