@@ -60,6 +60,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     korean_doctor: '',          // 한방주치의
     western_doctor: '',         // 양방주치의
     inflow_date: '',            // 유입일
+    consultation_date: '',      // 상담일
   });
 
   const [loading, setLoading] = useState(false);
@@ -121,7 +122,8 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         manager_name: patient.manager_name || '',
         korean_doctor: patient.korean_doctor || '',
         western_doctor: patient.western_doctor || '',
-        inflow_date: patient.inflow_date || ''
+        inflow_date: patient.inflow_date || '',
+        consultation_date: patient.consultation_date || ''
       });
       
       // manager_name이 없으면 현재 사용자 이름 가져오기
@@ -397,6 +399,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         korean_doctor: formData.korean_doctor || null,
         western_doctor: formData.western_doctor || null,
         inflow_date: formData.inflow_date || null,
+        consultation_date: formData.consultation_date || null,
         assigned_manager: user.id
       };
 
@@ -470,7 +473,8 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         manager_name: '',
         korean_doctor: '',
         western_doctor: '',
-        inflow_date: ''
+        inflow_date: '',
+        consultation_date: ''
       });
 
       onClose();
@@ -939,6 +943,45 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
                       setFormData(prev => ({ ...prev, inflow_date: formatted }));
                     } else {
                       setFormData(prev => ({ ...prev, inflow_date: '' }));
+                    }
+                  }}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* 상담일 */}
+          <div>
+            <Label htmlFor="consultation_date">상담일</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !formData.consultation_date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.consultation_date ? (
+                    format(new Date(formData.consultation_date), "PPP", { locale: ko })
+                  ) : (
+                    <span>날짜 선택</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={formData.consultation_date ? new Date(formData.consultation_date) : undefined}
+                  onSelect={(date) => {
+                    if (date) {
+                      const formatted = format(date, 'yyyy-MM-dd');
+                      setFormData(prev => ({ ...prev, consultation_date: formatted }));
+                    } else {
+                      setFormData(prev => ({ ...prev, consultation_date: '' }));
                     }
                   }}
                   initialFocus

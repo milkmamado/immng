@@ -654,6 +654,7 @@ export type Database = {
           admission_date: string | null
           age: number | null
           assigned_manager: string
+          consultation_date: string | null
           counselor: string | null
           created_at: string
           crm_memo: string | null
@@ -704,6 +705,7 @@ export type Database = {
           admission_date?: string | null
           age?: number | null
           assigned_manager: string
+          consultation_date?: string | null
           counselor?: string | null
           created_at?: string
           crm_memo?: string | null
@@ -754,6 +756,7 @@ export type Database = {
           admission_date?: string | null
           age?: number | null
           assigned_manager?: string
+          consultation_date?: string | null
           counselor?: string | null
           created_at?: string
           crm_memo?: string | null

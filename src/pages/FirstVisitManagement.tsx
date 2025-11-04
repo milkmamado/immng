@@ -29,6 +29,7 @@ interface Patient {
   address?: string;
   inflow_status?: string;
   inflow_date?: string;
+  consultation_date?: string;
   first_visit_date?: string;
   visit_type?: string;
   visit_motivation?: string;
@@ -245,6 +246,9 @@ export default function FirstVisitManagement() {
         '유입일': patient.inflow_date 
           ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
           : new Date(patient.created_at).toLocaleDateString('ko-KR'),
+        '상담일': patient.consultation_date 
+          ? new Date(patient.consultation_date).toLocaleDateString('ko-KR')
+          : '-',
         '유입/실패': patient.inflow_status || '-',
         '입원/외래': patient.visit_type || '-',
         '내원동기': patient.visit_motivation || '-',
@@ -413,6 +417,7 @@ export default function FirstVisitManagement() {
                       />
                     </div>
                   </TableHead>
+                  <TableHead>상담일</TableHead>
                   <TableHead>
                     <div className="flex items-center gap-1">
                       유입/실패
@@ -465,6 +470,11 @@ export default function FirstVisitManagement() {
                       {patient.inflow_date 
                         ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
                         : new Date(patient.created_at).toLocaleDateString('ko-KR')}
+                    </TableCell>
+                    <TableCell>
+                      {patient.consultation_date 
+                        ? new Date(patient.consultation_date).toLocaleDateString('ko-KR')
+                        : '-'}
                     </TableCell>
                     <TableCell>
                       <Badge variant={getInflowStatusColor(patient.inflow_status)}>
