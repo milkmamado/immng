@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { DataMigration } from "@/components/DataMigration";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -101,6 +102,8 @@ export default function Layout({ children }: LayoutProps) {
             </div>
             
             <div className="flex items-center gap-3">
+              <DataMigration />
+              
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2 px-3 py-2 h-auto">
