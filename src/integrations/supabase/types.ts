@@ -819,6 +819,8 @@ export type Database = {
       user_roles: {
         Row: {
           approval_status: Database["public"]["Enums"]["approval_status"]
+          approved_at: string | null
+          approved_by: string | null
           assigned_by: string | null
           created_at: string
           id: string
@@ -827,6 +829,8 @@ export type Database = {
         }
         Insert: {
           approval_status?: Database["public"]["Enums"]["approval_status"]
+          approved_at?: string | null
+          approved_by?: string | null
           assigned_by?: string | null
           created_at?: string
           id?: string
@@ -835,6 +839,8 @@ export type Database = {
         }
         Update: {
           approval_status?: Database["public"]["Enums"]["approval_status"]
+          approved_at?: string | null
+          approved_by?: string | null
           assigned_by?: string | null
           created_at?: string
           id?: string
