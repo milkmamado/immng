@@ -14,16 +14,845 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admission_cycles: {
+        Row: {
+          admission_date: string
+          admission_type: string | null
+          created_at: string
+          cycle_number: number
+          discharge_date: string | null
+          discharge_reason: string | null
+          id: string
+          patient_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admission_date: string
+          admission_type?: string | null
+          created_at?: string
+          cycle_number: number
+          discharge_date?: string | null
+          discharge_reason?: string | null
+          id?: string
+          patient_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admission_date?: string
+          admission_type?: string | null
+          created_at?: string
+          cycle_number?: number
+          discharge_date?: string | null
+          discharge_reason?: string | null
+          id?: string
+          patient_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admission_cycles_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_patient_status: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          patient_id: string
+          status_date: string
+          status_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          status_date: string
+          status_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          status_date?: string
+          status_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_patient_status_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diagnosis_options: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      hospital_options: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      insurance_type_options: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      manager_supervisors: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          manager_id: string
+          supervisor_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          manager_id: string
+          supervisor_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          manager_id?: string
+          supervisor_id?: string
+        }
+        Relationships: []
+      }
+      medical_info: {
+        Row: {
+          admission_cycle_id: string | null
+          biopsy_result: string | null
+          cancer_stage: string | null
+          cancer_type: string
+          created_at: string
+          diagnosis_date: string | null
+          id: string
+          metastasis_sites: string[] | null
+          metastasis_status: boolean | null
+          patient_id: string
+          primary_doctor: string | null
+          updated_at: string
+        }
+        Insert: {
+          admission_cycle_id?: string | null
+          biopsy_result?: string | null
+          cancer_stage?: string | null
+          cancer_type: string
+          created_at?: string
+          diagnosis_date?: string | null
+          id?: string
+          metastasis_sites?: string[] | null
+          metastasis_status?: boolean | null
+          patient_id: string
+          primary_doctor?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admission_cycle_id?: string | null
+          biopsy_result?: string | null
+          cancer_stage?: string | null
+          cancer_type?: string
+          created_at?: string
+          diagnosis_date?: string | null
+          id?: string
+          metastasis_sites?: string[] | null
+          metastasis_status?: boolean | null
+          patient_id?: string
+          primary_doctor?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_info_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      package_management: {
+        Row: {
+          count_balance: number | null
+          count_total: number | null
+          count_used: number | null
+          created_at: string
+          customer_number: string | null
+          deposit_balance: number | null
+          deposit_total: number | null
+          deposit_used: number | null
+          id: string
+          last_synced_at: string | null
+          patient_id: string
+          reward_balance: number | null
+          reward_total: number | null
+          reward_used: number | null
+          updated_at: string
+        }
+        Insert: {
+          count_balance?: number | null
+          count_total?: number | null
+          count_used?: number | null
+          created_at?: string
+          customer_number?: string | null
+          deposit_balance?: number | null
+          deposit_total?: number | null
+          deposit_used?: number | null
+          id?: string
+          last_synced_at?: string | null
+          patient_id: string
+          reward_balance?: number | null
+          reward_total?: number | null
+          reward_used?: number | null
+          updated_at?: string
+        }
+        Update: {
+          count_balance?: number | null
+          count_total?: number | null
+          count_used?: number | null
+          created_at?: string
+          customer_number?: string | null
+          deposit_balance?: number | null
+          deposit_total?: number | null
+          deposit_used?: number | null
+          id?: string
+          last_synced_at?: string | null
+          patient_id?: string
+          reward_balance?: number | null
+          reward_total?: number | null
+          reward_used?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_management_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: true
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      package_transactions: {
+        Row: {
+          amount: number
+          count: number | null
+          created_at: string
+          customer_number: string | null
+          id: string
+          note: string | null
+          patient_id: string
+          transaction_date: string
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          count?: number | null
+          created_at?: string
+          customer_number?: string | null
+          id?: string
+          note?: string | null
+          patient_id: string
+          transaction_date: string
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          count?: number | null
+          created_at?: string
+          customer_number?: string | null
+          id?: string
+          note?: string | null
+          patient_id?: string
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_transactions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      packages: {
+        Row: {
+          admission_cycle_id: string | null
+          created_at: string
+          end_date: string
+          has_private_insurance: boolean | null
+          id: string
+          included_treatments: string[] | null
+          insurance_coverage: number | null
+          insurance_limit: number | null
+          insurance_type: string | null
+          insurance_used: number | null
+          outstanding_balance: number | null
+          package_amount: number
+          package_type: string
+          patient_id: string
+          patient_payment: number
+          payment_date: string | null
+          payment_method: string | null
+          start_date: string
+          total_cost: number
+          updated_at: string
+        }
+        Insert: {
+          admission_cycle_id?: string | null
+          created_at?: string
+          end_date: string
+          has_private_insurance?: boolean | null
+          id?: string
+          included_treatments?: string[] | null
+          insurance_coverage?: number | null
+          insurance_limit?: number | null
+          insurance_type?: string | null
+          insurance_used?: number | null
+          outstanding_balance?: number | null
+          package_amount: number
+          package_type: string
+          patient_id: string
+          patient_payment: number
+          payment_date?: string | null
+          payment_method?: string | null
+          start_date: string
+          total_cost: number
+          updated_at?: string
+        }
+        Update: {
+          admission_cycle_id?: string | null
+          created_at?: string
+          end_date?: string
+          has_private_insurance?: boolean | null
+          id?: string
+          included_treatments?: string[] | null
+          insurance_coverage?: number | null
+          insurance_limit?: number | null
+          insurance_type?: string | null
+          insurance_used?: number | null
+          outstanding_balance?: number | null
+          package_amount?: number
+          package_type?: string
+          patient_id?: string
+          patient_payment?: number
+          payment_date?: string | null
+          payment_method?: string | null
+          start_date?: string
+          total_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "packages_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_notes: {
+        Row: {
+          admission_cycle_id: string | null
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          is_important: boolean | null
+          note_type: string
+          patient_id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          admission_cycle_id?: string | null
+          content: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_important?: boolean | null
+          note_type?: string
+          patient_id: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admission_cycle_id?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_important?: boolean | null
+          note_type?: string
+          patient_id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_notes_admission_cycle_id_fkey"
+            columns: ["admission_cycle_id"]
+            isOneToOne: false
+            referencedRelation: "admission_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_notes_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_reconnect_tracking: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          is_reconnected: boolean
+          patient_id: string
+          reconnect_notes: string | null
+          reconnected_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          is_reconnected?: boolean
+          patient_id: string
+          reconnect_notes?: string | null
+          reconnected_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_reconnected?: boolean
+          patient_id?: string
+          reconnect_notes?: string | null
+          reconnected_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_reconnect_tracking_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_status_options: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          exclude_from_daily_tracking: boolean
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          exclude_from_daily_tracking?: boolean
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          exclude_from_daily_tracking?: boolean
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      patients: {
+        Row: {
+          address: string | null
+          admission_date: string | null
+          age: number | null
+          assigned_manager: string
+          chart_number: string | null
+          counseling_content: string | null
+          counselor: string | null
+          created_at: string
+          detailed_diagnosis: string | null
+          diet_info: string | null
+          discharge_date: string | null
+          emergency_contact: string | null
+          examination_schedule: string | null
+          first_visit_date: string | null
+          gender: string | null
+          guardian_name: string | null
+          guardian_phone: string | null
+          guardian_relationship: string | null
+          hospital_treatment: string | null
+          id: string
+          inflow_status: string | null
+          insurance_type: string | null
+          korean_doctor: string | null
+          last_visit_date: string | null
+          management_status: string | null
+          manager_name: string | null
+          monthly_avg_days: number | null
+          name: string
+          patient_number: string
+          payment_amount: number | null
+          phone: string | null
+          previous_hospital: string | null
+          referral_source: string | null
+          resident_number_masked: string | null
+          treatment_plan: string | null
+          updated_at: string
+          visit_motivation: string | null
+          visit_type: string | null
+          western_doctor: string | null
+        }
+        Insert: {
+          address?: string | null
+          admission_date?: string | null
+          age?: number | null
+          assigned_manager: string
+          chart_number?: string | null
+          counseling_content?: string | null
+          counselor?: string | null
+          created_at?: string
+          detailed_diagnosis?: string | null
+          diet_info?: string | null
+          discharge_date?: string | null
+          emergency_contact?: string | null
+          examination_schedule?: string | null
+          first_visit_date?: string | null
+          gender?: string | null
+          guardian_name?: string | null
+          guardian_phone?: string | null
+          guardian_relationship?: string | null
+          hospital_treatment?: string | null
+          id?: string
+          inflow_status?: string | null
+          insurance_type?: string | null
+          korean_doctor?: string | null
+          last_visit_date?: string | null
+          management_status?: string | null
+          manager_name?: string | null
+          monthly_avg_days?: number | null
+          name: string
+          patient_number: string
+          payment_amount?: number | null
+          phone?: string | null
+          previous_hospital?: string | null
+          referral_source?: string | null
+          resident_number_masked?: string | null
+          treatment_plan?: string | null
+          updated_at?: string
+          visit_motivation?: string | null
+          visit_type?: string | null
+          western_doctor?: string | null
+        }
+        Update: {
+          address?: string | null
+          admission_date?: string | null
+          age?: number | null
+          assigned_manager?: string
+          chart_number?: string | null
+          counseling_content?: string | null
+          counselor?: string | null
+          created_at?: string
+          detailed_diagnosis?: string | null
+          diet_info?: string | null
+          discharge_date?: string | null
+          emergency_contact?: string | null
+          examination_schedule?: string | null
+          first_visit_date?: string | null
+          gender?: string | null
+          guardian_name?: string | null
+          guardian_phone?: string | null
+          guardian_relationship?: string | null
+          hospital_treatment?: string | null
+          id?: string
+          inflow_status?: string | null
+          insurance_type?: string | null
+          korean_doctor?: string | null
+          last_visit_date?: string | null
+          management_status?: string | null
+          manager_name?: string | null
+          monthly_avg_days?: number | null
+          name?: string
+          patient_number?: string
+          payment_amount?: number | null
+          phone?: string | null
+          previous_hospital?: string | null
+          referral_source?: string | null
+          resident_number_masked?: string | null
+          treatment_plan?: string | null
+          updated_at?: string
+          visit_motivation?: string | null
+          visit_type?: string | null
+          western_doctor?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      treatment_detail_options: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      treatment_history: {
+        Row: {
+          admission_cycle_id: string | null
+          created_at: string
+          end_date: string | null
+          hospital_name: string | null
+          id: string
+          notes: string | null
+          patient_id: string
+          start_date: string | null
+          treatment_name: string
+          treatment_type: string
+        }
+        Insert: {
+          admission_cycle_id?: string | null
+          created_at?: string
+          end_date?: string | null
+          hospital_name?: string | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          start_date?: string | null
+          treatment_name: string
+          treatment_type: string
+        }
+        Update: {
+          admission_cycle_id?: string | null
+          created_at?: string
+          end_date?: string | null
+          hospital_name?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          start_date?: string | null
+          treatment_name?: string
+          treatment_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_history_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_plans: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          is_paid: boolean
+          patient_id: string
+          payment_date: string | null
+          treatment_amount: number
+          treatment_detail: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          is_paid?: boolean
+          patient_id: string
+          payment_date?: string | null
+          treatment_amount?: number
+          treatment_detail: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_paid?: boolean
+          patient_id?: string
+          payment_date?: string | null
+          treatment_amount?: number
+          treatment_detail?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          approval_status: Database["public"]["Enums"]["approval_status"]
+          assigned_by: string | null
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Insert: {
+          approval_status?: Database["public"]["Enums"]["approval_status"]
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Update: {
+          approval_status?: Database["public"]["Enums"]["approval_status"]
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_stay_days: {
+        Args: { admission_date: string; discharge_date?: string }
+        Returns: number
+      }
+      get_next_cycle_number: { Args: { patient_uuid: string }; Returns: number }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["user_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_master_user: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      approval_status: "pending" | "approved" | "rejected"
+      user_role: "master" | "manager" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +979,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      approval_status: ["pending", "approved", "rejected"],
+      user_role: ["master", "manager", "admin"],
+    },
   },
 } as const
