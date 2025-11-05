@@ -108,18 +108,24 @@ export type Database = {
           created_by: string | null
           id: string
           name: string
+          parent_id: string | null
+          sort_order: number | null
         }
         Insert: {
           created_at?: string
           created_by?: string | null
           id?: string
           name: string
+          parent_id?: string | null
+          sort_order?: number | null
         }
         Update: {
           created_at?: string
           created_by?: string | null
           id?: string
           name?: string
+          parent_id?: string | null
+          sort_order?: number | null
         }
         Relationships: []
       }
@@ -129,18 +135,21 @@ export type Database = {
           created_by: string | null
           id: string
           name: string
+          parent_id: string | null
         }
         Insert: {
           created_at?: string
           created_by?: string | null
           id?: string
           name: string
+          parent_id?: string | null
         }
         Update: {
           created_at?: string
           created_by?: string | null
           id?: string
           name?: string
+          parent_id?: string | null
         }
         Relationships: []
       }
@@ -310,6 +319,8 @@ export type Database = {
           count: number | null
           created_at: string
           customer_number: string | null
+          date_from: string | null
+          date_to: string | null
           id: string
           note: string | null
           patient_id: string
@@ -322,6 +333,8 @@ export type Database = {
           count?: number | null
           created_at?: string
           customer_number?: string | null
+          date_from?: string | null
+          date_to?: string | null
           id?: string
           note?: string | null
           patient_id: string
@@ -334,6 +347,8 @@ export type Database = {
           count?: number | null
           created_at?: string
           customer_number?: string | null
+          date_from?: string | null
+          date_to?: string | null
           id?: string
           note?: string | null
           patient_id?: string
@@ -554,39 +569,51 @@ export type Database = {
           age: number | null
           assigned_manager: string
           chart_number: string | null
+          consultation_date: string | null
           counseling_content: string | null
           counselor: string | null
           created_at: string
+          crm_memo: string | null
           customer_number: string | null
           detailed_diagnosis: string | null
+          diagnosis_category: string | null
           diagnosis_detail: string | null
           diet_info: string | null
           discharge_date: string | null
           display_order: number | null
           emergency_contact: string | null
           examination_schedule: string | null
+          failure_reason: string | null
           first_visit_date: string | null
           gender: string | null
           guardian_name: string | null
           guardian_phone: string | null
           guardian_relationship: string | null
+          hospital_branch: string | null
           hospital_category: string | null
           hospital_treatment: string | null
           id: string
+          inflow_date: string | null
           inflow_status: string | null
           insurance_type: string | null
           korean_doctor: string | null
           last_visit_date: string | null
           management_status: string | null
           manager_name: string | null
+          memo1: string | null
           monthly_avg_days: number | null
           name: string
           patient_number: string
+          patient_or_guardian: string | null
           payment_amount: number | null
           phone: string | null
           previous_hospital: string | null
           referral_source: string | null
           resident_number_masked: string | null
+          special_note_1: string | null
+          special_note_2: string | null
+          treatment_memo_1: string | null
+          treatment_memo_2: string | null
           treatment_plan: string | null
           updated_at: string
           visit_motivation: string | null
@@ -599,39 +626,51 @@ export type Database = {
           age?: number | null
           assigned_manager: string
           chart_number?: string | null
+          consultation_date?: string | null
           counseling_content?: string | null
           counselor?: string | null
           created_at?: string
+          crm_memo?: string | null
           customer_number?: string | null
           detailed_diagnosis?: string | null
+          diagnosis_category?: string | null
           diagnosis_detail?: string | null
           diet_info?: string | null
           discharge_date?: string | null
           display_order?: number | null
           emergency_contact?: string | null
           examination_schedule?: string | null
+          failure_reason?: string | null
           first_visit_date?: string | null
           gender?: string | null
           guardian_name?: string | null
           guardian_phone?: string | null
           guardian_relationship?: string | null
+          hospital_branch?: string | null
           hospital_category?: string | null
           hospital_treatment?: string | null
           id?: string
+          inflow_date?: string | null
           inflow_status?: string | null
           insurance_type?: string | null
           korean_doctor?: string | null
           last_visit_date?: string | null
           management_status?: string | null
           manager_name?: string | null
+          memo1?: string | null
           monthly_avg_days?: number | null
           name: string
           patient_number: string
+          patient_or_guardian?: string | null
           payment_amount?: number | null
           phone?: string | null
           previous_hospital?: string | null
           referral_source?: string | null
           resident_number_masked?: string | null
+          special_note_1?: string | null
+          special_note_2?: string | null
+          treatment_memo_1?: string | null
+          treatment_memo_2?: string | null
           treatment_plan?: string | null
           updated_at?: string
           visit_motivation?: string | null
@@ -644,39 +683,51 @@ export type Database = {
           age?: number | null
           assigned_manager?: string
           chart_number?: string | null
+          consultation_date?: string | null
           counseling_content?: string | null
           counselor?: string | null
           created_at?: string
+          crm_memo?: string | null
           customer_number?: string | null
           detailed_diagnosis?: string | null
+          diagnosis_category?: string | null
           diagnosis_detail?: string | null
           diet_info?: string | null
           discharge_date?: string | null
           display_order?: number | null
           emergency_contact?: string | null
           examination_schedule?: string | null
+          failure_reason?: string | null
           first_visit_date?: string | null
           gender?: string | null
           guardian_name?: string | null
           guardian_phone?: string | null
           guardian_relationship?: string | null
+          hospital_branch?: string | null
           hospital_category?: string | null
           hospital_treatment?: string | null
           id?: string
+          inflow_date?: string | null
           inflow_status?: string | null
           insurance_type?: string | null
           korean_doctor?: string | null
           last_visit_date?: string | null
           management_status?: string | null
           manager_name?: string | null
+          memo1?: string | null
           monthly_avg_days?: number | null
           name?: string
           patient_number?: string
+          patient_or_guardian?: string | null
           payment_amount?: number | null
           phone?: string | null
           previous_hospital?: string | null
           referral_source?: string | null
           resident_number_masked?: string | null
+          special_note_1?: string | null
+          special_note_2?: string | null
+          treatment_memo_1?: string | null
+          treatment_memo_2?: string | null
           treatment_plan?: string | null
           updated_at?: string
           visit_motivation?: string | null
