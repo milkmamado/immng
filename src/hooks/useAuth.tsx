@@ -45,17 +45,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               if (rolesData && rolesData.length > 0) {
                 setUserBranches(rolesData);
                 
-                // localStorage에서 currentBranch 복원 또는 첫 번째 지점으로 설정
-                const savedBranch = localStorage.getItem('currentBranch') as '강서' | '광명' | '성동' | null;
-                const hasSavedBranch = rolesData.some(r => r.branch === savedBranch);
+                // 마스터 계정인지 확인
+                const isMaster = rolesData.some(r => r.role === 'master');
                 
-                if (hasSavedBranch && savedBranch) {
-                  const branchRole = rolesData.find(r => r.branch === savedBranch);
-                  setCurrentBranch(savedBranch);
-                  setUserRole(branchRole?.role || null);
-                  setUserBranch(savedBranch);
+                // localStorage에서 currentBranch 복원
+                const savedBranch = localStorage.getItem('currentBranch') as '강서' | '광명' | '성동' | null;
+                
+                if (savedBranch) {
+                  // 마스터는 모든 지점 접근 가능, 일반 사용자는 권한 확인
+                  if (isMaster) {
+                    // 마스터는 저장된 지점으로 바로 설정 (해당 지점에 role이 없어도 됨)
+                    setCurrentBranch(savedBranch);
+                    setUserRole('master');
+                    setUserBranch(savedBranch);
+                  } else {
+                    // 일반 사용자는 해당 지점에 권한이 있는지 확인
+                    const hasSavedBranch = rolesData.some(r => r.branch === savedBranch);
+                    if (hasSavedBranch) {
+                      const branchRole = rolesData.find(r => r.branch === savedBranch);
+                      setCurrentBranch(savedBranch);
+                      setUserRole(branchRole?.role || null);
+                      setUserBranch(savedBranch);
+                    } else {
+                      // 권한 없으면 첫 번째 지점으로
+                      setCurrentBranch(rolesData[0].branch);
+                      setUserRole(rolesData[0].role);
+                      setUserBranch(rolesData[0].branch);
+                    }
+                  }
                 } else {
-                  // 저장된 지점이 없거나 권한이 없으면 첫 번째 지점 사용
+                  // 저장된 지점이 없으면 첫 번째 지점 사용
                   setCurrentBranch(rolesData[0].branch);
                   setUserRole(rolesData[0].role);
                   setUserBranch(rolesData[0].branch);
@@ -102,14 +121,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (rolesData && rolesData.length > 0) {
               setUserBranches(rolesData);
               
-              const savedBranch = localStorage.getItem('currentBranch') as '강서' | '광명' | '성동' | null;
-              const hasSavedBranch = rolesData.some(r => r.branch === savedBranch);
+              // 마스터 계정인지 확인
+              const isMaster = rolesData.some(r => r.role === 'master');
               
-              if (hasSavedBranch && savedBranch) {
-                const branchRole = rolesData.find(r => r.branch === savedBranch);
-                setCurrentBranch(savedBranch);
-                setUserRole(branchRole?.role || null);
-                setUserBranch(savedBranch);
+              const savedBranch = localStorage.getItem('currentBranch') as '강서' | '광명' | '성동' | null;
+              
+              if (savedBranch) {
+                // 마스터는 모든 지점 접근 가능
+                if (isMaster) {
+                  setCurrentBranch(savedBranch);
+                  setUserRole('master');
+                  setUserBranch(savedBranch);
+                } else {
+                  const hasSavedBranch = rolesData.some(r => r.branch === savedBranch);
+                  if (hasSavedBranch) {
+                    const branchRole = rolesData.find(r => r.branch === savedBranch);
+                    setCurrentBranch(savedBranch);
+                    setUserRole(branchRole?.role || null);
+                    setUserBranch(savedBranch);
+                  } else {
+                    setCurrentBranch(rolesData[0].branch);
+                    setUserRole(rolesData[0].role);
+                    setUserBranch(rolesData[0].branch);
+                  }
+                }
               } else {
                 setCurrentBranch(rolesData[0].branch);
                 setUserRole(rolesData[0].role);
@@ -156,13 +191,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const switchBranch = (branch: '강서' | '광명' | '성동') => {
-    // 해당 지점에 대한 권한이 있는지 확인
-    const branchRole = userBranches.find(b => b.branch === branch);
-    if (branchRole) {
+    // 마스터는 모든 지점 접근 가능
+    const isMaster = userBranches.some(b => b.role === 'master');
+    
+    if (isMaster) {
       setCurrentBranch(branch);
-      setUserRole(branchRole.role);
+      setUserRole('master');
       setUserBranch(branch);
       localStorage.setItem('currentBranch', branch);
+    } else {
+      // 일반 사용자는 해당 지점에 대한 권한이 있는지 확인
+      const branchRole = userBranches.find(b => b.branch === branch);
+      if (branchRole) {
+        setCurrentBranch(branch);
+        setUserRole(branchRole.role);
+        setUserBranch(branch);
+        localStorage.setItem('currentBranch', branch);
+      }
     }
   };
 
