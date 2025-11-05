@@ -371,6 +371,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
 
       const patientData: any = {
         name: formData.name,
+        patient_number: formData.customer_number || '', // patient_number는 customer_number와 동일
         customer_number: formData.customer_number || null,
         resident_number_masked: formData.resident_number_masked || null,
         phone: formData.phone || null,
