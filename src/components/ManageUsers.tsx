@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useBranchFilter } from '@/hooks/useBranchFilter';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +31,7 @@ interface ManageUsersProps {
 
 export function ManageUsers({ type }: ManageUsersProps) {
   const { user } = useAuth();
+  const { currentBranch } = useBranchFilter();
   const { toast } = useToast();
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,10 +41,16 @@ export function ManageUsers({ type }: ManageUsersProps) {
       const tableName = type === 'pending' ? 'pending_approvals' : 'approved_users';
       const orderColumn = type === 'pending' ? 'requested_at' : 'approved_at';
       
-      const { data, error } = await supabase
+      let query = supabase
         .from(tableName)
-        .select('*')
-        .order(orderColumn, { ascending: false });
+        .select('*');
+      
+      // 현재 지점 필터 적용
+      if (currentBranch) {
+        query = query.eq('branch', currentBranch);
+      }
+      
+      const { data, error } = await query.order(orderColumn, { ascending: false });
 
       if (error) throw error;
       setUsers(data || []);
@@ -60,7 +68,7 @@ export function ManageUsers({ type }: ManageUsersProps) {
 
   useEffect(() => {
     fetchUsers();
-  }, [type]);
+  }, [type, currentBranch]); // currentBranch 의존성 추가
 
   const handleApprove = async (userId: string, roleId: string) => {
     try {

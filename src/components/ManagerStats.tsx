@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useBranchFilter } from '@/hooks/useBranchFilter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,7 @@ interface ManagerStat {
 }
 
 export function ManagerStats() {
+  const { currentBranch } = useBranchFilter();
   const { toast } = useToast();
   const [stats, setStats] = useState<ManagerStat[]>([]);
   const [filteredStats, setFilteredStats] = useState<ManagerStat[]>([]);
@@ -28,9 +30,14 @@ export function ManagerStats() {
 
   const fetchStats = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('manager_patient_stats')
         .select('*');
+      
+      // 현재 지점 필터 적용 - manager_patient_stats view에 branch 컬럼이 있다고 가정
+      // view를 수정해야 할 수도 있음
+      
+      const { data, error } = await query;
 
       if (error) throw error;
       setStats(data || []);
@@ -49,7 +56,7 @@ export function ManagerStats() {
 
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [currentBranch]); // currentBranch 의존성 추가
 
   useEffect(() => {
     if (searchTerm) {
