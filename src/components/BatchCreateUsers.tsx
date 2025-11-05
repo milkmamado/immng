@@ -58,12 +58,6 @@ export function BatchCreateUsers() {
       email: 'master@naver.com',
       password: 'medi12661266',
       role: 'admin'
-    },
-    {
-      name: '손효준',
-      email: 'torogrr@kakao.com',
-      password: 'xhfhrudtns!@^^',
-      role: 'master'
     }
   ];
 
