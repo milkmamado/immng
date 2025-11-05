@@ -960,6 +960,7 @@ export type Database = {
       }
       manager_patient_stats: {
         Row: {
+          branch: Database["public"]["Enums"]["branch_type"] | null
           last_patient_added: string | null
           manager_email: string | null
           manager_id: string | null

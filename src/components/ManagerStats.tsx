@@ -34,8 +34,10 @@ export function ManagerStats() {
         .from('manager_patient_stats')
         .select('*');
       
-      // 현재 지점 필터 적용 - manager_patient_stats view에 branch 컬럼이 있다고 가정
-      // view를 수정해야 할 수도 있음
+      // 현재 지점 필터 적용
+      if (currentBranch) {
+        query = query.eq('branch', currentBranch);
+      }
       
       const { data, error } = await query;
 
