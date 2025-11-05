@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { User, LogOut, Crown, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { BranchSwitcher } from "@/components/BranchSwitcher";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -102,6 +103,7 @@ export default function Layout({ children }: LayoutProps) {
             </div>
             
             <div className="flex items-center gap-3">
+              <BranchSwitcher />
               <DataMigration />
               
               <DropdownMenu>

@@ -2,12 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Layout from "./components/Layout";
 import { Dashboard } from "./components/Dashboard";
-import Auth from "./pages/Auth";
+import BranchSelection from "./pages/BranchSelection";
+import BranchAuth from "./pages/BranchAuth";
 import AccountManagement from "./pages/AccountManagement";
 import FirstVisitManagement from "./pages/FirstVisitManagement";
 import PatientListManagement from "./pages/PatientListManagement";
@@ -39,18 +40,19 @@ function AppRoutes() {
   if (!user) {
     return (
       <Routes>
-          <Route path="/auth" element={<Auth />} />
-        <Route path="*" element={<Navigate to="/auth" replace />} />
+        <Route path="/" element={<BranchSelection />} />
+        <Route path="/:branch/auth" element={<BranchAuth />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
   }
 
   return (
-    <Layout>
-      <Routes>
-        <Route path="/auth" element={<Navigate to="/" replace />} />
+    <Routes>
+      {/* 지점별 라우팅 */}
+      <Route path="/:branch" element={<Layout><Outlet /></Layout>}>
         <Route 
-          path="/" 
+          index 
           element={
             <ProtectedRoute>
               <Dashboard />
@@ -58,7 +60,7 @@ function AppRoutes() {
           } 
         />
         <Route 
-          path="/first-visit" 
+          path="first-visit" 
           element={
             <ProtectedRoute>
               <FirstVisitManagement />
@@ -66,7 +68,7 @@ function AppRoutes() {
           } 
         />
         <Route 
-          path="/patient-list" 
+          path="patient-list" 
           element={
             <ProtectedRoute>
               <PatientListManagement />
@@ -74,7 +76,7 @@ function AppRoutes() {
           } 
         />
         <Route 
-          path="/daily-tracking" 
+          path="daily-tracking" 
           element={
             <ProtectedRoute>
               <DailyStatusTracking />
@@ -82,7 +84,7 @@ function AppRoutes() {
           } 
         />
         <Route 
-          path="/risk-management" 
+          path="risk-management" 
           element={
             <ProtectedRoute>
               <RiskManagement />
@@ -90,7 +92,7 @@ function AppRoutes() {
           } 
         />
         <Route 
-          path="/statistics" 
+          path="statistics" 
           element={
             <ProtectedRoute>
               <StatisticsManagement />
@@ -98,7 +100,7 @@ function AppRoutes() {
           } 
         />
         <Route 
-          path="/user-manual" 
+          path="user-manual" 
           element={
             <ProtectedRoute>
               <UserManual />
@@ -106,7 +108,7 @@ function AppRoutes() {
           } 
         />
         <Route 
-          path="/crm-bookmarklet" 
+          path="crm-bookmarklet" 
           element={
             <ProtectedRoute>
               <CRMBookmarklet />
@@ -114,7 +116,7 @@ function AppRoutes() {
           } 
         />
         <Route 
-          path="/package-integration" 
+          path="package-integration" 
           element={
             <ProtectedRoute>
               <PackageIntegration />
@@ -122,7 +124,7 @@ function AppRoutes() {
           } 
         />
         <Route 
-          path="/marketing-statistics"
+          path="marketing-statistics"
           element={
             <ProtectedRoute requiredRole="master">
               <MarketingStatistics />
@@ -130,16 +132,19 @@ function AppRoutes() {
           } 
         />
         <Route 
-          path="/account-management"
+          path="account-management"
           element={
             <ProtectedRoute requiredRole="master">
               <AccountManagement />
             </ProtectedRoute>
           } 
         />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Layout>
+      </Route>
+      
+      {/* 루트 경로 처리 */}
+      <Route path="/" element={<Navigate to="/광명" replace />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
 

@@ -12,7 +12,7 @@ import {
   BookMarked,
   Package
 } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
 import {
@@ -27,31 +27,36 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const navigationItems = [
-  { title: "대시보드", url: "/", icon: Home },
-  { title: "초진관리", url: "/first-visit", icon: Heart },
-  { title: "관리 환자 리스트", url: "/patient-list", icon: Users },
-  { title: "일별 환자 관리 현황", url: "/daily-tracking", icon: ClipboardCheck },
-  { title: "이탈 리스크 관리", url: "/risk-management", icon: Calendar },
-  { title: "통계 관리", url: "/statistics", icon: BarChart3 },
-  { title: "CRM 연동", url: "/crm-bookmarklet", icon: BookMarked },
-  { title: "패키지 연동", url: "/package-integration", icon: Package },
-  { title: "사용자 메뉴얼", url: "/user-manual", icon: BookOpen },
+const getNavigationItems = (branch: string) => [
+  { title: "대시보드", url: `/${branch}`, icon: Home },
+  { title: "초진관리", url: `/${branch}/first-visit`, icon: Heart },
+  { title: "관리 환자 리스트", url: `/${branch}/patient-list`, icon: Users },
+  { title: "일별 환자 관리 현황", url: `/${branch}/daily-tracking`, icon: ClipboardCheck },
+  { title: "이탈 리스크 관리", url: `/${branch}/risk-management`, icon: Calendar },
+  { title: "통계 관리", url: `/${branch}/statistics`, icon: BarChart3 },
+  { title: "CRM 연동", url: `/${branch}/crm-bookmarklet`, icon: BookMarked },
+  { title: "패키지 연동", url: `/${branch}/package-integration`, icon: Package },
+  { title: "사용자 메뉴얼", url: `/${branch}/user-manual`, icon: BookOpen },
 ];
 
 const managementItems: never[] = [];
 
-const adminItems = [
-  { title: "마케팅 통계", url: "/marketing-statistics", icon: TrendingUp, requiredRole: 'master' as const },
-  { title: "계정 관리", url: "/account-management", icon: Shield, requiredRole: 'master' as const },
+const getAdminItems = (branch: string) => [
+  { title: "마케팅 통계", url: `/${branch}/marketing-statistics`, icon: TrendingUp, requiredRole: 'master' as const },
+  { title: "계정 관리", url: `/${branch}/account-management`, icon: Shield, requiredRole: 'master' as const },
 ];
 
 export function AppSidebar() {
   const { open } = useSidebar();
   const { userRole } = useAuth();
   const location = useLocation();
+  const { branch } = useParams<{ branch: string }>();
+  const currentBranch = branch || '광명';
   const currentPath = location.pathname;
   const isCollapsed = !open;
+  
+  const navigationItems = getNavigationItems(currentBranch);
+  const adminItems = getAdminItems(currentBranch);
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive 

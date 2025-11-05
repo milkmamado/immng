@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           admission_date: string
           admission_type: string | null
+          branch: Database["public"]["Enums"]["branch_type"]
           created_at: string
           cycle_number: number
           discharge_date: string | null
@@ -30,6 +31,7 @@ export type Database = {
         Insert: {
           admission_date: string
           admission_type?: string | null
+          branch?: Database["public"]["Enums"]["branch_type"]
           created_at?: string
           cycle_number: number
           discharge_date?: string | null
@@ -42,6 +44,7 @@ export type Database = {
         Update: {
           admission_date?: string
           admission_type?: string | null
+          branch?: Database["public"]["Enums"]["branch_type"]
           created_at?: string
           cycle_number?: number
           discharge_date?: string | null
@@ -63,6 +66,7 @@ export type Database = {
       }
       daily_patient_status: {
         Row: {
+          branch: Database["public"]["Enums"]["branch_type"]
           created_at: string
           created_by: string
           id: string
@@ -73,6 +77,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          branch?: Database["public"]["Enums"]["branch_type"]
           created_at?: string
           created_by: string
           id?: string
@@ -83,6 +88,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          branch?: Database["public"]["Enums"]["branch_type"]
           created_at?: string
           created_by?: string
           id?: string
@@ -202,6 +208,7 @@ export type Database = {
         Row: {
           admission_cycle_id: string | null
           biopsy_result: string | null
+          branch: Database["public"]["Enums"]["branch_type"]
           cancer_stage: string | null
           cancer_type: string
           created_at: string
@@ -216,6 +223,7 @@ export type Database = {
         Insert: {
           admission_cycle_id?: string | null
           biopsy_result?: string | null
+          branch?: Database["public"]["Enums"]["branch_type"]
           cancer_stage?: string | null
           cancer_type: string
           created_at?: string
@@ -230,6 +238,7 @@ export type Database = {
         Update: {
           admission_cycle_id?: string | null
           biopsy_result?: string | null
+          branch?: Database["public"]["Enums"]["branch_type"]
           cancer_stage?: string | null
           cancer_type?: string
           created_at?: string
@@ -253,6 +262,7 @@ export type Database = {
       }
       package_management: {
         Row: {
+          branch: Database["public"]["Enums"]["branch_type"]
           count_balance: number | null
           count_total: number | null
           count_used: number | null
@@ -270,6 +280,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          branch?: Database["public"]["Enums"]["branch_type"]
           count_balance?: number | null
           count_total?: number | null
           count_used?: number | null
@@ -287,6 +298,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          branch?: Database["public"]["Enums"]["branch_type"]
           count_balance?: number | null
           count_total?: number | null
           count_used?: number | null
@@ -316,6 +328,7 @@ export type Database = {
       package_transactions: {
         Row: {
           amount: number
+          branch: Database["public"]["Enums"]["branch_type"]
           count: number | null
           created_at: string
           customer_number: string | null
@@ -330,6 +343,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          branch?: Database["public"]["Enums"]["branch_type"]
           count?: number | null
           created_at?: string
           customer_number?: string | null
@@ -344,6 +358,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          branch?: Database["public"]["Enums"]["branch_type"]
           count?: number | null
           created_at?: string
           customer_number?: string | null
@@ -369,6 +384,7 @@ export type Database = {
       packages: {
         Row: {
           admission_cycle_id: string | null
+          branch: Database["public"]["Enums"]["branch_type"]
           created_at: string
           end_date: string
           has_private_insurance: boolean | null
@@ -391,6 +407,7 @@ export type Database = {
         }
         Insert: {
           admission_cycle_id?: string | null
+          branch?: Database["public"]["Enums"]["branch_type"]
           created_at?: string
           end_date: string
           has_private_insurance?: boolean | null
@@ -413,6 +430,7 @@ export type Database = {
         }
         Update: {
           admission_cycle_id?: string | null
+          branch?: Database["public"]["Enums"]["branch_type"]
           created_at?: string
           end_date?: string
           has_private_insurance?: boolean | null
@@ -446,6 +464,7 @@ export type Database = {
       patient_notes: {
         Row: {
           admission_cycle_id: string | null
+          branch: Database["public"]["Enums"]["branch_type"]
           content: string
           created_at: string
           created_by: string
@@ -458,6 +477,7 @@ export type Database = {
         }
         Insert: {
           admission_cycle_id?: string | null
+          branch?: Database["public"]["Enums"]["branch_type"]
           content: string
           created_at?: string
           created_by: string
@@ -470,6 +490,7 @@ export type Database = {
         }
         Update: {
           admission_cycle_id?: string | null
+          branch?: Database["public"]["Enums"]["branch_type"]
           content?: string
           created_at?: string
           created_by?: string
@@ -499,6 +520,7 @@ export type Database = {
       }
       patient_reconnect_tracking: {
         Row: {
+          branch: Database["public"]["Enums"]["branch_type"]
           created_at: string
           created_by: string
           id: string
@@ -509,6 +531,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          branch?: Database["public"]["Enums"]["branch_type"]
           created_at?: string
           created_by: string
           id?: string
@@ -519,6 +542,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          branch?: Database["public"]["Enums"]["branch_type"]
           created_at?: string
           created_by?: string
           id?: string
@@ -568,6 +592,7 @@ export type Database = {
           admission_date: string | null
           age: number | null
           assigned_manager: string
+          branch: Database["public"]["Enums"]["branch_type"]
           chart_number: string | null
           consultation_date: string | null
           counseling_content: string | null
@@ -625,6 +650,7 @@ export type Database = {
           admission_date?: string | null
           age?: number | null
           assigned_manager: string
+          branch?: Database["public"]["Enums"]["branch_type"]
           chart_number?: string | null
           consultation_date?: string | null
           counseling_content?: string | null
@@ -682,6 +708,7 @@ export type Database = {
           admission_date?: string | null
           age?: number | null
           assigned_manager?: string
+          branch?: Database["public"]["Enums"]["branch_type"]
           chart_number?: string | null
           consultation_date?: string | null
           counseling_content?: string | null
@@ -738,6 +765,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          branch: Database["public"]["Enums"]["branch_type"]
           created_at: string
           email: string
           id: string
@@ -746,6 +774,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          branch?: Database["public"]["Enums"]["branch_type"]
           created_at?: string
           email: string
           id: string
@@ -754,6 +783,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          branch?: Database["public"]["Enums"]["branch_type"]
           created_at?: string
           email?: string
           id?: string
@@ -787,6 +817,7 @@ export type Database = {
       treatment_history: {
         Row: {
           admission_cycle_id: string | null
+          branch: Database["public"]["Enums"]["branch_type"]
           created_at: string
           end_date: string | null
           hospital_name: string | null
@@ -799,6 +830,7 @@ export type Database = {
         }
         Insert: {
           admission_cycle_id?: string | null
+          branch?: Database["public"]["Enums"]["branch_type"]
           created_at?: string
           end_date?: string | null
           hospital_name?: string | null
@@ -811,6 +843,7 @@ export type Database = {
         }
         Update: {
           admission_cycle_id?: string | null
+          branch?: Database["public"]["Enums"]["branch_type"]
           created_at?: string
           end_date?: string | null
           hospital_name?: string | null
@@ -833,6 +866,7 @@ export type Database = {
       }
       treatment_plans: {
         Row: {
+          branch: Database["public"]["Enums"]["branch_type"]
           created_at: string
           created_by: string
           id: string
@@ -844,6 +878,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          branch?: Database["public"]["Enums"]["branch_type"]
           created_at?: string
           created_by: string
           id?: string
@@ -855,6 +890,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          branch?: Database["public"]["Enums"]["branch_type"]
           created_at?: string
           created_by?: string
           id?: string
@@ -873,6 +909,7 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           assigned_by: string | null
+          branch: Database["public"]["Enums"]["branch_type"]
           created_at: string
           id: string
           role: Database["public"]["Enums"]["user_role"]
@@ -883,6 +920,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           assigned_by?: string | null
+          branch?: Database["public"]["Enums"]["branch_type"]
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["user_role"]
@@ -893,6 +931,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           assigned_by?: string | null
+          branch?: Database["public"]["Enums"]["branch_type"]
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["user_role"]
@@ -964,6 +1003,7 @@ export type Database = {
     }
     Enums: {
       approval_status: "pending" | "approved" | "rejected"
+      branch_type: "강서" | "광명" | "성동"
       user_role: "master" | "manager" | "admin"
     }
     CompositeTypes: {
@@ -1093,6 +1133,7 @@ export const Constants = {
   public: {
     Enums: {
       approval_status: ["pending", "approved", "rejected"],
+      branch_type: ["강서", "광명", "성동"],
       user_role: ["master", "manager", "admin"],
     },
   },
