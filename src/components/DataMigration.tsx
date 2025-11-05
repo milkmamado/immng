@@ -194,8 +194,24 @@ export function DataMigration() {
       // Step 4: UUID 필드를 변환하는 헬퍼 함수
       const transformUuid = (uuid: string | null | undefined): string | null => {
         if (!uuid) return null;
-        return uuidMapping[uuid] || uuid;
+        return uuidMapping[uuid] || null; // 매핑 실패 시 null 반환
       };
+      
+      // Master 사용자 찾기 (assigned_manager 대체용)
+      const { data: masterUsers } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'master')
+        .eq('approval_status', 'approved')
+        .limit(1);
+      
+      const fallbackManagerId = masterUsers?.[0]?.user_id || user?.id;
+      
+      if (!fallbackManagerId) {
+        toast.error('Master 계정을 찾을 수 없습니다.');
+        setIsImporting(false);
+        return;
+      }
       
       // 존재하지 않는 컬럼을 제거하는 헬퍼 함수
       const removeNonExistentColumns = (record: any, tableName: string): any => {
@@ -239,20 +255,32 @@ export function DataMigration() {
         transformed = removeNonExistentColumns(transformed, tableName);
         
         // 공통 UUID 필드 변환
-        if (transformed.user_id) transformed.user_id = transformUuid(transformed.user_id);
-        if (transformed.created_by) transformed.created_by = transformUuid(transformed.created_by);
+        if (transformed.user_id) {
+          const mappedId = transformUuid(transformed.user_id);
+          transformed.user_id = mappedId || fallbackManagerId;
+        }
+        if (transformed.created_by) {
+          const mappedId = transformUuid(transformed.created_by);
+          transformed.created_by = mappedId || fallbackManagerId;
+        }
         if (transformed.approved_by) transformed.approved_by = transformUuid(transformed.approved_by);
         if (transformed.assigned_by) transformed.assigned_by = transformUuid(transformed.assigned_by);
-        if (transformed.assigned_manager) transformed.assigned_manager = transformUuid(transformed.assigned_manager);
+        if (transformed.assigned_manager) {
+          const mappedId = transformUuid(transformed.assigned_manager);
+          transformed.assigned_manager = mappedId || fallbackManagerId; // 매핑 실패 시 fallback 사용
+        }
         
         // 테이블별 특수 필드
         if (tableName === 'manager_supervisors') {
-          if (transformed.manager_id) transformed.manager_id = transformUuid(transformed.manager_id);
-          if (transformed.supervisor_id) transformed.supervisor_id = transformUuid(transformed.supervisor_id);
+          if (transformed.manager_id) {
+            const mappedId = transformUuid(transformed.manager_id);
+            transformed.manager_id = mappedId || fallbackManagerId;
+          }
+          if (transformed.supervisor_id) {
+            const mappedId = transformUuid(transformed.supervisor_id);
+            transformed.supervisor_id = mappedId || fallbackManagerId;
+          }
         }
-        
-        // profiles는 업로드하지 않음 (이미 가입된 계정 사용)
-        // user_roles도 업로드하지 않음 (이미 승인된 role 사용)
         
         return transformed;
       };
