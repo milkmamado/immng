@@ -14,13 +14,22 @@ export function BranchSwitcher() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // 마스터 계정은 모든 지점 접근 가능
+  const allBranches: Array<{ branch: '강서' | '광명' | '성동'; role: 'master' | 'manager' | 'admin' }> = [
+    { branch: '강서', role: 'master' },
+    { branch: '광명', role: 'master' },
+    { branch: '성동', role: 'master' },
+  ];
+
+  const availableBranches = userRole === 'master' ? allBranches : userBranches;
+
   // 사용자가 접근 가능한 지점이 없으면 표시하지 않음
-  if (!userBranches || userBranches.length === 0) {
+  if (!availableBranches || availableBranches.length === 0) {
     return null;
   }
 
   // 사용자가 한 지점에만 권한이 있으면 표시하지 않음 (master 제외)
-  if (userBranches.length === 1 && userRole !== 'master') {
+  if (availableBranches.length === 1 && userRole !== 'master') {
     return null;
   }
 
@@ -50,7 +59,7 @@ export function BranchSwitcher() {
           <SelectValue placeholder="지점 선택" />
         </SelectTrigger>
         <SelectContent>
-          {userBranches.map(({ branch }) => (
+          {availableBranches.map(({ branch }) => (
             <SelectItem key={branch} value={branch}>
               {branch}점
             </SelectItem>
