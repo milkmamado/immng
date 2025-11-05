@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Users, BarChart3, Shield } from 'lucide-react';
 import { ManageUsers } from '@/components/ManageUsers';
 import { ManagerStats } from '@/components/ManagerStats';
+import { UpdateUserPassword } from '@/components/UpdateUserPassword';
 
 export default function AccountManagement() {
   const { userRole } = useAuth();
@@ -36,6 +37,8 @@ export default function AccountManagement() {
           </p>
         </div>
       </div>
+
+      <UpdateUserPassword />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
