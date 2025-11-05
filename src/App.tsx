@@ -51,6 +51,9 @@ function AppRoutes() {
     <Routes>
       {/* 지점별 라우팅 */}
       <Route path="/:branch" element={<Layout><Outlet /></Layout>}>
+        {/* auth 경로 리다이렉트 (로그인 후 잠깐 보이는 404 방지) */}
+        <Route path="auth" element={<Navigate to=".." replace />} />
+        
         <Route 
           index 
           element={
