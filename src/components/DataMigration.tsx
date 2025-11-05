@@ -198,20 +198,29 @@ export function DataMigration() {
       };
       
       // Master 사용자 찾기 (assigned_manager 대체용)
-      const { data: masterUsers } = await supabase
+      const { data: masterUsers, error: masterError } = await supabase
         .from('user_roles')
         .select('user_id')
         .eq('role', 'master')
         .eq('approval_status', 'approved')
         .limit(1);
       
+      if (masterError) {
+        console.error('Master 계정 조회 에러:', masterError);
+      }
+      
       const fallbackManagerId = masterUsers?.[0]?.user_id || user?.id;
       
+      console.log('Fallback Manager ID:', fallbackManagerId);
+      console.log('Current User ID:', user?.id);
+      
       if (!fallbackManagerId) {
-        toast.error('Master 계정을 찾을 수 없습니다.');
+        toast.error('관리자 계정을 찾을 수 없습니다. 업로드를 중단합니다.');
         setIsImporting(false);
         return;
       }
+      
+      toast.info(`Fallback 관리자: ${fallbackManagerId}`);
       
       // 존재하지 않는 컬럼을 제거하는 헬퍼 함수
       const removeNonExistentColumns = (record: any, tableName: string): any => {
