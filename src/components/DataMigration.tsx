@@ -389,18 +389,24 @@ export function DataMigration() {
           // 일반 테이블 - 필수 컬럼 처리
           let validData = transformedData;
           
-          // patients 테이블의 경우 patient_number가 없거나 빈 문자열이면 자동 생성
+          // patients 테이블의 경우 patient_number 필수 처리
           if (tableName === 'patients') {
             let generatedCount = 0;
             validData = transformedData.map((record: any, index: number) => {
-              if (!record.patient_number || record.patient_number.trim() === '') {
-                // patient_number가 없거나 빈 값이면 name + 타임스탬프로 생성
+              // patient_number가 없거나, 빈 문자열이거나, 공백만 있으면 자동 생성
+              const hasValidPatientNumber = record.patient_number && 
+                typeof record.patient_number === 'string' && 
+                record.patient_number.trim().length > 0;
+              
+              if (!hasValidPatientNumber) {
+                // patient_number 자동 생성: 이름-타임스탬프-인덱스
                 const timestamp = Date.now();
-                const patientName = record.name || 'Patient';
+                const patientName = (record.name && record.name.trim()) || 'Patient';
                 record.patient_number = `${patientName}-${timestamp}-${index}`;
                 generatedCount++;
-                console.log(`Auto-generated patient_number: ${record.patient_number}`);
+                console.log(`Auto-generated patient_number for ${patientName}: ${record.patient_number}`);
               }
+              
               return record;
             });
             
