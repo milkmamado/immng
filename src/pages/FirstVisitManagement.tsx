@@ -52,7 +52,7 @@ interface Patient {
 }
 
 export default function FirstVisitManagement() {
-  const { applyBranchFilter } = useBranchFilter();
+  const { applyBranchFilter, currentBranch } = useBranchFilter();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [showLookupDialog, setShowLookupDialog] = useState(false);
@@ -169,7 +169,7 @@ export default function FirstVisitManagement() {
       window.removeEventListener('message', handleMessage);
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [currentBranch]); // currentBranch 의존성 추가
 
   const fetchPatients = async () => {
     setLoading(true);

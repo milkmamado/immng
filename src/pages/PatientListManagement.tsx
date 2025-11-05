@@ -211,7 +211,7 @@ export default function PatientListManagement() {
       window.removeEventListener('message', handleMessage);
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [currentBranch]); // currentBranch 의존성 추가
 
   useEffect(() => {
     // 기존 검색 + 필터 로직 통합
