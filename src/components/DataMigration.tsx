@@ -142,6 +142,85 @@ export function DataMigration() {
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       
+      // Step 1: 업로드된 profiles에서 이메일 → 기존 UUID 매핑 생성
+      const profilesSheet = workbook.Sheets['profiles'];
+      if (!profilesSheet) {
+        toast.error('profiles 시트가 없습니다.');
+        setIsImporting(false);
+        return;
+      }
+      
+      const uploadedProfiles = XLSX.utils.sheet_to_json(profilesSheet) as any[];
+      const oldEmailToUuid: Record<string, string> = {};
+      uploadedProfiles.forEach((profile: any) => {
+        if (profile.email && profile.id) {
+          oldEmailToUuid[profile.email] = profile.id;
+        }
+      });
+      
+      // Step 2: 현재 프로젝트의 profiles 조회하여 이메일 → 새 UUID 매핑 생성
+      const { data: currentProfiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, email');
+      
+      if (profilesError) {
+        toast.error(`프로필 조회 실패: ${profilesError.message}`);
+        setIsImporting(false);
+        return;
+      }
+      
+      const newEmailToUuid: Record<string, string> = {};
+      currentProfiles?.forEach((profile: any) => {
+        if (profile.email && profile.id) {
+          newEmailToUuid[profile.email] = profile.id;
+        }
+      });
+      
+      // Step 3: 기존 UUID → 새 UUID 매핑 테이블 생성
+      const uuidMapping: Record<string, string> = {};
+      Object.keys(oldEmailToUuid).forEach((email) => {
+        const oldUuid = oldEmailToUuid[email];
+        const newUuid = newEmailToUuid[email];
+        if (newUuid) {
+          uuidMapping[oldUuid] = newUuid;
+        } else {
+          console.warn(`이메일 ${email}에 해당하는 신규 계정이 없습니다.`);
+        }
+      });
+      
+      console.log('UUID 매핑:', uuidMapping);
+      toast.info(`${Object.keys(uuidMapping).length}개의 계정 매핑 완료`);
+      
+      // Step 4: UUID 필드를 변환하는 헬퍼 함수
+      const transformUuid = (uuid: string | null | undefined): string | null => {
+        if (!uuid) return null;
+        return uuidMapping[uuid] || uuid;
+      };
+      
+      const transformRecord = (record: any, tableName: string): any => {
+        const transformed = { ...record };
+        
+        // 공통 UUID 필드 변환
+        if (transformed.user_id) transformed.user_id = transformUuid(transformed.user_id);
+        if (transformed.created_by) transformed.created_by = transformUuid(transformed.created_by);
+        if (transformed.approved_by) transformed.approved_by = transformUuid(transformed.approved_by);
+        if (transformed.assigned_by) transformed.assigned_by = transformUuid(transformed.assigned_by);
+        if (transformed.assigned_manager) transformed.assigned_manager = transformUuid(transformed.assigned_manager);
+        
+        // 테이블별 특수 필드
+        if (tableName === 'manager_supervisors') {
+          if (transformed.manager_id) transformed.manager_id = transformUuid(transformed.manager_id);
+          if (transformed.supervisor_id) transformed.supervisor_id = transformUuid(transformed.supervisor_id);
+        }
+        
+        // profiles와 user_roles는 id도 변환
+        if (tableName === 'profiles' || tableName === 'user_roles') {
+          if (transformed.id) transformed.id = transformUuid(transformed.id);
+        }
+        
+        return transformed;
+      };
+      
       // 각 시트의 데이터를 읽어서 업로드
       const tableMap: Record<string, string> = {
         'patients': 'patients',
@@ -177,14 +256,21 @@ export function DataMigration() {
         
         if (jsonData.length === 0) continue;
 
+        // Step 5: UUID 변환 적용
+        const transformedData = jsonData.map((record: any) => 
+          transformRecord(record, tableName)
+        );
+
         // 테이블별로 데이터 삽입
         const { error } = await (supabase as any)
           .from(tableName)
-          .upsert(jsonData, { onConflict: 'id' });
+          .upsert(transformedData, { onConflict: 'id' });
 
         if (error) {
           console.error(`Error importing ${tableName}:`, error);
           toast.error(`${tableName} 테이블 가져오기 실패: ${error.message}`);
+        } else {
+          toast.success(`${tableName} 테이블 가져오기 완료`);
         }
       }
       
