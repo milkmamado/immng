@@ -349,20 +349,27 @@ export function DataMigration() {
           }
           toast.success(`${tableName} 테이블 가져오기 완료`);
         } else {
-          // 일반 테이블 - null 필수 컬럼 처리
+          // 일반 테이블 - 필수 컬럼 처리
           let validData = transformedData;
           
-          // patients 테이블의 경우 patient_number가 null이면 자동 생성
+          // patients 테이블의 경우 patient_number가 없거나 빈 문자열이면 자동 생성
           if (tableName === 'patients') {
+            let generatedCount = 0;
             validData = transformedData.map((record: any, index: number) => {
-              if (!record.patient_number) {
-                // patient_number가 없으면 타임스탬프 기반으로 자동 생성
-                const timestamp = new Date().getTime();
-                record.patient_number = `P${timestamp}-${index}`;
+              if (!record.patient_number || record.patient_number.trim() === '') {
+                // patient_number가 없거나 빈 값이면 name + 타임스탬프로 생성
+                const timestamp = Date.now();
+                const patientName = record.name || 'Patient';
+                record.patient_number = `${patientName}-${timestamp}-${index}`;
+                generatedCount++;
                 console.log(`Auto-generated patient_number: ${record.patient_number}`);
               }
               return record;
             });
+            
+            if (generatedCount > 0) {
+              toast.info(`${generatedCount}개의 환자 번호를 자동 생성했습니다.`);
+            }
           }
           
           if (validData.length === 0) {
