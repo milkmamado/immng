@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   userRole: 'master' | 'manager' | 'admin' | null;
   userBranch: '강서' | '광명' | '성동' | null;
+  userBranches: Array<{ branch: '강서' | '광명' | '성동'; role: 'master' | 'manager' | 'admin' }>; // 사용자가 가진 모든 지점
   currentBranch: '강서' | '광명' | '성동' | null;
   loading: boolean;
   signOut: () => Promise<void>;
@@ -20,6 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<'master' | 'manager' | 'admin' | null>(null);
   const [userBranch, setUserBranch] = useState<'강서' | '광명' | '성동' | null>(null);
+  const [userBranches, setUserBranches] = useState<Array<{ branch: '강서' | '광명' | '성동'; role: 'master' | 'manager' | 'admin' }>>([]);
   const [currentBranch, setCurrentBranch] = useState<'강서' | '광명' | '성동' | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -31,34 +33,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // 사용자 역할 및 지점 조회
+          // 사용자의 모든 지점 role 조회
           setTimeout(async () => {
             try {
-              const { data: roleData } = await supabase
+              const { data: rolesData } = await supabase
                 .from('user_roles')
                 .select('role, branch')
                 .eq('user_id', session.user.id)
-                .eq('approval_status', 'approved')
-                .single();
+                .eq('approval_status', 'approved');
               
-              setUserRole(roleData?.role || null);
-              setUserBranch(roleData?.branch || null);
-              
-              // localStorage에서 currentBranch 복원 (master인 경우) 또는 사용자 지점으로 설정
-              const savedBranch = localStorage.getItem('currentBranch') as '강서' | '광명' | '성동' | null;
-              if (roleData?.role === 'master' && savedBranch) {
-                setCurrentBranch(savedBranch);
+              if (rolesData && rolesData.length > 0) {
+                setUserBranches(rolesData);
+                
+                // localStorage에서 currentBranch 복원 또는 첫 번째 지점으로 설정
+                const savedBranch = localStorage.getItem('currentBranch') as '강서' | '광명' | '성동' | null;
+                const hasSavedBranch = rolesData.some(r => r.branch === savedBranch);
+                
+                if (hasSavedBranch && savedBranch) {
+                  const branchRole = rolesData.find(r => r.branch === savedBranch);
+                  setCurrentBranch(savedBranch);
+                  setUserRole(branchRole?.role || null);
+                  setUserBranch(savedBranch);
+                } else {
+                  // 저장된 지점이 없거나 권한이 없으면 첫 번째 지점 사용
+                  setCurrentBranch(rolesData[0].branch);
+                  setUserRole(rolesData[0].role);
+                  setUserBranch(rolesData[0].branch);
+                }
               } else {
-                setCurrentBranch(roleData?.branch || null);
+                setUserBranches([]);
+                setUserRole(null);
+                setUserBranch(null);
+                setCurrentBranch(null);
               }
             } catch (error) {
               console.error('역할 조회 실패:', error);
+              setUserBranches([]);
               setUserRole(null);
               setUserBranch(null);
               setCurrentBranch(null);
             }
           }, 0);
         } else {
+          setUserBranches([]);
           setUserRole(null);
           setUserBranch(null);
           setCurrentBranch(null);
@@ -76,24 +93,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         setTimeout(async () => {
           try {
-            const { data: roleData } = await supabase
+            const { data: rolesData } = await supabase
               .from('user_roles')
               .select('role, branch')
               .eq('user_id', session.user.id)
-              .eq('approval_status', 'approved')
-              .single();
+              .eq('approval_status', 'approved');
             
-            setUserRole(roleData?.role || null);
-            setUserBranch(roleData?.branch || null);
-            
-            const savedBranch = localStorage.getItem('currentBranch') as '강서' | '광명' | '성동' | null;
-            if (roleData?.role === 'master' && savedBranch) {
-              setCurrentBranch(savedBranch);
+            if (rolesData && rolesData.length > 0) {
+              setUserBranches(rolesData);
+              
+              const savedBranch = localStorage.getItem('currentBranch') as '강서' | '광명' | '성동' | null;
+              const hasSavedBranch = rolesData.some(r => r.branch === savedBranch);
+              
+              if (hasSavedBranch && savedBranch) {
+                const branchRole = rolesData.find(r => r.branch === savedBranch);
+                setCurrentBranch(savedBranch);
+                setUserRole(branchRole?.role || null);
+                setUserBranch(savedBranch);
+              } else {
+                setCurrentBranch(rolesData[0].branch);
+                setUserRole(rolesData[0].role);
+                setUserBranch(rolesData[0].branch);
+              }
             } else {
-              setCurrentBranch(roleData?.branch || null);
+              setUserBranches([]);
+              setUserRole(null);
+              setUserBranch(null);
+              setCurrentBranch(null);
             }
           } catch (error) {
             console.error('역할 조회 실패:', error);
+            setUserBranches([]);
             setUserRole(null);
             setUserBranch(null);
             setCurrentBranch(null);
@@ -118,6 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(null);
       setUserRole(null);
       setUserBranch(null);
+      setUserBranches([]);
       setCurrentBranch(null);
       localStorage.clear();
       window.location.href = '/';
@@ -125,8 +156,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const switchBranch = (branch: '강서' | '광명' | '성동') => {
-    if (userRole === 'master') {
+    // 해당 지점에 대한 권한이 있는지 확인
+    const branchRole = userBranches.find(b => b.branch === branch);
+    if (branchRole) {
       setCurrentBranch(branch);
+      setUserRole(branchRole.role);
+      setUserBranch(branch);
       localStorage.setItem('currentBranch', branch);
     }
   };
@@ -136,6 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     userRole,
     userBranch,
+    userBranches,
     currentBranch,
     loading,
     signOut,

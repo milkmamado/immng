@@ -10,12 +10,17 @@ import {
 import { Building2 } from 'lucide-react';
 
 export function BranchSwitcher() {
-  const { userRole, currentBranch, switchBranch } = useAuth();
+  const { userRole, currentBranch, userBranches, switchBranch } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // master만 지점 전환 가능
-  if (userRole !== 'master') {
+  // 사용자가 접근 가능한 지점이 없으면 표시하지 않음
+  if (!userBranches || userBranches.length === 0) {
+    return null;
+  }
+
+  // 사용자가 한 지점에만 권한이 있으면 표시하지 않음 (master 제외)
+  if (userBranches.length === 1 && userRole !== 'master') {
     return null;
   }
 
@@ -45,9 +50,11 @@ export function BranchSwitcher() {
           <SelectValue placeholder="지점 선택" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="강서">강서점</SelectItem>
-          <SelectItem value="광명">광명점</SelectItem>
-          <SelectItem value="성동">성동점</SelectItem>
+          {userBranches.map(({ branch }) => (
+            <SelectItem key={branch} value={branch}>
+              {branch}점
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>
