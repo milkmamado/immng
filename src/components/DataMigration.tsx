@@ -257,68 +257,103 @@ export function DataMigration() {
         return transformed;
       };
       
-      // 각 시트의 데이터를 읽어서 업로드
-      const tableMap: Record<string, string> = {
-        'patients': 'patients',
-        'daily_patient_status': 'daily_patient_status',
-        'admission_cycles': 'admission_cycles',
-        'medical_info': 'medical_info',
-        'packages': 'packages',
-        'package_management': 'package_management',
-        'package_transactions': 'package_transactions',
-        'treatment_history': 'treatment_history',
-        'treatment_plans': 'treatment_plans',
-        'patient_notes': 'patient_notes',
-        'patient_reconnect_tracking': 'patient_reconnect_tracking',
-        'profiles': 'profiles',
-        'user_roles': 'user_roles',
-        'manager_supervisors': 'manager_supervisors',
-        'diagnosis_options': 'diagnosis_options',
-        'hospital_options': 'hospital_options',
-        'insurance_type_options': 'insurance_type_options',
-        'patient_status_options': 'patient_status_options',
-        'treatment_detail_options': 'treatment_detail_options'
-      };
+      // 정확한 순서로 테이블 업로드 (foreign key 제약 조건 고려)
+      const uploadOrder = [
+        // 1. 옵션 테이블 먼저
+        'diagnosis_options',
+        'hospital_options',
+        'insurance_type_options',
+        'patient_status_options',
+        'treatment_detail_options',
+        // 2. 매니저 관계
+        'manager_supervisors',
+        // 3. 환자 기본 정보
+        'patients',
+        // 4. 환자 관련 테이블들
+        'admission_cycles',
+        'medical_info',
+        'packages',
+        'package_management',
+        'package_transactions',
+        'treatment_history',
+        'treatment_plans',
+        'patient_notes',
+        'patient_reconnect_tracking',
+        'daily_patient_status',
+      ];
 
-      for (const sheetName of workbook.SheetNames) {
-        const tableName = tableMap[sheetName];
-        if (!tableName) {
-          console.warn(`Unknown table: ${sheetName}`);
-          continue;
-        }
-        
+      for (const tableName of uploadOrder) {
         // profiles와 user_roles는 스킵 (이미 가입된 계정 사용)
         if (tableName === 'profiles' || tableName === 'user_roles') {
           console.log(`Skipping ${tableName} - using existing accounts`);
           continue;
         }
 
-        const worksheet = workbook.Sheets[sheetName];
+        const worksheet = workbook.Sheets[tableName];
+        if (!worksheet) {
+          console.log(`Sheet ${tableName} not found, skipping`);
+          continue;
+        }
+        
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
         
-        if (jsonData.length === 0) continue;
+        if (jsonData.length === 0) {
+          console.log(`${tableName} has no data, skipping`);
+          continue;
+        }
 
         // Step 5: UUID 변환 및 컬럼 정리 적용
         const transformedData = jsonData.map((record: any) => 
           transformRecord(record, tableName)
         );
 
-        // 옵션 테이블은 id 기반 upsert (unique constraint가 name에 없을 수 있음)
+        // 옵션 테이블은 name 기준으로 upsert (name에 unique constraint 있음)
         const isOptionTable = ['diagnosis_options', 'hospital_options', 'insurance_type_options', 'patient_status_options', 'treatment_detail_options'].includes(tableName);
-        const upsertConfig = isOptionTable 
-          ? { onConflict: 'id', ignoreDuplicates: false }
-          : { onConflict: 'id' };
-
+        
         // 테이블별로 데이터 삽입
-        const { error } = await (supabase as any)
-          .from(tableName)
-          .upsert(transformedData, upsertConfig);
-
-        if (error) {
-          console.error(`Error importing ${tableName}:`, error);
-          toast.error(`${tableName} 테이블 가져오기 실패: ${error.message}`);
-        } else {
+        if (isOptionTable) {
+          // 옵션 테이블은 하나씩 upsert (name 중복 체크)
+          for (const record of transformedData) {
+            const { data: existing } = await (supabase as any)
+              .from(tableName)
+              .select('id')
+              .eq('name', record.name)
+              .single();
+            
+            if (existing) {
+              // 이미 존재하면 업데이트
+              const { error } = await (supabase as any)
+                .from(tableName)
+                .update(record)
+                .eq('id', existing.id);
+              
+              if (error) {
+                console.error(`Error updating ${tableName}:`, error);
+              }
+            } else {
+              // 존재하지 않으면 삽입
+              const { error } = await (supabase as any)
+                .from(tableName)
+                .insert(record);
+              
+              if (error) {
+                console.error(`Error inserting ${tableName}:`, error);
+              }
+            }
+          }
           toast.success(`${tableName} 테이블 가져오기 완료 (${transformedData.length}건)`);
+        } else {
+          // 일반 테이블은 batch upsert
+          const { error } = await (supabase as any)
+            .from(tableName)
+            .upsert(transformedData, { onConflict: 'id' });
+
+          if (error) {
+            console.error(`Error importing ${tableName}:`, error);
+            toast.error(`${tableName} 테이블 가져오기 실패: ${error.message}`);
+          } else {
+            toast.success(`${tableName} 테이블 가져오기 완료 (${transformedData.length}건)`);
+          }
         }
       }
       
