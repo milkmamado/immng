@@ -36,7 +36,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     gender: '',                 // 성별 (API)
     age: '',                    // 나이(만) (API)
     visit_motivation: '',       // 내원동기 (API)
-    diagnosis_category: '',     // 진단명 대분류 (API)
+    
     diagnosis_detail: '',       // 진단명 중분류 (API)
     hospital_category: '',      // 이전병원 대분류 (API)
     hospital_branch: '',        // 이전병원 중분류 (API)
@@ -101,7 +101,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         gender: patient.gender || '',
         age: patient.age?.toString() || '',
         visit_motivation: patient.visit_motivation || '',
-        diagnosis_category: patient.diagnosis_category || '',
+        
         diagnosis_detail: patient.diagnosis_detail || '',
         hospital_category: patient.hospital_category || '',
         hospital_branch: patient.hospital_branch || '',
@@ -278,7 +278,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
       const updatedFields: any = {};
       const apiFields = [
         'name', 'customer_number', 'resident_number_masked', 'phone', 
-        'gender', 'age', 'visit_motivation', 'diagnosis_category', 
+        'gender', 'age', 'visit_motivation', 
         'diagnosis_detail', 'hospital_category', 'hospital_branch', 
         'address', 'crm_memo', 'special_note_1', 'special_note_2', 
         'treatment_memo_1', 'treatment_memo_2'
@@ -377,7 +377,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         gender: formData.gender || null,
         age: formData.age ? parseInt(formData.age) : null,
         visit_motivation: formData.visit_motivation || null,
-        diagnosis_category: formData.diagnosis_category || null,
+        
         diagnosis_detail: formData.diagnosis_detail || null,
         hospital_category: formData.hospital_category || null,
         hospital_branch: formData.hospital_branch || null,
@@ -452,7 +452,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         gender: '',
         age: '',
         visit_motivation: '',
-        diagnosis_category: '',
+        
         diagnosis_detail: '',
         hospital_category: '',
         hospital_branch: '',
@@ -617,13 +617,13 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
             />
           </div>
 
-          {/* 진단명 대분류 */}
+          {/* 진단명 */}
           <div>
-            <Label htmlFor="diagnosis_category">진단명 (대분류)</Label>
+            <Label htmlFor="diagnosis_detail">진단명</Label>
             <Input
-              id="diagnosis_category"
-              name="diagnosis_category"
-              value={formData.diagnosis_category}
+              id="diagnosis_detail"
+              name="diagnosis_detail"
+              value={formData.diagnosis_detail}
               placeholder="API에서 자동 입력"
               disabled
               className="bg-muted"

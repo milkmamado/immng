@@ -33,7 +33,7 @@ interface Patient {
   first_visit_date?: string;
   visit_type?: string;
   visit_motivation?: string;
-  diagnosis_category?: string;
+  
   diagnosis_detail?: string;
   hospital_category?: string;
   hospital_branch?: string;
@@ -253,7 +253,7 @@ export default function FirstVisitManagement() {
         '입원/외래': patient.visit_type || '-',
         '내원동기': patient.visit_motivation || '-',
         '이름': patient.name,
-        '진단명': patient.diagnosis_category || '-',
+        '진단명': patient.diagnosis_detail || '-',
         '세부진단명': patient.diagnosis_detail || '-',
         '환자 or 보호자': patient.patient_or_guardian || '-',
         '이전병원': patient.hospital_category || '-',
@@ -344,7 +344,6 @@ export default function FirstVisitManagement() {
     if (diagnosisSearch.trim()) {
       const diagnosisText = diagnosisSearch.toLowerCase();
       const matchesDiagnosis = 
-        (patient.diagnosis_category && patient.diagnosis_category.toLowerCase().includes(diagnosisText)) ||
         (patient.diagnosis_detail && patient.diagnosis_detail.toLowerCase().includes(diagnosisText));
       
       if (!matchesDiagnosis) return false;
@@ -484,7 +483,7 @@ export default function FirstVisitManagement() {
                       {patient.visit_motivation || '-'}
                     </TableCell>
                     <TableCell className="font-medium">{patient.name}</TableCell>
-                    <TableCell>{patient.diagnosis_category || '-'}</TableCell>
+                    <TableCell>{patient.diagnosis_detail || '-'}</TableCell>
                     <TableCell className="max-w-32 truncate">
                       {patient.diagnosis_detail || '-'}
                     </TableCell>

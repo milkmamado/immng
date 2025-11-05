@@ -38,7 +38,7 @@ interface Patient {
   consultation_date?: string;
   visit_type?: string;
   visit_motivation?: string;
-  diagnosis_category?: string;
+  
   diagnosis_detail?: string;
   counselor?: string;
   hospital_category?: string;
@@ -248,7 +248,6 @@ export default function PatientListManagement() {
       if (diagnosisSearch.trim()) {
         const diagnosisText = diagnosisSearch.toLowerCase();
         const matchesDiagnosis = 
-          (patient.diagnosis_category && patient.diagnosis_category.toLowerCase().includes(diagnosisText)) ||
           (patient.diagnosis_detail && patient.diagnosis_detail.toLowerCase().includes(diagnosisText));
         
         if (!matchesDiagnosis) return false;
@@ -445,7 +444,7 @@ export default function PatientListManagement() {
           ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
           : new Date(patient.created_at).toLocaleDateString('ko-KR'),
         '입원/외래': patient.visit_type || '-',
-        '진단명': patient.diagnosis_category || '-',
+        '진단명': patient.diagnosis_detail || '-',
         '세부진단명': patient.diagnosis_detail || '-',
         '이전병원': patient.hospital_category || '-',
         '담당자': patient.manager_name || '-',
@@ -2107,7 +2106,7 @@ export default function PatientListManagement() {
                     <TableCell>{patient.manager_name || '-'}</TableCell>
                     <TableCell className="font-medium">{patient.name}</TableCell>
                     <TableCell className="max-w-32 truncate">
-                      {patient.diagnosis_category || '-'}
+                      {patient.diagnosis_detail || '-'}
                     </TableCell>
                     <TableCell>
                       {patient.consultation_date 
@@ -2269,9 +2268,9 @@ export default function PatientListManagement() {
 
                   {/* 진단명 대분류 */}
                   <div>
-                    <Label>진단명 (대분류)</Label>
+                    <Label>진단명</Label>
                     <Input
-                      value={selectedPatientDetail?.diagnosis_category || ''}
+                      value={selectedPatientDetail?.diagnosis_detail || ''}
                       disabled
                       className="bg-muted"
                     />

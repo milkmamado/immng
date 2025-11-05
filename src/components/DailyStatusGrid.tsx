@@ -53,7 +53,7 @@ interface Patient {
   treatment_memo_1?: string;
   treatment_memo_2?: string;
   last_visit_date?: string;
-  diagnosis_category?: string;
+  
   diagnosis_detail?: string;
   hospital_category?: string;
   hospital_branch?: string;
@@ -1587,7 +1587,7 @@ export function DailyStatusGrid({
                   <div>
                     <Label>진단명 (대분류)</Label>
                     <Input
-                      value={selectedPatientDetail?.diagnosis_category || ''}
+                      value={selectedPatientDetail?.diagnosis_detail || ''}
                       disabled
                       className="bg-muted"
                     />
