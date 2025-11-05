@@ -154,7 +154,15 @@ export function DataMigration() {
         'treatment_history': 'treatment_history',
         'treatment_plans': 'treatment_plans',
         'patient_notes': 'patient_notes',
-        'patient_reconnect_tracking': 'patient_reconnect_tracking'
+        'patient_reconnect_tracking': 'patient_reconnect_tracking',
+        'profiles': 'profiles',
+        'user_roles': 'user_roles',
+        'manager_supervisors': 'manager_supervisors',
+        'diagnosis_options': 'diagnosis_options',
+        'hospital_options': 'hospital_options',
+        'insurance_type_options': 'insurance_type_options',
+        'patient_status_options': 'patient_status_options',
+        'treatment_detail_options': 'treatment_detail_options'
       };
 
       for (const sheetName of workbook.SheetNames) {
