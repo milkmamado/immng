@@ -78,25 +78,7 @@ export default function Auth() {
         if (error) throw error;
 
         if (data.user) {
-          // 승인 대기 상태로 역할 할당
-          const { error: roleError } = await supabase
-            .from('user_roles')
-            .insert({
-              user_id: data.user.id,
-              role: 'manager',
-              approval_status: 'pending'
-            });
-
-          if (roleError) {
-            console.error('역할 할당 실패:', roleError);
-            toast({
-              variant: "destructive",
-              title: "회원가입 오류",
-              description: "계정 생성 중 오류가 발생했습니다.",
-            });
-            return;
-          }
-
+          // 트리거가 자동으로 role을 생성하므로 수동 insert 불필요
           toast({
             title: "회원가입 신청 완료",
             description: "관리자 승인 후 로그인이 가능합니다. 승인까지 시간이 걸릴 수 있습니다.",
