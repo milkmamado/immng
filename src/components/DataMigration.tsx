@@ -263,6 +263,14 @@ export function DataMigration() {
         // 먼저 존재하지 않는 컬럼 제거
         transformed = removeNonExistentColumns(transformed, tableName);
         
+        // patients 테이블 특수 처리
+        if (tableName === 'patients') {
+          // customer_number를 patient_number로 매핑
+          if (transformed.customer_number && !transformed.patient_number) {
+            transformed.patient_number = transformed.customer_number;
+          }
+        }
+        
         // 공통 UUID 필드 변환
         if (transformed.user_id) {
           const mappedId = transformUuid(transformed.user_id);
