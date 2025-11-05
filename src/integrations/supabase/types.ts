@@ -946,6 +946,7 @@ export type Database = {
           approval_status: Database["public"]["Enums"]["approval_status"] | null
           approved_at: string | null
           approved_by_name: string | null
+          branch: Database["public"]["Enums"]["branch_type"] | null
           email: string | null
           id: string | null
           joined_at: string | null
@@ -974,6 +975,7 @@ export type Database = {
       pending_approvals: {
         Row: {
           approval_status: Database["public"]["Enums"]["approval_status"] | null
+          branch: Database["public"]["Enums"]["branch_type"] | null
           email: string | null
           id: string | null
           joined_at: string | null

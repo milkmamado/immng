@@ -50,7 +50,8 @@ export function ManageUsers({ type }: ManageUsersProps) {
         query = query.eq('branch', currentBranch);
       }
       
-      const { data, error } = await query.order(orderColumn, { ascending: false });
+      const { data, error } = await query
+        .order(orderColumn, { ascending: false });
 
       if (error) throw error;
       setUsers(data || []);
