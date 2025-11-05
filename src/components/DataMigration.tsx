@@ -14,19 +14,29 @@ import {
 } from '@/components/ui/dialog';
 
 export function DataMigration() {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
 
+  // Master 계정만 접근 가능
+  if (userRole !== 'master') {
+    return null;
+  }
+
   const exportData = async () => {
-    if (!user) return;
+    if (!user || userRole !== 'master') {
+      toast.error('Master 권한이 필요합니다.');
+      return;
+    }
 
     try {
       setIsExporting(true);
+      toast.info('데이터베이스를 내보내는 중...');
       
-      // 담당자가 접근 가능한 모든 데이터 가져오기
+      // 모든 테이블 데이터 가져오기 (Master는 모든 데이터 접근 가능)
       const [
+        // 환자 관련
         patientsRes,
         dailyStatusRes,
         admissionCyclesRes,
@@ -37,7 +47,17 @@ export function DataMigration() {
         treatmentHistoryRes,
         treatmentPlansRes,
         patientNotesRes,
-        reconnectTrackingRes
+        reconnectTrackingRes,
+        // 사용자 및 권한 관련
+        profilesRes,
+        userRolesRes,
+        managerSupervisorsRes,
+        // 옵션 테이블
+        diagnosisOptionsRes,
+        hospitalOptionsRes,
+        insuranceTypeOptionsRes,
+        patientStatusOptionsRes,
+        treatmentDetailOptionsRes
       ] = await Promise.all([
         supabase.from('patients').select('*'),
         supabase.from('daily_patient_status').select('*'),
@@ -49,73 +69,58 @@ export function DataMigration() {
         supabase.from('treatment_history').select('*'),
         supabase.from('treatment_plans').select('*'),
         supabase.from('patient_notes').select('*'),
-        supabase.from('patient_reconnect_tracking').select('*')
+        supabase.from('patient_reconnect_tracking').select('*'),
+        supabase.from('profiles').select('*'),
+        supabase.from('user_roles').select('*'),
+        supabase.from('manager_supervisors').select('*'),
+        supabase.from('diagnosis_options').select('*'),
+        supabase.from('hospital_options').select('*'),
+        supabase.from('insurance_type_options').select('*'),
+        supabase.from('patient_status_options').select('*'),
+        supabase.from('treatment_detail_options').select('*')
       ]);
 
       // 워크북 생성
       const wb = XLSX.utils.book_new();
 
       // 각 테이블을 시트로 추가
-      if (patientsRes.data && patientsRes.data.length > 0) {
-        const ws = XLSX.utils.json_to_sheet(patientsRes.data);
-        XLSX.utils.book_append_sheet(wb, ws, 'patients');
-      }
-      
-      if (dailyStatusRes.data && dailyStatusRes.data.length > 0) {
-        const ws = XLSX.utils.json_to_sheet(dailyStatusRes.data);
-        XLSX.utils.book_append_sheet(wb, ws, 'daily_patient_status');
-      }
-      
-      if (admissionCyclesRes.data && admissionCyclesRes.data.length > 0) {
-        const ws = XLSX.utils.json_to_sheet(admissionCyclesRes.data);
-        XLSX.utils.book_append_sheet(wb, ws, 'admission_cycles');
-      }
-      
-      if (medicalInfoRes.data && medicalInfoRes.data.length > 0) {
-        const ws = XLSX.utils.json_to_sheet(medicalInfoRes.data);
-        XLSX.utils.book_append_sheet(wb, ws, 'medical_info');
-      }
-      
-      if (packagesRes.data && packagesRes.data.length > 0) {
-        const ws = XLSX.utils.json_to_sheet(packagesRes.data);
-        XLSX.utils.book_append_sheet(wb, ws, 'packages');
-      }
-      
-      if (packageMgmtRes.data && packageMgmtRes.data.length > 0) {
-        const ws = XLSX.utils.json_to_sheet(packageMgmtRes.data);
-        XLSX.utils.book_append_sheet(wb, ws, 'package_management');
-      }
-      
-      if (packageTransRes.data && packageTransRes.data.length > 0) {
-        const ws = XLSX.utils.json_to_sheet(packageTransRes.data);
-        XLSX.utils.book_append_sheet(wb, ws, 'package_transactions');
-      }
-      
-      if (treatmentHistoryRes.data && treatmentHistoryRes.data.length > 0) {
-        const ws = XLSX.utils.json_to_sheet(treatmentHistoryRes.data);
-        XLSX.utils.book_append_sheet(wb, ws, 'treatment_history');
-      }
-      
-      if (treatmentPlansRes.data && treatmentPlansRes.data.length > 0) {
-        const ws = XLSX.utils.json_to_sheet(treatmentPlansRes.data);
-        XLSX.utils.book_append_sheet(wb, ws, 'treatment_plans');
-      }
-      
-      if (patientNotesRes.data && patientNotesRes.data.length > 0) {
-        const ws = XLSX.utils.json_to_sheet(patientNotesRes.data);
-        XLSX.utils.book_append_sheet(wb, ws, 'patient_notes');
-      }
-      
-      if (reconnectTrackingRes.data && reconnectTrackingRes.data.length > 0) {
-        const ws = XLSX.utils.json_to_sheet(reconnectTrackingRes.data);
-        XLSX.utils.book_append_sheet(wb, ws, 'patient_reconnect_tracking');
-      }
+      const addSheet = (data: any[] | null, sheetName: string) => {
+        if (data && data.length > 0) {
+          const ws = XLSX.utils.json_to_sheet(data);
+          XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        }
+      };
+
+      // 환자 관련 테이블
+      addSheet(patientsRes.data, 'patients');
+      addSheet(dailyStatusRes.data, 'daily_patient_status');
+      addSheet(admissionCyclesRes.data, 'admission_cycles');
+      addSheet(medicalInfoRes.data, 'medical_info');
+      addSheet(packagesRes.data, 'packages');
+      addSheet(packageMgmtRes.data, 'package_management');
+      addSheet(packageTransRes.data, 'package_transactions');
+      addSheet(treatmentHistoryRes.data, 'treatment_history');
+      addSheet(treatmentPlansRes.data, 'treatment_plans');
+      addSheet(patientNotesRes.data, 'patient_notes');
+      addSheet(reconnectTrackingRes.data, 'patient_reconnect_tracking');
+
+      // 사용자 및 권한 관련 테이블
+      addSheet(profilesRes.data, 'profiles');
+      addSheet(userRolesRes.data, 'user_roles');
+      addSheet(managerSupervisorsRes.data, 'manager_supervisors');
+
+      // 옵션 테이블
+      addSheet(diagnosisOptionsRes.data, 'diagnosis_options');
+      addSheet(hospitalOptionsRes.data, 'hospital_options');
+      addSheet(insuranceTypeOptionsRes.data, 'insurance_type_options');
+      addSheet(patientStatusOptionsRes.data, 'patient_status_options');
+      addSheet(treatmentDetailOptionsRes.data, 'treatment_detail_options');
 
       // 엑셀 파일 다운로드
-      const timestamp = new Date().toISOString().split('T')[0];
-      XLSX.writeFile(wb, `database_export_${timestamp}.xlsx`);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+      XLSX.writeFile(wb, `complete_database_backup_${timestamp}.xlsx`);
       
-      toast.success('데이터베이스를 성공적으로 내보냈습니다.');
+      toast.success('전체 데이터베이스를 성공적으로 내보냈습니다.');
     } catch (error) {
       console.error('Export error:', error);
       toast.error('데이터 내보내기 중 오류가 발생했습니다.');
@@ -125,10 +130,14 @@ export function DataMigration() {
   };
 
   const importData = async (file: File) => {
-    if (!user) return;
+    if (!user || userRole !== 'master') {
+      toast.error('Master 권한이 필요합니다.');
+      return;
+    }
 
     try {
       setIsImporting(true);
+      toast.info('데이터를 가져오는 중...');
       
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
