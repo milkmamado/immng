@@ -157,14 +157,14 @@ export default function DailyStatusTracking() {
       let patientsQuery = supabase
         .from('patients')
         .select(`
-          id, name, customer_number, diagnosis_category, diagnosis_detail, 
-          korean_doctor, western_doctor, manager_name, hospital_category, hospital_branch,
-          management_status, created_at, inflow_date, consultation_date, resident_number_masked, phone, gender, age,
-          visit_motivation, address, crm_memo, special_note_1, special_note_2,
-          treatment_memo_1, treatment_memo_2, last_visit_date, diet_info,
-          patient_or_guardian, inflow_status, visit_type, guardian_name,
-          guardian_relationship, guardian_phone, insurance_type, hospital_treatment,
-          examination_schedule, payment_amount, memo1, display_order,
+          id, name, customer_number, diagnosis_detail, 
+          korean_doctor, western_doctor, manager_name,
+          management_status, created_at, phone, gender, age,
+          visit_motivation, address,
+          last_visit_date, diet_info,
+          inflow_status, visit_type, guardian_name,
+          guardian_relationship, guardian_phone, insurance_type,
+          payment_amount, display_order,
           admission_cycles (
             id, admission_date, discharge_date, admission_type, status
           )

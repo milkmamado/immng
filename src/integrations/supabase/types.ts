@@ -845,7 +845,50 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      approved_users: {
+        Row: {
+          approval_status: Database["public"]["Enums"]["approval_status"] | null
+          approved_at: string | null
+          approved_by_name: string | null
+          email: string | null
+          id: string | null
+          joined_at: string | null
+          name: string | null
+          phone: string | null
+          requested_at: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      manager_patient_stats: {
+        Row: {
+          last_patient_added: string | null
+          manager_email: string | null
+          manager_id: string | null
+          manager_name: string | null
+          new_patients_this_month: number | null
+          outstanding_balance: number | null
+          total_patients: number | null
+          total_revenue: number | null
+          visits_this_week: number | null
+        }
+        Relationships: []
+      }
+      pending_approvals: {
+        Row: {
+          approval_status: Database["public"]["Enums"]["approval_status"] | null
+          email: string | null
+          id: string | null
+          joined_at: string | null
+          name: string | null
+          phone: string | null
+          requested_at: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_stay_days: {
