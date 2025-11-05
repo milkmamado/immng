@@ -112,23 +112,51 @@ Deno.serve(async (req) => {
 
         console.log(`User created: ${newUser.user.id}`)
 
-        // 역할 할당 (approved 상태로)
-        const { error: roleInsertError } = await supabaseAdmin
-          .from('user_roles')
-          .insert({
-            user_id: newUser.user.id,
-            role: account.role,
-            approval_status: 'approved',
-            assigned_by: user.id
-          })
-
-        if (roleInsertError) {
-          console.error(`Error assigning role to ${account.email}:`, roleInsertError)
-          errors.push({
-            email: account.email,
-            error: `Role assignment failed: ${roleInsertError.message}`
-          })
-          continue
+        // 역할 할당 (트리거가 이미 manager role을 pending으로 생성했으므로 업데이트)
+        // account.role이 manager가 아닌 경우 새로 삽입 필요
+        if (account.role === 'manager') {
+          // 기존 pending manager role을 approved로 업데이트
+          const { error: roleUpdateError } = await supabaseAdmin
+            .from('user_roles')
+            .update({
+              approval_status: 'approved',
+              assigned_by: user.id
+            })
+            .eq('user_id', newUser.user.id)
+            .eq('role', 'manager')
+          
+          if (roleUpdateError) {
+            console.error(`Error updating role for ${account.email}:`, roleUpdateError)
+            errors.push({
+              email: account.email,
+              error: `Role update failed: ${roleUpdateError.message}`
+            })
+            continue
+          }
+        } else {
+          // admin 또는 master의 경우 기존 manager role을 삭제하고 새로 생성
+          await supabaseAdmin
+            .from('user_roles')
+            .delete()
+            .eq('user_id', newUser.user.id)
+          
+          const { error: roleInsertError } = await supabaseAdmin
+            .from('user_roles')
+            .insert({
+              user_id: newUser.user.id,
+              role: account.role,
+              approval_status: 'approved',
+              assigned_by: user.id
+            })
+          
+          if (roleInsertError) {
+            console.error(`Error assigning role to ${account.email}:`, roleInsertError)
+            errors.push({
+              email: account.email,
+              error: `Role assignment failed: ${roleInsertError.message}`
+            })
+            continue
+          }
         }
 
         console.log(`Role assigned to ${account.email}: ${account.role}`)
