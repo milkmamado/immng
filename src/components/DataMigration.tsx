@@ -312,47 +312,76 @@ export function DataMigration() {
         
         // 테이블별로 데이터 삽입
         if (isOptionTable) {
-          // 옵션 테이블은 하나씩 upsert (name 중복 체크)
+          // 옵션 테이블은 하나씩 upsert (id 또는 name 중복 체크)
           for (const record of transformedData) {
-            const { data: existing } = await (supabase as any)
+            // ID가 있으면 ID로 먼저 체크
+            const { data: existingById } = await (supabase as any)
+              .from(tableName)
+              .select('id')
+              .eq('id', record.id)
+              .maybeSingle();
+            
+            if (existingById) {
+              // ID가 존재하면 건너뛰기 (이미 있는 데이터)
+              continue;
+            }
+            
+            // Name으로 체크
+            const { data: existingByName } = await (supabase as any)
               .from(tableName)
               .select('id')
               .eq('name', record.name)
-              .single();
+              .maybeSingle();
             
-            if (existing) {
-              // 이미 존재하면 업데이트
-              const { error } = await (supabase as any)
-                .from(tableName)
-                .update(record)
-                .eq('id', existing.id);
-              
-              if (error) {
-                console.error(`Error updating ${tableName}:`, error);
-              }
-            } else {
-              // 존재하지 않으면 삽입
-              const { error } = await (supabase as any)
-                .from(tableName)
-                .insert(record);
-              
-              if (error) {
-                console.error(`Error inserting ${tableName}:`, error);
-              }
+            if (existingByName) {
+              // Name이 존재하면 건너뛰기
+              continue;
+            }
+            
+            // 둘 다 없으면 삽입
+            const { error } = await (supabase as any)
+              .from(tableName)
+              .insert(record);
+            
+            if (error) {
+              console.error(`Error inserting ${tableName}:`, error);
             }
           }
-          toast.success(`${tableName} 테이블 가져오기 완료 (${transformedData.length}건)`);
+          toast.success(`${tableName} 테이블 가져오기 완료`);
         } else {
+          // 일반 테이블 - null 필수 컬럼 필터링
+          let validData = transformedData;
+          
+          // patients 테이블의 경우 patient_number가 null인 레코드 제외
+          if (tableName === 'patients') {
+            validData = transformedData.filter((record: any) => {
+              if (!record.patient_number) {
+                console.warn('Skipping patient record with null patient_number:', record);
+                return false;
+              }
+              return true;
+            });
+            
+            if (validData.length < transformedData.length) {
+              toast.warning(`${transformedData.length - validData.length}개의 유효하지 않은 환자 레코드를 건너뛰었습니다.`);
+            }
+          }
+          
+          if (validData.length === 0) {
+            console.log(`${tableName} has no valid data after filtering, skipping`);
+            continue;
+          }
+          
           // 일반 테이블은 batch upsert
           const { error } = await (supabase as any)
             .from(tableName)
-            .upsert(transformedData, { onConflict: 'id' });
+            .upsert(validData, { onConflict: 'id' });
 
           if (error) {
             console.error(`Error importing ${tableName}:`, error);
             toast.error(`${tableName} 테이블 가져오기 실패: ${error.message}`);
           } else {
-            toast.success(`${tableName} 테이블 가져오기 완료 (${transformedData.length}건)`);
+            toast.success(`${tableName} 테이블 가져오기 완료 (${validData.length}건)`);
           }
         }
       }
