@@ -214,6 +214,7 @@ export function DataMigration() {
           delete cleaned.treatment_memo_2;
           delete cleaned.failure_reason;
           delete cleaned.inflow_date;
+          delete cleaned.crm_memo;
         }
         
         // user_roles 테이블에서 제거할 컬럼들
@@ -302,9 +303,10 @@ export function DataMigration() {
           transformRecord(record, tableName)
         );
 
-        // 옵션 테이블은 중복 방지를 위해 이름 기반 upsert
-        const upsertConfig = ['diagnosis_options', 'hospital_options', 'insurance_type_options', 'patient_status_options', 'treatment_detail_options'].includes(tableName)
-          ? { onConflict: 'name', ignoreDuplicates: true }
+        // 옵션 테이블은 id 기반 upsert (unique constraint가 name에 없을 수 있음)
+        const isOptionTable = ['diagnosis_options', 'hospital_options', 'insurance_type_options', 'patient_status_options', 'treatment_detail_options'].includes(tableName);
+        const upsertConfig = isOptionTable 
+          ? { onConflict: 'id', ignoreDuplicates: false }
           : { onConflict: 'id' };
 
         // 테이블별로 데이터 삽입
