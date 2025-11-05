@@ -557,9 +557,12 @@ export type Database = {
           counseling_content: string | null
           counselor: string | null
           created_at: string
+          customer_number: string | null
           detailed_diagnosis: string | null
+          diagnosis_detail: string | null
           diet_info: string | null
           discharge_date: string | null
+          display_order: number | null
           emergency_contact: string | null
           examination_schedule: string | null
           first_visit_date: string | null
@@ -567,6 +570,7 @@ export type Database = {
           guardian_name: string | null
           guardian_phone: string | null
           guardian_relationship: string | null
+          hospital_category: string | null
           hospital_treatment: string | null
           id: string
           inflow_status: string | null
@@ -598,9 +602,12 @@ export type Database = {
           counseling_content?: string | null
           counselor?: string | null
           created_at?: string
+          customer_number?: string | null
           detailed_diagnosis?: string | null
+          diagnosis_detail?: string | null
           diet_info?: string | null
           discharge_date?: string | null
+          display_order?: number | null
           emergency_contact?: string | null
           examination_schedule?: string | null
           first_visit_date?: string | null
@@ -608,6 +615,7 @@ export type Database = {
           guardian_name?: string | null
           guardian_phone?: string | null
           guardian_relationship?: string | null
+          hospital_category?: string | null
           hospital_treatment?: string | null
           id?: string
           inflow_status?: string | null
@@ -639,9 +647,12 @@ export type Database = {
           counseling_content?: string | null
           counselor?: string | null
           created_at?: string
+          customer_number?: string | null
           detailed_diagnosis?: string | null
+          diagnosis_detail?: string | null
           diet_info?: string | null
           discharge_date?: string | null
+          display_order?: number | null
           emergency_contact?: string | null
           examination_schedule?: string | null
           first_visit_date?: string | null
@@ -649,6 +660,7 @@ export type Database = {
           guardian_name?: string | null
           guardian_phone?: string | null
           guardian_relationship?: string | null
+          hospital_category?: string | null
           hospital_treatment?: string | null
           id?: string
           inflow_status?: string | null
