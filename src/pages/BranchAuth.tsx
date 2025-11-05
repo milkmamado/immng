@@ -43,21 +43,33 @@ export default function BranchAuth() {
         if (error) throw error;
 
         if (data.user) {
-          // 해당 지점에 대한 승인된 role 확인
-          const { data: userRoleData, error: roleError } = await supabase
+          // 모든 승인된 role 확인 (마스터는 모든 지점 접근 가능)
+          const { data: userRoles, error: roleError } = await supabase
             .from('user_roles')
             .select('approval_status, role, branch')
             .eq('user_id', data.user.id)
-            .eq('branch', branch)
-            .eq('approval_status', 'approved')
-            .maybeSingle();
+            .eq('approval_status', 'approved');
 
-          if (roleError || !userRoleData) {
+          if (roleError || !userRoles || userRoles.length === 0) {
             await supabase.auth.signOut();
             toast({
               variant: "destructive",
               title: "로그인 실패",
-              description: `${branch}점에 대한 계정이 승인되지 않았거나 승인 대기 중입니다. 관리자에게 문의하세요.`,
+              description: `계정이 승인되지 않았거나 승인 대기 중입니다. 관리자에게 문의하세요.`,
+            });
+            return;
+          }
+
+          // 마스터는 모든 지점 접근 가능, 그 외는 해당 지점 role 확인
+          const isMaster = userRoles.some(r => r.role === 'master');
+          const hasBranchAccess = userRoles.some(r => r.branch === branch);
+
+          if (!isMaster && !hasBranchAccess) {
+            await supabase.auth.signOut();
+            toast({
+              variant: "destructive",
+              title: "로그인 실패",
+              description: `${branch}점에 대한 접근 권한이 없습니다.`,
             });
             return;
           }
