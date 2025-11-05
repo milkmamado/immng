@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useBranchFilter } from "@/hooks/useBranchFilter";
 
 type PeriodType = "1" | "3" | "6" | "9" | "12";
 
@@ -29,6 +30,7 @@ interface InsuranceStats {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF6B9D'];
 
 export default function MarketingStatistics() {
+  const { applyBranchFilter } = useBranchFilter();
   const [period, setPeriod] = useState<PeriodType>("3");
   const [diagnosisStats, setDiagnosisStats] = useState<DiagnosisStats[]>([]);
   const [hospitalStats, setHospitalStats] = useState<HospitalStats[]>([]);
@@ -47,12 +49,17 @@ export default function MarketingStatistics() {
       monthsAgo.setMonth(monthsAgo.getMonth() - parseInt(period));
 
       // 진단명별 방문유형 통계
-      const { data: diagnosisData, error: diagnosisError } = await supabase
+      let diagnosisQuery = supabase
         .from('patients')
         .select('diagnosis_detail, visit_type')
         .gte('first_visit_date', monthsAgo.toISOString().split('T')[0])
         .not('diagnosis_detail', 'is', null)
         .not('visit_type', 'is', null);
+      
+      // 지점 필터 적용
+      diagnosisQuery = applyBranchFilter(diagnosisQuery);
+      
+      const { data: diagnosisData, error: diagnosisError } = await diagnosisQuery;
 
       if (diagnosisError) throw diagnosisError;
 
@@ -90,11 +97,16 @@ export default function MarketingStatistics() {
       setDiagnosisStats(diagnosisResult);
 
       // 이전병원 통계
-      const { data: hospitalData, error: hospitalError } = await supabase
+      let hospitalQuery = supabase
         .from('patients')
         .select('hospital_category')
         .gte('first_visit_date', monthsAgo.toISOString().split('T')[0])
         .not('hospital_category', 'is', null);
+      
+      // 지점 필터 적용
+      hospitalQuery = applyBranchFilter(hospitalQuery);
+      
+      const { data: hospitalData, error: hospitalError } = await hospitalQuery;
 
       if (hospitalError) throw hospitalError;
 
@@ -117,10 +129,15 @@ export default function MarketingStatistics() {
       setHospitalStats(hospitalResult);
 
       // 보험유형 통계
-      const { data: insuranceData, error: insuranceError } = await supabase
+      let insuranceQuery = supabase
         .from('patients')
         .select('insurance_type')
         .gte('first_visit_date', monthsAgo.toISOString().split('T')[0]);
+      
+      // 지점 필터 적용
+      insuranceQuery = applyBranchFilter(insuranceQuery);
+      
+      const { data: insuranceData, error: insuranceError } = await insuranceQuery;
 
       if (insuranceError) throw insuranceError;
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useBranchFilter } from "@/hooks/useBranchFilter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -120,6 +121,7 @@ interface PackageTransaction {
 }
 
 export default function PatientListManagement() {
+  const { applyBranchFilter, currentBranch } = useBranchFilter();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -261,11 +263,16 @@ export default function PatientListManagement() {
   const fetchPatients = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('patients')
         .select('*')
         .eq('inflow_status', '유입')
         .order('created_at', { ascending: false });
+      
+      // 지점 필터 적용
+      query = applyBranchFilter(query);
+      
+      const { data, error } = await query;
 
       if (error) throw error;
       

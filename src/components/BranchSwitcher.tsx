@@ -23,10 +23,15 @@ export function BranchSwitcher() {
     switchBranch(newBranch);
     
     // 현재 경로에서 지점 부분만 변경
-    const pathParts = location.pathname.split('/');
-    if (pathParts.length > 1) {
-      pathParts[1] = newBranch;
-      navigate(pathParts.join('/'));
+    const pathParts = location.pathname.split('/').filter(Boolean);
+    
+    // URL 디코딩 후 처리 (한글 인코딩 문제 해결)
+    const decodedParts = pathParts.map(part => decodeURIComponent(part));
+    
+    if (decodedParts.length > 0) {
+      // 첫 번째 부분(지점)을 새 지점으로 교체
+      decodedParts[0] = newBranch;
+      navigate(`/${decodedParts.join('/')}`);
     } else {
       navigate(`/${newBranch}`);
     }

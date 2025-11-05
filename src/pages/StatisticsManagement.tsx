@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useBranchFilter } from '@/hooks/useBranchFilter';
 import { Users, TrendingUp, DollarSign, Activity } from 'lucide-react';
 
 interface ManagerStats {
@@ -22,6 +23,7 @@ interface ManagerStats {
 
 export default function StatisticsManagement() {
   const { user } = useAuth();
+  const { applyBranchFilter } = useBranchFilter();
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -161,6 +163,9 @@ export default function StatisticsManagement() {
         const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
         query = query.eq('assigned_manager', targetManager);
       }
+      
+      // 지점 필터 적용
+      query = applyBranchFilter(query);
 
       const { data: patients, error: patientsError } = await query;
 

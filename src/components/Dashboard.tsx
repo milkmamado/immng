@@ -25,7 +25,7 @@ interface ManagerStat {
 }
 
 export function Dashboard() {
-  const { user } = useAuth();
+  const { user, currentBranch } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
     totalPatients: 0,
     monthlyRevenue: 0,
@@ -74,6 +74,11 @@ export function Dashboard() {
         .from('patients')
         .select('id, name, customer_number, assigned_manager, manager_name, last_visit_date, payment_amount, created_at')
         .eq('inflow_status', '유입');
+
+      // 지점 필터 추가
+      if (currentBranch) {
+        patientsQuery = patientsQuery.eq('branch', currentBranch);
+      }
 
       if (!isAdmin) {
         patientsQuery = patientsQuery.eq('assigned_manager', user.id);
@@ -179,11 +184,18 @@ export function Dashboard() {
 
           const managerStatsData = await Promise.all(
             (profiles || []).map(async (profile) => {
-              const { data: managerPatients } = await supabase
+              let managerPatientsQuery = supabase
                 .from('patients')
                 .select('payment_amount')
                 .eq('assigned_manager', profile.id)
                 .eq('inflow_status', '유입');
+              
+              // 지점 필터 추가
+              if (currentBranch) {
+                managerPatientsQuery = managerPatientsQuery.eq('branch', currentBranch);
+              }
+              
+              const { data: managerPatients } = await managerPatientsQuery;
 
               const revenue = managerPatients?.reduce((sum, p) => sum + (p.payment_amount || 0), 0) || 0;
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useBranchFilter } from "@/hooks/useBranchFilter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DailyStatusGrid } from "@/components/DailyStatusGrid";
@@ -72,6 +73,7 @@ interface DailyStatus {
 }
 
 export default function DailyStatusTracking() {
+  const { applyBranchFilter } = useBranchFilter();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [dailyStatuses, setDailyStatuses] = useState<DailyStatus[]>([]);
@@ -174,8 +176,12 @@ export default function DailyStatusTracking() {
         .order('created_at', { ascending: false });
 
       // 최종 상태(사망, 상태악화, 치료종료) 및 "아웃", "아웃위기" 환자 제외
-      const { data: patientsData, error: patientsError } = await patientsQuery
-        .not('management_status', 'in', '("사망","상태악화","치료종료","아웃","아웃위기")');
+      patientsQuery = patientsQuery.not('management_status', 'in', '("사망","상태악화","치료종료","아웃","아웃위기")');
+      
+      // 지점 필터 적용
+      patientsQuery = applyBranchFilter(patientsQuery);
+      
+      const { data: patientsData, error: patientsError } = await patientsQuery;
 
       if (patientsError) throw patientsError;
 
