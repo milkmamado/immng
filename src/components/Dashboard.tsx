@@ -169,11 +169,18 @@ export function Dashboard() {
 
       // 마스터/관리자인 경우 매니저별 통계
       if (isAdmin) {
-        const { data: userRoles } = await supabase
+        let userRolesQuery = supabase
           .from('user_roles')
           .select('user_id')
           .eq('role', 'manager')
           .eq('approval_status', 'approved');
+
+        // 지점 필터 추가
+        if (currentBranch) {
+          userRolesQuery = userRolesQuery.eq('branch', currentBranch);
+        }
+
+        const { data: userRoles } = await userRolesQuery;
 
         if (userRoles && userRoles.length > 0) {
           const managerIds = userRoles.map(r => r.user_id);
