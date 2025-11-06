@@ -256,13 +256,15 @@ export default function FirstVisitManagement() {
 
       if (error) throw error;
 
+      // 삭제 성공 시 즉시 목록 새로고침
+      setPatientToDelete(null);
+      await fetchPatients();
+
       toast({
         title: "삭제 완료",
         description: "환자 및 관련 데이터가 성공적으로 삭제되었습니다.",
         duration: 1000,
       });
-      
-      fetchPatients(); // 목록 새로고침
     } catch (error) {
       console.error('Error deleting patient:', error);
       toast({
@@ -270,7 +272,6 @@ export default function FirstVisitManagement() {
         description: "환자 삭제에 실패했습니다.",
         variant: "destructive",
       });
-    } finally {
       setPatientToDelete(null);
     }
   };
