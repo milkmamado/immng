@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Heart, Mail, Lock, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,6 +16,7 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [branch, setBranch] = useState<'광명' | '성동'>('광명');
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -71,6 +73,7 @@ export default function Auth() {
             emailRedirectTo: redirectUrl,
             data: {
               name: name,
+              branch: branch,
             }
           }
         });
@@ -124,6 +127,21 @@ export default function Auth() {
                   required={!isLogin}
                   disabled={loading}
                 />
+              </div>
+            )}
+            
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="branch">지점 선택</Label>
+                <Select value={branch} onValueChange={(value) => setBranch(value as '광명' | '성동')}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="지점을 선택하세요" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="광명">광명</SelectItem>
+                    <SelectItem value="성동">성동</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             )}
             
