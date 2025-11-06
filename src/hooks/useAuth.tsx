@@ -50,7 +50,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 
                 // URL에서 현재 지점 파악 (우선순위 1)
                 const urlPath = window.location.pathname;
-                const urlBranch = urlPath.split('/')[1] as '강서' | '광명' | '성동' | null;
+                const urlBranchRaw = urlPath.split('/')[1];
+                const urlBranch = urlBranchRaw ? decodeURIComponent(urlBranchRaw) as '강서' | '광명' | '성동' | null : null;
                 
                 // localStorage에서 currentBranch 복원 (우선순위 2)
                 const savedBranch = localStorage.getItem('currentBranch') as '강서' | '광명' | '성동' | null;
@@ -137,7 +138,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               
               // URL에서 현재 지점 파악 (우선순위 1)
               const urlPath = window.location.pathname;
-              const urlBranch = urlPath.split('/')[1] as '강서' | '광명' | '성동' | null;
+              const urlBranchRaw = urlPath.split('/')[1];
+              const urlBranch = urlBranchRaw ? decodeURIComponent(urlBranchRaw) as '강서' | '광명' | '성동' | null : null;
               
               const savedBranch = localStorage.getItem('currentBranch') as '강서' | '광명' | '성동' | null;
               
