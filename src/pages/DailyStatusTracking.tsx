@@ -309,15 +309,21 @@ export default function DailyStatusTracking() {
         throw error;
       }
 
-      console.log('Memo updated in DB successfully, calling fetchData...');
+      console.log('Memo updated in DB successfully, updating local state...');
+      
+      // 로컬 상태만 업데이트 (fetchData 대신)
+      setPatients(prev => prev.map(patient => 
+        patient.id === patientId 
+          ? { ...patient, [memoType]: value }
+          : patient
+      ));
       
       toast({
         title: "성공",
         description: "메모가 저장되었습니다.",
       });
 
-      await fetchData(); // 데이터 새로고침
-      console.log('fetchData completed after memo update');
+      console.log('Local state updated for memo');
     } catch (error) {
       console.error('Error updating memo:', error);
       toast({
