@@ -209,7 +209,8 @@ export default function RiskManagement() {
         }
 
         // 14일 이상이거나 수동으로 아웃/아웃위기로 설정된 환자만 리스크 환자로 추가
-        if (daysSinceCheck >= 14 || manuallySetStatuses.includes(patient.management_status)) {
+        // newManagementStatus를 기준으로 판단 (업데이트 후 상태 반영)
+        if (newManagementStatus === "아웃" || newManagementStatus === "아웃위기") {
           riskyPatients.push({
             ...patient,
             management_status: newManagementStatus,
