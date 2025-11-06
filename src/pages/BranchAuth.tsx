@@ -94,6 +94,7 @@ export default function BranchAuth() {
             emailRedirectTo: redirectUrl,
             data: {
               name: name,
+              branch: branch,
             }
           }
         });
