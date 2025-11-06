@@ -1,5 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 import {
   Select,
   SelectContent,
@@ -13,6 +14,7 @@ export function BranchSwitcher() {
   const { userRole, currentBranch, userBranches, switchBranch } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
 
   // 마스터 계정은 모든 지점 접근 가능
   const allBranches: Array<{ branch: '강서' | '광명' | '성동'; role: 'master' | 'manager' | 'admin' }> = [
@@ -34,6 +36,13 @@ export function BranchSwitcher() {
   }
 
   const handleBranchChange = (newBranch: '강서' | '광명' | '성동') => {
+    // 로딩 토스트 표시
+    toast({
+      title: "지점 전환 중...",
+      description: `${newBranch}점 데이터를 불러오는 중입니다.`,
+      duration: 1500,
+    });
+
     switchBranch(newBranch);
     
     // 현재 경로에서 지점 부분만 변경
