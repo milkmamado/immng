@@ -1908,27 +1908,6 @@ export function DailyStatusGrid({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="insurance-type">실비보험유형</Label>
-                    <Select 
-                      value={selectedPatientDetail?.insurance_type || ''} 
-                      onValueChange={(value) => {
-                        updateEditingField('insurance_type', value);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="실비보험유형을 선택하세요" />
-                      </SelectTrigger>
-                      <SelectContent className="z-[100] bg-background">
-                        {insuranceTypeOptions.map((option: any) => (
-                          <SelectItem key={option.id} value={option.name}>
-                            {option.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
                     <Label>관리 상태</Label>
                     <Select 
                       value={selectedPatientDetail?.management_status || '관리 중'} 
@@ -1947,6 +1926,48 @@ export function DailyStatusGrid({
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  {/* 실비보험 유형 */}
+                  <div>
+                    <Label>실비보험 유형</Label>
+                    <Select
+                      value={selectedPatientDetail?.insurance_type || ''}
+                      onValueChange={(value) => {
+                        updateEditingField('insurance_type', value);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="선택" />
+                      </SelectTrigger>
+                      <SelectContent className="z-[100] bg-background">
+                        {insuranceTypeOptions.map((option: any) => (
+                          <SelectItem key={option.id} value={option.name}>
+                            {option.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* 본병원 치료 */}
+                  <div>
+                    <Label>본병원 치료</Label>
+                    <Input
+                      value={selectedPatientDetail?.hospital_treatment || ''}
+                      onChange={(e) => updateEditingField('hospital_treatment', e.target.value)}
+                      placeholder="본병원 치료 내용"
+                    />
+                  </div>
+
+                  {/* 본병원 검사일정 */}
+                  <div>
+                    <Label>본병원 검사일정</Label>
+                    <Input
+                      value={selectedPatientDetail?.examination_schedule || ''}
+                      onChange={(e) => updateEditingField('examination_schedule', e.target.value)}
+                      placeholder="검사 일정 입력"
+                    />
                   </div>
 
                   <div>
@@ -1991,28 +2012,6 @@ export function DailyStatusGrid({
                     <p className="text-xs text-muted-foreground mt-1">
                       총 수납금액 (예치금 + 입원/외래 매출)
                     </p>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <Label htmlFor="hospital-treatment">본병원 치료</Label>
-                    <Textarea
-                      id="hospital-treatment"
-                      placeholder="본병원 치료 내용을 입력하세요"
-                      value={selectedPatientDetail?.hospital_treatment || ''}
-                      onChange={(e) => updateEditingField('hospital_treatment', e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <Label htmlFor="examination-schedule">본병원 검사일정</Label>
-                    <Textarea
-                      id="examination-schedule"
-                      placeholder="본병원 검사일정을 입력하세요"
-                      value={selectedPatientDetail?.examination_schedule || ''}
-                      onChange={(e) => updateEditingField('examination_schedule', e.target.value)}
-                      rows={3}
-                    />
                   </div>
 
                   {/* 담당자 메모 */}
