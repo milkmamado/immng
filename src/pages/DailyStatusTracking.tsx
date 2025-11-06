@@ -168,6 +168,10 @@ export default function DailyStatusTracking() {
           guardian_relationship, guardian_phone, insurance_type,
           payment_amount, display_order,
           inflow_date, consultation_date, memo1,
+          special_note_1, special_note_2,
+          treatment_memo_1, treatment_memo_2, crm_memo,
+          hospital_category, hospital_branch,
+          resident_number_masked,
           admission_cycles (
             id, admission_date, discharge_date, admission_type, status
           )
