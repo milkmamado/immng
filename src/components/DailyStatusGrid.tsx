@@ -1191,7 +1191,7 @@ export function DailyStatusGrid({
       console.log('Immediate scroll restore to:', savedScrollPosition);
       tableScrollRef.current.scrollLeft = savedScrollPosition;
     }
-  }, [dailyStatuses]);
+  }, [dailyStatuses, patients]); // patients도 의존성에 추가
 
   // 스크롤 위치 복원 (여러 번 시도하여 확실하게)
   useEffect(() => {
@@ -1215,7 +1215,7 @@ export function DailyStatusGrid({
         timeoutIds.forEach(id => clearTimeout(id));
       };
     }
-  }, [dailyStatuses, savedScrollPosition]);
+  }, [dailyStatuses, savedScrollPosition, patients]); // patients도 의존성에 추가
 
   // 마우스 드래그 스크롤 핸들러
   const handleMouseDown = (e: React.MouseEvent) => {
