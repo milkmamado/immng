@@ -439,19 +439,44 @@ export default function RiskManagement() {
 
       if (updateError) throw updateError;
 
-      // 2. 오늘 날짜로 daily_patient_status 레코드 추가
-      // status_type은 환자의 visit_type 또는 기본값 "외래" 사용
-      const { error: insertError } = await supabase
+      // 2. 오늘 날짜로 daily_patient_status 레코드 추가 또는 업데이트
+      const today = new Date().toISOString().split('T')[0];
+      
+      // 오늘 날짜에 이미 레코드가 있는지 확인
+      const { data: existingStatus, error: checkError } = await supabase
         .from("daily_patient_status")
-        .insert({
-          patient_id: patientId,
-          status_date: new Date().toISOString().split('T')[0],
-          status_type: patientData?.visit_type || "외래",
-          created_by: user?.id!,
-          branch: currentBranch
-        });
+        .select("id")
+        .eq("patient_id", patientId)
+        .eq("status_date", today)
+        .maybeSingle();
 
-      if (insertError) throw insertError;
+      if (checkError) throw checkError;
+
+      if (existingStatus) {
+        // 기존 레코드 업데이트
+        const { error: updateStatusError } = await supabase
+          .from("daily_patient_status")
+          .update({
+            status_type: patientData?.visit_type || "외래",
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", existingStatus.id);
+
+        if (updateStatusError) throw updateStatusError;
+      } else {
+        // 새 레코드 추가
+        const { error: insertError } = await supabase
+          .from("daily_patient_status")
+          .insert({
+            patient_id: patientId,
+            status_date: today,
+            status_type: patientData?.visit_type || "외래",
+            created_by: user?.id!,
+            branch: currentBranch
+          });
+
+        if (insertError) throw insertError;
+      }
 
       // 환자 목록 새로고침
       await fetchRiskPatients();
