@@ -194,33 +194,21 @@ export function ManageUsers({ type }: ManageUsersProps) {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!window.confirm('정말로 이 사용자를 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+    if (!window.confirm('정말로 이 사용자를 완전히 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없으며, 해당 사용자가 관리하던 모든 환자 데이터도 함께 삭제됩니다.')) {
       return;
     }
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error('인증 세션이 없습니다.');
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId }
+      });
+
+      if (error) {
+        throw new Error(error.message || '사용자 삭제에 실패했습니다.');
       }
 
-      const response = await fetch(
-        `https://fxqcvxlnfbqqxxjlnebh.supabase.co/functions/v1/delete-user`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ userId }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || '사용자 삭제에 실패했습니다.');
+      if (data?.error) {
+        throw new Error(data.error);
       }
 
       toast({
