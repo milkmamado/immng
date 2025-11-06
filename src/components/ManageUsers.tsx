@@ -38,12 +38,24 @@ export function ManageUsers({ type }: ManageUsersProps) {
 
   const fetchUsers = async () => {
     try {
-      const tableName = type === 'pending' ? 'pending_approvals' : 'approved_users';
-      const orderColumn = type === 'pending' ? 'requested_at' : 'approved_at';
+      setLoading(true);
+      setUsers([]); // 데이터 초기화
       
+      // user_roles 테이블에서 직접 조회
       let query = supabase
-        .from(tableName)
-        .select('*');
+        .from('user_roles')
+        .select(`
+          id,
+          user_id,
+          role,
+          approval_status,
+          branch,
+          created_at,
+          approved_at,
+          approved_by,
+          profiles!user_roles_user_id_fkey(name, email, phone)
+        `)
+        .eq('approval_status', type === 'pending' ? 'pending' : 'approved');
       
       // 현재 지점 필터 적용
       if (currentBranch) {
@@ -51,10 +63,26 @@ export function ManageUsers({ type }: ManageUsersProps) {
       }
       
       const { data, error } = await query
-        .order(orderColumn, { ascending: false });
+        .order(type === 'pending' ? 'created_at' : 'approved_at', { ascending: false });
 
       if (error) throw error;
-      setUsers(data || []);
+      
+      // 데이터 변환
+      const transformedData = (data || []).map((item: any) => ({
+        id: item.id,
+        role_id: item.id,
+        user_id: item.user_id,
+        role: item.role,
+        approval_status: item.approval_status,
+        requested_at: item.created_at,
+        approved_at: item.approved_at,
+        name: item.profiles?.name || '알 수 없음',
+        email: item.profiles?.email || '알 수 없음',
+        phone: item.profiles?.phone,
+        branch: item.branch
+      }));
+      
+      setUsers(transformedData);
     } catch (error: any) {
       console.error('사용자 조회 실패:', error);
       toast({
@@ -68,8 +96,10 @@ export function ManageUsers({ type }: ManageUsersProps) {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, [type, currentBranch]); // currentBranch 의존성 추가
+    if (currentBranch) {
+      fetchUsers();
+    }
+  }, [type, currentBranch]);
 
   const handleApprove = async (userId: string, roleId: string) => {
     try {
