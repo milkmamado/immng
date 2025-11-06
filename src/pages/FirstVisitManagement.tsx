@@ -219,16 +219,46 @@ export default function FirstVisitManagement() {
     if (!patientToDelete) return;
 
     try {
+      const patientId = patientToDelete.id;
+
+      // 환자 관련 데이터를 순서대로 삭제
+      const tablesToDelete = [
+        'package_transactions',
+        'package_management',
+        'treatment_plans',
+        'treatment_history',
+        'patient_reconnect_tracking',
+        'patient_notes',
+        'packages',
+        'medical_info',
+        'daily_patient_status',
+        'admission_cycles'
+      ];
+
+      // 각 테이블에서 관련 데이터 삭제
+      for (const table of tablesToDelete) {
+        const { error: deleteError } = await supabase
+          .from(table as any)
+          .delete()
+          .eq('patient_id', patientId);
+        
+        if (deleteError) {
+          console.error(`${table} 삭제 오류:`, deleteError);
+          // 데이터가 없을 수 있으므로 계속 진행
+        }
+      }
+
+      // 마지막으로 환자 데이터 삭제
       const { error } = await supabase
         .from('patients')
         .delete()
-        .eq('id', patientToDelete.id);
+        .eq('id', patientId);
 
       if (error) throw error;
 
       toast({
         title: "삭제 완료",
-        description: "환자가 성공적으로 삭제되었습니다.",
+        description: "환자 및 관련 데이터가 성공적으로 삭제되었습니다.",
         duration: 1000,
       });
       
