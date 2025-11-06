@@ -318,19 +318,32 @@ export default function PatientListManagement() {
             daysSinceCheck = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
           }
 
-          // 최종 상태(사망, 상태악화, 치료종료, 아웃, 아웃위기)는 자동 업데이트하지 않음
-          // 사용자가 수동으로 설정한 상태는 유지되어야 함
-          const finalStatuses = ['사망', '상태악화', '치료종료', '아웃', '아웃위기'];
+          // 최종 상태(사망, 상태악화, 치료종료, 아웃)는 자동 업데이트하지 않음
+          // "아웃위기"는 자동 업데이트 대상이지만, "관리 중"은 사용자가 수동으로 설정한 경우 유지
+          const finalStatuses = ['사망', '상태악화', '치료종료', '아웃'];
           let newManagementStatus = patient.management_status || "관리 중";
           
           if (!finalStatuses.includes(patient.management_status)) {
-            // 자동 상태 업데이트 로직 (관리 중만 자동 업데이트)
+            // 자동 상태 업데이트 로직
+            let autoStatus = "관리 중";
             if (daysSinceCheck >= 21) {
-              newManagementStatus = "아웃";
+              autoStatus = "아웃";
             } else if (daysSinceCheck >= 14) {
+              autoStatus = "아웃위기";
+            }
+
+            // "관리 중" 상태는 사용자가 수동으로 설정했을 수 있으므로,
+            // 아웃위기나 관리 중이 아닌 경우에만 자동 업데이트
+            // 즉, 현재 "아웃위기"인데 자동 계산이 "관리 중"이면 유지하지 않고,
+            // 현재 "관리 중"인데 자동 계산이 "아웃위기"이면 업데이트하지 않음
+            if (patient.management_status === "아웃위기" && autoStatus === "관리 중") {
+              // 아웃위기 → 관리 중은 자동 업데이트 안함 (사용자가 수동으로 복귀해야 함)
               newManagementStatus = "아웃위기";
-            } else {
+            } else if (patient.management_status === "관리 중" && autoStatus === "아웃위기") {
+              // 관리 중 → 아웃위기는 자동 업데이트 안함 (사용자가 수동으로 복귀한 경우 유지)
               newManagementStatus = "관리 중";
+            } else {
+              newManagementStatus = autoStatus;
             }
 
             // management_status가 변경되었으면 업데이트
