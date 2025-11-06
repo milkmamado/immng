@@ -43,6 +43,10 @@ export const calculateAutoManagementStatus = (
  * 자동 상태 업데이트 가능 여부 확인
  * @param currentStatus 현재 환자 상태
  * @param excludeManuallySet true이면 수동 설정된 아웃/아웃위기도 제외 (RiskManagement용)
+ * 
+ * CRITICAL: "관리 중" 상태는 자동으로 "아웃위기"로 변경하지 않음
+ * - 사용자가 "아웃위기" → "관리 중"으로 수동 복귀시킨 경우를 보호
+ * - 자동 업데이트는 "관리 중" → "아웃" 방향으로만 진행 (21일 이상)
  */
 export const shouldAutoUpdateStatus = (
   currentStatus: string | undefined,
@@ -61,6 +65,11 @@ export const shouldAutoUpdateStatus = (
     if (manuallySetStatuses.includes(currentStatus || '')) {
       return false;
     }
+  }
+  
+  // "관리 중" 상태는 자동 업데이트하지 않음 (사용자가 수동으로 복귀시킨 경우 보호)
+  if (currentStatus === '관리 중') {
+    return false;
   }
   
   return true;
