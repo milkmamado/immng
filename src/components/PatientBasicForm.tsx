@@ -74,6 +74,68 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
   useEffect(() => {
     fetchOptions();
 
+    // Realtime 구독 설정 - patients 테이블 변경 감지
+    const channel = supabase
+      .channel('patient-form-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'patients'
+        },
+        async (payload) => {
+          console.log('PatientBasicForm - Patient data changed:', payload);
+          
+          // 현재 편집 중인 환자가 업데이트되었으면 formData도 갱신
+          if (patient && payload.new && (payload.new as any).id === patient.id) {
+            const { data: updatedPatient } = await supabase
+              .from('patients')
+              .select('*')
+              .eq('id', patient.id)
+              .single();
+            
+            if (updatedPatient) {
+              // formData 업데이트 (단, 현재 사용자가 편집 중인 필드는 덮어쓰지 않음)
+              setFormData(prev => ({
+                ...prev,
+                // DB의 최신 데이터로 업데이트
+                name: updatedPatient.name || '',
+                customer_number: updatedPatient.customer_number || '',
+                resident_number_masked: updatedPatient.resident_number_masked || '',
+                phone: updatedPatient.phone || '',
+                gender: updatedPatient.gender || '',
+                age: updatedPatient.age?.toString() || '',
+                visit_motivation: updatedPatient.visit_motivation || '',
+                diagnosis_detail: updatedPatient.diagnosis_detail || '',
+                hospital_category: updatedPatient.hospital_category || '',
+                hospital_branch: updatedPatient.hospital_branch || '',
+                address: updatedPatient.address || '',
+                crm_memo: updatedPatient.crm_memo || '',
+                special_note_1: updatedPatient.special_note_1 || '',
+                special_note_2: updatedPatient.special_note_2 || '',
+                treatment_memo_1: updatedPatient.treatment_memo_1 || '',
+                treatment_memo_2: updatedPatient.treatment_memo_2 || '',
+                patient_or_guardian: updatedPatient.patient_or_guardian || '환자',
+                diet_info: updatedPatient.diet_info || '',
+                inflow_status: updatedPatient.inflow_status || '유입',
+                failure_reason: updatedPatient.failure_reason || '',
+                visit_type: updatedPatient.visit_type || '',
+                guardian_name: updatedPatient.guardian_name || '',
+                guardian_relationship: updatedPatient.guardian_relationship || '',
+                guardian_phone: updatedPatient.guardian_phone || '',
+                korean_doctor: updatedPatient.korean_doctor || '',
+                western_doctor: updatedPatient.western_doctor || '',
+                inflow_date: updatedPatient.inflow_date || '',
+                consultation_date: updatedPatient.consultation_date || '',
+              }));
+              console.log('✅ 초진관리 폼 데이터 자동 갱신:', updatedPatient.name);
+            }
+          }
+        }
+      )
+      .subscribe();
+
     // postMessage로 CRM 데이터 수신
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'crm-patient-data' && event.data?.data) {
@@ -84,8 +146,9 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);
+      supabase.removeChannel(channel);
     };
-  }, []);
+  }, [patient]); // patient 의존성 추가
 
   // 환자 데이터 로드 및 설정
   useEffect(() => {
