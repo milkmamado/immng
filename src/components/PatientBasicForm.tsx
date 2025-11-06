@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { RefreshCw } from "lucide-react";
+import { useAuth } from '@/hooks/useAuth';
 
 interface PatientBasicFormProps {
   patient?: any;
@@ -27,6 +28,7 @@ interface Option {
 }
 
 export function PatientBasicForm({ patient, onClose, initialData }: PatientBasicFormProps) {
+  const { currentBranch } = useAuth();
   const [formData, setFormData] = useState({
     // API 자동입력 필드
     name: '',                   // 고객명 (API)
@@ -401,7 +403,8 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         western_doctor: formData.western_doctor || null,
         inflow_date: formData.inflow_date || null,
         consultation_date: formData.consultation_date || null,
-        assigned_manager: user.id
+        assigned_manager: user.id,
+        branch: currentBranch // 현재 지점 정보 추가
       };
 
       if (patient) {
