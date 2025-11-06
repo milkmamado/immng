@@ -682,23 +682,56 @@ export function DailyStatusGrid({
 
       if (error) throw error;
 
-      // 업데이트된 환자 정보 다시 조회
-      const { data: updatedPatient } = await supabase
+      // 업데이트된 환자 정보 다시 조회 (모든 필드 포함)
+      const { data: updatedPatient, error: fetchError } = await supabase
         .from('patients')
-        .select('*')
+        .select(`
+          *,
+          admission_cycles (
+            id, admission_date, discharge_date, admission_type, status
+          )
+        `)
         .eq('id', selectedPatientDetail.id)
         .single();
+
+      if (fetchError) throw fetchError;
 
       if (updatedPatient) {
         // 모달의 환자 정보 업데이트
         setSelectedPatientDetail(updatedPatient);
+        
+        // 부모 컴포넌트의 patients 배열에서도 해당 환자 정보 업데이트
+        const updatedPatients = patients.map(p => 
+          p.id === updatedPatient.id ? updatedPatient : p
+        );
+        
+        // 패키지 데이터 다시 조회
+        await fetchPackageData(selectedPatientDetail.id);
+        await calculatePatientStats(selectedPatientDetail.id);
       }
 
       setEditingFields({});
 
-      console.log('✅ 환자 정보가 저장되었습니다.');
+      // 성공 메시지를 사용자에게 표시
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-md shadow-lg z-50';
+      toast.textContent = '✅ 환자 정보가 저장되었습니다.';
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.remove();
+      }, 2000);
+
     } catch (error) {
       console.error('Error updating patient fields:', error);
+      
+      // 오류 메시지 표시
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-md shadow-lg z-50';
+      toast.textContent = '❌ 저장에 실패했습니다.';
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.remove();
+      }, 2000);
     }
   };
   
