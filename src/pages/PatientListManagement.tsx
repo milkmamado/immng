@@ -169,9 +169,20 @@ export default function PatientListManagement() {
         },
         async (payload) => {
           console.log('Patient data changed:', payload);
-          // 모달이 열려있지 않을 때만 목록 새로고침
-          if (!selectedPatientDetail) {
-            fetchPatients();
+          fetchPatients();
+          
+          // 현재 열려있는 모달의 환자가 업데이트되었으면 모달 데이터도 갱신
+          if (selectedPatientDetail && payload.new && (payload.new as any).id === selectedPatientDetail.id) {
+            const { data: updatedPatient } = await supabase
+              .from('patients')
+              .select('*')
+              .eq('id', selectedPatientDetail.id)
+              .single();
+            
+            if (updatedPatient) {
+              setSelectedPatientDetail(updatedPatient);
+              console.log('✅ 모달 환자 정보 자동 갱신:', updatedPatient.name);
+            }
           }
         }
       )

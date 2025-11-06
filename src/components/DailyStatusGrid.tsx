@@ -249,7 +249,20 @@ export function DailyStatusGrid({
         },
         async (payload) => {
           console.log('DailyStatusGrid - Patient data changed:', payload);
-          // 모달이 열려있지 않을 때만 목록 새로고침은 부모 컴포넌트에서 처리
+          
+          // 현재 열려있는 모달의 환자가 업데이트되었으면 모달 데이터도 갱신
+          if (selectedPatientDetail && payload.new && (payload.new as any).id === selectedPatientDetail.id) {
+            const { data: updatedPatient } = await supabase
+              .from('patients')
+              .select('*')
+              .eq('id', selectedPatientDetail.id)
+              .single();
+            
+            if (updatedPatient) {
+              setSelectedPatientDetail(updatedPatient);
+              console.log('✅ 일별환자관리 모달 환자 정보 자동 갱신:', updatedPatient.name);
+            }
+          }
         }
       )
       .subscribe();
