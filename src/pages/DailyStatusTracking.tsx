@@ -167,6 +167,7 @@ export default function DailyStatusTracking() {
           inflow_status, visit_type, guardian_name,
           guardian_relationship, guardian_phone, insurance_type,
           payment_amount, display_order,
+          inflow_date, consultation_date,
           admission_cycles (
             id, admission_date, discharge_date, admission_type, status
           )
