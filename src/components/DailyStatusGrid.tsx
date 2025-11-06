@@ -1799,8 +1799,8 @@ export function DailyStatusGrid({
                     <Label>특이사항1</Label>
                     <Textarea
                       value={selectedPatientDetail?.special_note_1 || ''}
-                      onChange={(e) => updateEditingField('special_note_1', e.target.value)}
-                      placeholder="특이사항1 입력"
+                      disabled
+                      className="bg-muted"
                       rows={3}
                     />
                   </div>
@@ -1810,8 +1810,8 @@ export function DailyStatusGrid({
                     <Label>특이사항2</Label>
                     <Textarea
                       value={selectedPatientDetail?.special_note_2 || ''}
-                      onChange={(e) => updateEditingField('special_note_2', e.target.value)}
-                      placeholder="특이사항2 입력"
+                      disabled
+                      className="bg-muted"
                       rows={3}
                     />
                   </div>
@@ -1821,8 +1821,8 @@ export function DailyStatusGrid({
                     <Label>진료메모1</Label>
                     <Textarea
                       value={selectedPatientDetail?.treatment_memo_1 || ''}
-                      onChange={(e) => updateEditingField('treatment_memo_1', e.target.value)}
-                      placeholder="진료메모1 입력"
+                      disabled
+                      className="bg-muted"
                       rows={3}
                     />
                   </div>
@@ -1832,8 +1832,8 @@ export function DailyStatusGrid({
                     <Label>진료메모2</Label>
                     <Textarea
                       value={selectedPatientDetail?.treatment_memo_2 || ''}
-                      onChange={(e) => updateEditingField('treatment_memo_2', e.target.value)}
-                      placeholder="진료메모2 입력"
+                      disabled
+                      className="bg-muted"
                       rows={3}
                     />
                   </div>
@@ -1843,8 +1843,8 @@ export function DailyStatusGrid({
                     <Label>CRM메모</Label>
                     <Textarea
                       value={selectedPatientDetail?.crm_memo || ''}
-                      onChange={(e) => updateEditingField('crm_memo', e.target.value)}
-                      placeholder="CRM메모 입력"
+                      disabled
+                      className="bg-muted"
                       rows={3}
                     />
                   </div>
