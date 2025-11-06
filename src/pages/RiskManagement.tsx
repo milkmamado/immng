@@ -420,15 +420,6 @@ export default function RiskManagement() {
     }
 
     try {
-      // 환자 정보 조회하여 visit_type 확인
-      const { data: patientData, error: fetchError } = await supabase
-        .from("patients")
-        .select("visit_type")
-        .eq("id", patientId)
-        .single();
-
-      if (fetchError) throw fetchError;
-
       // 1. 환자의 management_status를 "관리 중"으로 업데이트
       const { error: updateError } = await supabase
         .from("patients")
@@ -453,24 +444,24 @@ export default function RiskManagement() {
       if (checkError) throw checkError;
 
       if (existingStatus) {
-        // 기존 레코드 업데이트
+        // 기존 레코드 업데이트 - "돌환"으로 설정
         const { error: updateStatusError } = await supabase
           .from("daily_patient_status")
           .update({
-            status_type: patientData?.visit_type || "외래",
+            status_type: "돌환",
             updated_at: new Date().toISOString()
           })
           .eq("id", existingStatus.id);
 
         if (updateStatusError) throw updateStatusError;
       } else {
-        // 새 레코드 추가
+        // 새 레코드 추가 - "돌환"으로 설정
         const { error: insertError } = await supabase
           .from("daily_patient_status")
           .insert({
             patient_id: patientId,
             status_date: today,
-            status_type: patientData?.visit_type || "외래",
+            status_type: "돌환",
             created_by: user?.id!,
             branch: currentBranch
           });
