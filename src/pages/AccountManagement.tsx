@@ -6,6 +6,7 @@ import { Settings, Users, BarChart3, Shield } from 'lucide-react';
 import { ManageUsers } from '@/components/ManageUsers';
 import { ManagerStats } from '@/components/ManagerStats';
 import { UpdateUserPassword } from '@/components/UpdateUserPassword';
+import { ConfirmEmail } from '@/components/ConfirmEmail';
 
 export default function AccountManagement() {
   const { userRole } = useAuth();
@@ -39,6 +40,7 @@ export default function AccountManagement() {
       </div>
 
       <UpdateUserPassword />
+      <ConfirmEmail />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
