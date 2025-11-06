@@ -243,13 +243,18 @@ export function DailyStatusGrid({
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'UPDATE',
           schema: 'public',
           table: 'patients'
         },
         async (payload) => {
           console.log('DailyStatusGrid - Patient data changed:', payload);
-          // 모달이 열려있지 않을 때만 목록 새로고침은 부모 컴포넌트에서 처리
+          
+          // 모달이 열려있고 업데이트된 환자가 현재 선택된 환자인 경우
+          if (selectedPatientDetail && payload.new.id === selectedPatientDetail.id) {
+            // 모달 정보 실시간 업데이트
+            setSelectedPatientDetail(payload.new as any);
+          }
         }
       )
       .subscribe();
@@ -882,6 +887,12 @@ export function DailyStatusGrid({
     if (!memoCell) return;
     
     await onMemoUpdate(memoCell.patientId, memoCell.memoType, memoValue);
+    
+    // 모달이 열려있고 해당 환자의 메모를 수정한 경우, selectedPatientDetail도 업데이트
+    if (selectedPatientDetail && selectedPatientDetail.id === memoCell.patientId) {
+      setSelectedPatientDetail(prev => prev ? { ...prev, [memoCell.memoType]: memoValue } : null);
+    }
+    
     setMemoCell(null);
     setMemoValue('');
   };
