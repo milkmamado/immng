@@ -215,7 +215,8 @@ export function Dashboard() {
             })
           );
 
-          setManagerStats(managerStatsData);
+          // 환자가 있는 매니저만 필터링
+          setManagerStats(managerStatsData.filter(stat => stat.patient_count > 0));
         }
       }
 
