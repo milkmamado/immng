@@ -169,8 +169,8 @@ export default function PatientListManagement() {
         },
         async (payload) => {
           console.log('Patient data changed:', payload);
-          // 모달이 열려있지 않을 때만 목록 새로고침
-          if (!selectedPatientDetail) {
+          // 저장 후에만 목록 새로고침 (UPDATE 이벤트만)
+          if (payload.eventType === 'UPDATE') {
             fetchPatients();
           }
         }
@@ -214,7 +214,7 @@ export default function PatientListManagement() {
       window.removeEventListener('message', handleMessage);
       supabase.removeChannel(channel);
     };
-  }, [currentBranch, selectedPatientDetail]); // selectedPatientDetail 의존성 추가
+  }, [currentBranch]);
 
   useEffect(() => {
     // 기존 검색 + 필터 로직 통합
