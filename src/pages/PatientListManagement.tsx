@@ -167,9 +167,12 @@ export default function PatientListManagement() {
           schema: 'public',
           table: 'patients'
         },
-        (payload) => {
+        async (payload) => {
           console.log('Patient data changed:', payload);
-          fetchPatients();
+          // 저장 후에만 목록 새로고침 (UPDATE 이벤트만)
+          if (payload.eventType === 'UPDATE') {
+            fetchPatients();
+          }
         }
       )
       .on(
@@ -211,7 +214,7 @@ export default function PatientListManagement() {
       window.removeEventListener('message', handleMessage);
       supabase.removeChannel(channel);
     };
-  }, [currentBranch]); // currentBranch 의존성 추가
+  }, [currentBranch]);
 
   useEffect(() => {
     // 기존 검색 + 필터 로직 통합

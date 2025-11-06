@@ -237,6 +237,23 @@ export function DailyStatusGrid({
     fetchOptions();
     fetchCurrentUserName();
     
+    // Realtime 구독 설정 - patients 테이블 변경 감지
+    const channel = supabase
+      .channel('daily-status-modal-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'patients'
+        },
+        async (payload) => {
+          console.log('DailyStatusGrid - Patient data changed:', payload);
+          // 모달이 열려있지 않을 때만 목록 새로고침은 부모 컴포넌트에서 처리
+        }
+      )
+      .subscribe();
+    
     // CRM에서 postMessage로 패키지 데이터 수신
     const handleMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === 'crm-package-data') {
@@ -248,8 +265,9 @@ export function DailyStatusGrid({
     
     return () => {
       window.removeEventListener('message', handleMessage);
+      supabase.removeChannel(channel);
     };
-  }, []);
+  }, [selectedPatientDetail]); // selectedPatientDetail 의존성 추가
 
   const fetchOptions = async () => {
     try {
