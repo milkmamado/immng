@@ -67,11 +67,11 @@ export default function RiskManagement() {
   const [selectedVisitTypes, setSelectedVisitTypes] = useState<string[]>([]);
   const [diagnosisSearch, setDiagnosisSearch] = useState('');
   
-  const { user, userRole } = useAuth();
+  const { user, userRole, currentBranch } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
+    if (user && currentBranch) {
       fetchManagerList();
       fetchRiskPatients();
     }
@@ -109,25 +109,30 @@ export default function RiskManagement() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, userRole]);
+  }, [user, userRole, currentBranch]);
 
   useEffect(() => {
-    if (user) {
+    if (user && currentBranch) {
       fetchRiskPatients();
     }
-  }, [selectedManager]);
+  }, [selectedManager, currentBranch]);
 
   const fetchManagerList = async () => {
     const isMasterOrAdmin = userRole === 'master' || userRole === 'admin';
     
-    if (isMasterOrAdmin) {
+    if (isMasterOrAdmin && currentBranch) {
       // approved_users view를 사용하여 매니저 목록 조회 (일관성 개선)
-      const { data: managersData } = await supabase
+      let managersQuery = supabase
         .from('approved_users')
         .select('user_id, name')
         .eq('role', 'manager')
         .eq('approval_status', 'approved')
         .order('name');
+
+      // 지점 필터 추가
+      managersQuery = managersQuery.eq('branch', currentBranch);
+
+      const { data: managersData } = await managersQuery;
 
       if (managersData) {
         setManagers(managersData.map(m => ({ id: m.user_id!, name: m.name || '이름 없음' })));
@@ -145,6 +150,11 @@ export default function RiskManagement() {
         .from("patients")
         .select("*")
         .eq("inflow_status", "유입");
+
+      // 지점 필터 추가
+      if (currentBranch) {
+        patientsQuery = patientsQuery.eq("branch", currentBranch);
+      }
 
       // 일반 매니저는 본인 환자만, 마스터/관리자가 특정 매니저 선택 시 해당 매니저만
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
