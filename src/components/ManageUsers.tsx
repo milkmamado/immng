@@ -41,20 +41,10 @@ export function ManageUsers({ type }: ManageUsersProps) {
       setLoading(true);
       setUsers([]); // 데이터 초기화
       
-      // user_roles 테이블에서 직접 조회
+      // user_roles 테이블에서 조회
       let query = supabase
         .from('user_roles')
-        .select(`
-          id,
-          user_id,
-          role,
-          approval_status,
-          branch,
-          created_at,
-          approved_at,
-          approved_by,
-          profiles!user_roles_user_id_fkey(name, email, phone)
-        `)
+        .select('id, user_id, role, approval_status, branch, created_at, approved_at, approved_by')
         .eq('approval_status', type === 'pending' ? 'pending' : 'approved');
       
       // 현재 지점 필터 적용
@@ -62,25 +52,46 @@ export function ManageUsers({ type }: ManageUsersProps) {
         query = query.eq('branch', currentBranch);
       }
       
-      const { data, error } = await query
+      const { data: rolesData, error: rolesError } = await query
         .order(type === 'pending' ? 'created_at' : 'approved_at', { ascending: false });
 
-      if (error) throw error;
+      if (rolesError) throw rolesError;
       
-      // 데이터 변환
-      const transformedData = (data || []).map((item: any) => ({
-        id: item.id,
-        role_id: item.id,
-        user_id: item.user_id,
-        role: item.role,
-        approval_status: item.approval_status,
-        requested_at: item.created_at,
-        approved_at: item.approved_at,
-        name: item.profiles?.name || '알 수 없음',
-        email: item.profiles?.email || '알 수 없음',
-        phone: item.profiles?.phone,
-        branch: item.branch
-      }));
+      if (!rolesData || rolesData.length === 0) {
+        setUsers([]);
+        return;
+      }
+      
+      // 사용자 ID 목록 추출
+      const userIds = rolesData.map(r => r.user_id);
+      
+      // profiles 테이블에서 사용자 정보 조회
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name, email, phone')
+        .in('id', userIds);
+      
+      if (profilesError) {
+        console.error('프로필 조회 오류:', profilesError);
+      }
+      
+      // 데이터 병합
+      const transformedData = rolesData.map((role: any) => {
+        const profile = profilesData?.find(p => p.id === role.user_id);
+        return {
+          id: role.id,
+          role_id: role.id,
+          user_id: role.user_id,
+          role: role.role,
+          approval_status: role.approval_status,
+          requested_at: role.created_at,
+          approved_at: role.approved_at,
+          name: profile?.name || '알 수 없음',
+          email: profile?.email || '알 수 없음',
+          phone: profile?.phone,
+          branch: role.branch
+        };
+      });
       
       setUsers(transformedData);
     } catch (error: any) {
