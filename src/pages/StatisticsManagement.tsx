@@ -314,7 +314,7 @@ export default function StatisticsManagement() {
       setTotalStats(totals);
 
       // 새로운 통계 계산 로직 추가
-      // 1. 아웃 환자 수 - 담당자 필터 적용
+      // 1. 아웃 환자 수 - 담당자 필터 및 지점 필터 적용
       let statusQuery = supabase
         .from('patients')
         .select('id, management_status, created_at, first_visit_date, assigned_manager')
@@ -325,6 +325,9 @@ export default function StatisticsManagement() {
         const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
         statusQuery = statusQuery.eq('assigned_manager', targetManager);
       }
+      
+      // 지점 필터 적용
+      statusQuery = applyBranchFilter(statusQuery);
       
       const { data: allPatientsWithStatus } = await statusQuery;
 
@@ -339,7 +342,7 @@ export default function StatisticsManagement() {
         return inflowYearMonth === selectedMonth;
       }).length || 0;
 
-      // 전화상담 환자 수 (해당 월)
+      // 전화상담 환자 수 (해당 월) - 지점 필터 추가
       let phoneConsultQuery = supabase
         .from('patients')
         .select('id, created_at, first_visit_date')
@@ -350,6 +353,9 @@ export default function StatisticsManagement() {
         phoneConsultQuery = phoneConsultQuery.eq('assigned_manager', targetManager);
       }
       
+      // 지점 필터 적용
+      phoneConsultQuery = applyBranchFilter(phoneConsultQuery);
+      
       const { data: phoneConsultPatients } = await phoneConsultQuery;
       const phoneConsultCount = phoneConsultPatients?.filter(p => {
         const inflowDate = new Date(p.first_visit_date || p.created_at);
@@ -357,7 +363,7 @@ export default function StatisticsManagement() {
         return inflowYearMonth === selectedMonth;
       }).length || 0;
 
-      // 방문상담 환자 수 (해당 월)
+      // 방문상담 환자 수 (해당 월) - 지점 필터 추가
       let visitConsultQuery = supabase
         .from('patients')
         .select('id, created_at, first_visit_date')
@@ -368,6 +374,9 @@ export default function StatisticsManagement() {
         visitConsultQuery = visitConsultQuery.eq('assigned_manager', targetManager);
       }
       
+      // 지점 필터 적용
+      visitConsultQuery = applyBranchFilter(visitConsultQuery);
+      
       const { data: visitConsultPatients } = await visitConsultQuery;
       const visitConsultCount = visitConsultPatients?.filter(p => {
         const inflowDate = new Date(p.first_visit_date || p.created_at);
@@ -375,7 +384,7 @@ export default function StatisticsManagement() {
         return inflowYearMonth === selectedMonth;
       }).length || 0;
 
-      // 실패 환자 수 (해당 월)
+      // 실패 환자 수 (해당 월) - 지점 필터 추가
       let failedQuery = supabase
         .from('patients')
         .select('id, created_at, first_visit_date')
@@ -385,6 +394,9 @@ export default function StatisticsManagement() {
         const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
         failedQuery = failedQuery.eq('assigned_manager', targetManager);
       }
+      
+      // 지점 필터 적용
+      failedQuery = applyBranchFilter(failedQuery);
       
       const { data: failedPatients } = await failedQuery;
       const failedCount = failedPatients?.filter(p => {
