@@ -167,23 +167,9 @@ export default function PatientListManagement() {
           schema: 'public',
           table: 'patients'
         },
-        async (payload) => {
+        (payload) => {
           console.log('Patient data changed:', payload);
           fetchPatients();
-          
-          // 현재 열려있는 모달의 환자가 업데이트되었으면 모달 데이터도 갱신
-          if (selectedPatientDetail && payload.new && (payload.new as any).id === selectedPatientDetail.id) {
-            const { data: updatedPatient } = await supabase
-              .from('patients')
-              .select('*')
-              .eq('id', selectedPatientDetail.id)
-              .single();
-            
-            if (updatedPatient) {
-              setSelectedPatientDetail(updatedPatient);
-              console.log('✅ 모달 환자 정보 자동 갱신:', updatedPatient.name);
-            }
-          }
         }
       )
       .on(
@@ -225,7 +211,7 @@ export default function PatientListManagement() {
       window.removeEventListener('message', handleMessage);
       supabase.removeChannel(channel);
     };
-  }, [currentBranch, selectedPatientDetail]); // selectedPatientDetail 의존성 추가
+  }, [currentBranch]); // currentBranch 의존성 추가
 
   useEffect(() => {
     // 기존 검색 + 필터 로직 통합
