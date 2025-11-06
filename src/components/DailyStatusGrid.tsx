@@ -119,8 +119,17 @@ export function DailyStatusGrid({
   const [memoValue, setMemoValue] = useState<string>('');
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<any | null>(null);
   const [editingManagementStatus, setEditingManagementStatus] = useState<string>('');
-  const [savedScrollPosition, setSavedScrollPosition] = useState<number>(0);
-  const [savedVerticalScrollPosition, setSavedVerticalScrollPosition] = useState<number>(0);
+  
+  // localStorage에서 스크롤 위치 복원
+  const scrollStorageKey = `daily-tracking-scroll-${yearMonth}`;
+  const [savedScrollPosition, setSavedScrollPosition] = useState<number>(() => {
+    const saved = localStorage.getItem(scrollStorageKey + '-h');
+    return saved ? Number(saved) : 0;
+  });
+  const [savedVerticalScrollPosition, setSavedVerticalScrollPosition] = useState<number>(() => {
+    const saved = localStorage.getItem(scrollStorageKey + '-v');
+    return saved ? Number(saved) : 0;
+  });
   
   // 일괄 스케줄 등록 관련 state
   const [bulkScheduleDialog, setBulkScheduleDialog] = useState<{
@@ -906,16 +915,18 @@ export function DailyStatusGrid({
   const handleMemoSave = async () => {
     if (!memoCell) return;
     
-    // 현재 가로 스크롤 위치 저장
+    // 현재 가로 스크롤 위치 저장 (localStorage에 영구 저장)
     if (tableScrollRef.current) {
       const currentScroll = tableScrollRef.current.scrollLeft;
       setSavedScrollPosition(currentScroll);
+      localStorage.setItem(scrollStorageKey + '-h', String(currentScroll));
       console.log('Saving horizontal scroll position before memo save:', currentScroll);
     }
     
-    // 현재 세로 스크롤 위치 저장
+    // 현재 세로 스크롤 위치 저장 (localStorage에 영구 저장)
     const currentVerticalScroll = window.scrollY || document.documentElement.scrollTop;
     setSavedVerticalScrollPosition(currentVerticalScroll);
+    localStorage.setItem(scrollStorageKey + '-v', String(currentVerticalScroll));
     console.log('Saving vertical scroll position before memo save:', currentVerticalScroll);
     
     console.log('Saving memo:', memoCell, memoValue);
@@ -1234,7 +1245,18 @@ export function DailyStatusGrid({
         timeoutIds.forEach(id => clearTimeout(id));
       };
     }
-  }, [dailyStatuses, savedScrollPosition, savedVerticalScrollPosition, patients]); // patients도 의존성에 추가
+  }, [dailyStatuses, savedScrollPosition, savedVerticalScrollPosition, patients]);
+  
+  // 스크롤 위치 정리 (컴포넌트 언마운트 시 또는 월 변경 시)
+  useEffect(() => {
+    return () => {
+      // 다른 월로 이동할 때 localStorage 정리
+      if (savedScrollPosition === 0 && savedVerticalScrollPosition === 0) {
+        localStorage.removeItem(scrollStorageKey + '-h');
+        localStorage.removeItem(scrollStorageKey + '-v');
+      }
+    };
+  }, [yearMonth, scrollStorageKey, savedScrollPosition, savedVerticalScrollPosition]);
 
   // 마우스 드래그 스크롤 핸들러
   const handleMouseDown = (e: React.MouseEvent) => {
