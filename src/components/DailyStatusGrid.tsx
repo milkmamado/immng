@@ -252,8 +252,27 @@ export function DailyStatusGrid({
           
           // 모달이 열려있고 업데이트된 환자가 현재 선택된 환자인 경우
           if (selectedPatientDetail && payload.new.id === selectedPatientDetail.id) {
-            // 모달 정보 실시간 업데이트
-            setSelectedPatientDetail(payload.new as any);
+            console.log('Re-fetching updated patient data for modal...');
+            // DB에서 최신 데이터를 다시 가져옴 (admission_cycles 포함)
+            const { data: updatedPatient } = await supabase
+              .from('patients')
+              .select(`
+                *,
+                admission_cycles (
+                  id,
+                  admission_date,
+                  discharge_date,
+                  admission_type,
+                  status
+                )
+              `)
+              .eq('id', payload.new.id)
+              .single();
+            
+            if (updatedPatient) {
+              console.log('Updated patient data:', updatedPatient);
+              setSelectedPatientDetail(updatedPatient as any);
+            }
           }
         }
       )
@@ -886,11 +905,31 @@ export function DailyStatusGrid({
   const handleMemoSave = async () => {
     if (!memoCell) return;
     
+    console.log('Saving memo:', memoCell, memoValue);
     await onMemoUpdate(memoCell.patientId, memoCell.memoType, memoValue);
     
-    // 모달이 열려있고 해당 환자의 메모를 수정한 경우, selectedPatientDetail도 업데이트
+    // 모달이 열려있고 해당 환자의 메모를 수정한 경우, DB에서 최신 데이터 다시 가져오기
     if (selectedPatientDetail && selectedPatientDetail.id === memoCell.patientId) {
-      setSelectedPatientDetail(prev => prev ? { ...prev, [memoCell.memoType]: memoValue } : null);
+      console.log('Updating modal with new memo value...');
+      const { data: updatedPatient } = await supabase
+        .from('patients')
+        .select(`
+          *,
+          admission_cycles (
+            id,
+            admission_date,
+            discharge_date,
+            admission_type,
+            status
+          )
+        `)
+        .eq('id', memoCell.patientId)
+        .single();
+      
+      if (updatedPatient) {
+        console.log('Updated patient after memo save:', updatedPatient);
+        setSelectedPatientDetail(updatedPatient as any);
+      }
     }
     
     setMemoCell(null);
