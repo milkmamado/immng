@@ -905,6 +905,13 @@ export function DailyStatusGrid({
   const handleMemoSave = async () => {
     if (!memoCell) return;
     
+    // 현재 스크롤 위치 저장
+    if (tableScrollRef.current) {
+      const currentScroll = tableScrollRef.current.scrollLeft;
+      setSavedScrollPosition(currentScroll);
+      console.log('Saving scroll position before memo save:', currentScroll);
+    }
+    
     console.log('Saving memo:', memoCell, memoValue);
     await onMemoUpdate(memoCell.patientId, memoCell.memoType, memoValue);
     
