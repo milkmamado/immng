@@ -38,6 +38,16 @@ export function Dashboard() {
 
   useEffect(() => {
     if (user && currentBranch) {
+      // 데이터 초기화 (지점 변경 시 이전 데이터 제거)
+      setStats({
+        totalPatients: 0,
+        monthlyRevenue: 0,
+        totalRevenue: 0,
+        riskPatients: []
+      });
+      setManagerStats([]);
+      setLoading(true);
+      
       checkUserRole();
       fetchDashboardData();
     }
