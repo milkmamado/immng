@@ -297,19 +297,27 @@ export default function DailyStatusTracking() {
 
   const handleMemoUpdate = async (patientId: string, memoType: 'memo1' | 'memo2', value: string) => {
     try {
+      console.log('handleMemoUpdate called:', { patientId, memoType, value });
+      
       const { error } = await supabase
         .from('patients')
         .update({ [memoType]: value })
         .eq('id', patientId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error in DB update:', error);
+        throw error;
+      }
 
+      console.log('Memo updated in DB successfully, calling fetchData...');
+      
       toast({
         title: "성공",
         description: "메모가 저장되었습니다.",
       });
 
-      fetchData(); // 데이터 새로고침
+      await fetchData(); // 데이터 새로고침
+      console.log('fetchData completed after memo update');
     } catch (error) {
       console.error('Error updating memo:', error);
       toast({
