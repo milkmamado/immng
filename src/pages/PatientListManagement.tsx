@@ -2621,6 +2621,48 @@ export default function PatientListManagement() {
                     </Select>
                   </div>
 
+                  {/* 실비보험 유형 */}
+                  <div>
+                    <Label>실비보험 유형</Label>
+                    <Select
+                      value={selectedPatientDetail?.insurance_type || ''}
+                      onValueChange={(value) => {
+                        updateEditingField('insurance_type', value);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="선택" />
+                      </SelectTrigger>
+                      <SelectContent className="z-[100] bg-background">
+                        {insuranceTypeOptions.map(option => (
+                          <SelectItem key={option.id} value={option.name}>
+                            {option.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* 본병원 치료 */}
+                  <div>
+                    <Label>본병원 치료</Label>
+                    <Input
+                      value={selectedPatientDetail?.hospital_treatment || ''}
+                      onChange={(e) => updateEditingField('hospital_treatment', e.target.value)}
+                      placeholder="본병원 치료 내용"
+                    />
+                  </div>
+
+                  {/* 본병원 검사일정 */}
+                  <div>
+                    <Label>본병원 검사일정</Label>
+                    <Input
+                      value={selectedPatientDetail?.examination_schedule || ''}
+                      onChange={(e) => updateEditingField('examination_schedule', e.target.value)}
+                      placeholder="검사 일정 입력"
+                    />
+                  </div>
+
                   <div>
                     <Label>월평균 입원일수</Label>
                     <div className="p-2 bg-muted rounded-md h-10 flex items-center">
