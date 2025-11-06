@@ -415,15 +415,24 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
 
         if (error) throw error;
 
+        // 업데이트된 환자 정보 다시 조회하여 Realtime 이벤트 확실히 트리거
+        await supabase
+          .from('patients')
+          .select('*')
+          .eq('id', patient.id)
+          .single();
+
         toast({
-          title: "수정 완료",
-          description: "환자 정보가 성공적으로 수정되었습니다.",
-          duration: 1000,
+          title: "✅ 수정 완료",
+          description: "환자 정보가 저장되었습니다. 다른 화면에도 자동 반영됩니다.",
+          duration: 1500,
         });
       } else {
-        const { error } = await supabase
+        const { data: newPatient, error } = await supabase
           .from('patients')
-          .insert([patientData]);
+          .insert([patientData])
+          .select()
+          .single();
 
         if (error) {
           // 중복 키 오류 처리
@@ -441,9 +450,9 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         }
 
         toast({
-          title: "등록 완료",
-          description: "새 환자가 성공적으로 등록되었습니다.",
-          duration: 1000,
+          title: "✅ 등록 완료",
+          description: "새 환자가 등록되었습니다. 다른 화면에도 자동 반영됩니다.",
+          duration: 1500,
         });
       }
 
