@@ -664,9 +664,21 @@ export function DailyStatusGrid({
 
       if (error) throw error;
 
+      // 업데이트된 환자 정보 다시 조회
+      const { data: updatedPatient } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('id', selectedPatientDetail.id)
+        .single();
+
+      if (updatedPatient) {
+        // 모달의 환자 정보 업데이트
+        setSelectedPatientDetail(updatedPatient);
+      }
+
       setEditingFields({});
 
-      console.log('정보가 저장되었습니다.');
+      console.log('✅ 환자 정보가 저장되었습니다.');
     } catch (error) {
       console.error('Error updating patient fields:', error);
     }

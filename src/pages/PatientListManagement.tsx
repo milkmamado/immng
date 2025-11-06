@@ -1438,20 +1438,29 @@ export default function PatientListManagement() {
 
       if (error) throw error;
 
-      // Update patients list including management_status
-      setPatients(prev => prev.map(p => 
-        p.id === selectedPatientDetail.id ? { ...p, ...editingFields } : p
-      ));
+      // DB에서 업데이트된 환자 정보 다시 조회
+      const { data: updatedPatient } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('id', selectedPatientDetail.id)
+        .single();
 
-      // Update selected patient detail
-      setSelectedPatientDetail(prev => prev ? { ...prev, ...editingFields } : null);
+      if (updatedPatient) {
+        // 환자 목록 업데이트
+        setPatients(prev => prev.map(p => 
+          p.id === selectedPatientDetail.id ? updatedPatient : p
+        ));
+
+        // 선택된 환자 정보 업데이트
+        setSelectedPatientDetail(updatedPatient);
+      }
 
       // Clear editing fields
       setEditingFields({});
 
       toast({
-        title: "성공",
-        description: "정보가 저장되었습니다.",
+        title: "✅ 저장 완료",
+        description: "환자 정보가 저장되었습니다.",
       });
     } catch (error) {
       console.error('Error updating patient fields:', error);
