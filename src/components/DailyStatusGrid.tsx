@@ -120,6 +120,7 @@ export function DailyStatusGrid({
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<any | null>(null);
   const [editingManagementStatus, setEditingManagementStatus] = useState<string>('');
   const [savedScrollPosition, setSavedScrollPosition] = useState<number>(0);
+  const [savedVerticalScrollPosition, setSavedVerticalScrollPosition] = useState<number>(0);
   
   // 일괄 스케줄 등록 관련 state
   const [bulkScheduleDialog, setBulkScheduleDialog] = useState<{
@@ -905,12 +906,17 @@ export function DailyStatusGrid({
   const handleMemoSave = async () => {
     if (!memoCell) return;
     
-    // 현재 스크롤 위치 저장
+    // 현재 가로 스크롤 위치 저장
     if (tableScrollRef.current) {
       const currentScroll = tableScrollRef.current.scrollLeft;
       setSavedScrollPosition(currentScroll);
-      console.log('Saving scroll position before memo save:', currentScroll);
+      console.log('Saving horizontal scroll position before memo save:', currentScroll);
     }
+    
+    // 현재 세로 스크롤 위치 저장
+    const currentVerticalScroll = window.scrollY || document.documentElement.scrollTop;
+    setSavedVerticalScrollPosition(currentVerticalScroll);
+    console.log('Saving vertical scroll position before memo save:', currentVerticalScroll);
     
     console.log('Saving memo:', memoCell, memoValue);
     await onMemoUpdate(memoCell.patientId, memoCell.memoType, memoValue);
@@ -1188,25 +1194,38 @@ export function DailyStatusGrid({
   // 스크롤 위치 복원 (useLayoutEffect로 DOM 업데이트 직후 실행)
   useLayoutEffect(() => {
     if (savedScrollPosition > 0 && tableScrollRef.current) {
-      console.log('Immediate scroll restore to:', savedScrollPosition);
+      console.log('Immediate horizontal scroll restore to:', savedScrollPosition);
       tableScrollRef.current.scrollLeft = savedScrollPosition;
+    }
+    if (savedVerticalScrollPosition > 0) {
+      console.log('Immediate vertical scroll restore to:', savedVerticalScrollPosition);
+      window.scrollTo(0, savedVerticalScrollPosition);
     }
   }, [dailyStatuses, patients]); // patients도 의존성에 추가
 
   // 스크롤 위치 복원 (여러 번 시도하여 확실하게)
   useEffect(() => {
-    if (tableScrollRef.current && savedScrollPosition > 0) {
-      console.log('Restoring scroll position:', savedScrollPosition);
+    if (savedScrollPosition > 0 || savedVerticalScrollPosition > 0) {
+      console.log('Restoring scroll positions - H:', savedScrollPosition, 'V:', savedVerticalScrollPosition);
       
       // 즉시 실행
-      tableScrollRef.current.scrollLeft = savedScrollPosition;
+      if (tableScrollRef.current && savedScrollPosition > 0) {
+        tableScrollRef.current.scrollLeft = savedScrollPosition;
+      }
+      if (savedVerticalScrollPosition > 0) {
+        window.scrollTo(0, savedVerticalScrollPosition);
+      }
       
       // 여러 시점에서 재시도 (브라우저 렌더링 완료 후)
       const timeoutIds = [0, 10, 50, 100, 200, 300, 500].map(delay => 
         setTimeout(() => {
-          if (tableScrollRef.current && tableScrollRef.current.scrollLeft !== savedScrollPosition) {
+          if (tableScrollRef.current && savedScrollPosition > 0 && tableScrollRef.current.scrollLeft !== savedScrollPosition) {
             tableScrollRef.current.scrollLeft = savedScrollPosition;
-            console.log(`Scroll restored to: ${savedScrollPosition} (after ${delay}ms)`);
+            console.log(`Horizontal scroll restored to: ${savedScrollPosition} (after ${delay}ms)`);
+          }
+          if (savedVerticalScrollPosition > 0 && window.scrollY !== savedVerticalScrollPosition) {
+            window.scrollTo(0, savedVerticalScrollPosition);
+            console.log(`Vertical scroll restored to: ${savedVerticalScrollPosition} (after ${delay}ms)`);
           }
         }, delay)
       );
@@ -1215,7 +1234,7 @@ export function DailyStatusGrid({
         timeoutIds.forEach(id => clearTimeout(id));
       };
     }
-  }, [dailyStatuses, savedScrollPosition, patients]); // patients도 의존성에 추가
+  }, [dailyStatuses, savedScrollPosition, savedVerticalScrollPosition, patients]); // patients도 의존성에 추가
 
   // 마우스 드래그 스크롤 핸들러
   const handleMouseDown = (e: React.MouseEvent) => {
