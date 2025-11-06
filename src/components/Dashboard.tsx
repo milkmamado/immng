@@ -37,11 +37,11 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
+    if (user && currentBranch) {
       checkUserRole();
       fetchDashboardData();
     }
-  }, [user]);
+  }, [user, currentBranch]);
 
   const checkUserRole = async () => {
     if (!user) return;
