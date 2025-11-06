@@ -191,6 +191,8 @@ export default function RiskManagement() {
         
         let newManagementStatus = patient.management_status || "관리 중";
 
+        console.log(`[RiskManagement] 환자: ${patient.name}, DB상태: ${patient.management_status}, 경과일: ${daysSinceCheck}`);
+
         // 자동 업데이트 가능 여부 확인 (최종 상태 + 수동 설정 아웃/아웃위기 제외)
         if (shouldAutoUpdateStatus(patient.management_status, true)) {
           // 경과 일수에 따른 새 상태 계산
@@ -198,6 +200,7 @@ export default function RiskManagement() {
 
           // management_status가 변경되었으면 업데이트
           if (patient.management_status !== newManagementStatus) {
+            console.log(`[RiskManagement] 자동 상태 변경: ${patient.management_status} → ${newManagementStatus}`);
             await supabase
               .from("patients")
               .update({ management_status: newManagementStatus })
@@ -206,10 +209,12 @@ export default function RiskManagement() {
         } else {
           // 수동 설정된 상태 유지
           newManagementStatus = patient.management_status;
+          console.log(`[RiskManagement] 수동 상태 유지: ${newManagementStatus}`);
         }
 
-        // 14일 이상이거나 수동으로 아웃/아웃위기로 설정된 환자만 리스크 환자로 추가
-        // newManagementStatus를 기준으로 판단 (업데이트 후 상태 반영)
+        console.log(`[RiskManagement] 최종 상태: ${newManagementStatus}, 리스크 추가: ${newManagementStatus === "아웃" || newManagementStatus === "아웃위기"}`);
+
+        // 업데이트된 상태가 아웃/아웃위기인 환자만 리스크 환자로 추가
         if (newManagementStatus === "아웃" || newManagementStatus === "아웃위기") {
           riskyPatients.push({
             ...patient,
