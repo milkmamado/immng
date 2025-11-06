@@ -48,15 +48,24 @@ const getAdminItems = (branch: string) => [
 
 export function AppSidebar() {
   const { open } = useSidebar();
-  const { userRole } = useAuth();
+  const { userRole, currentBranch } = useAuth();
   const location = useLocation();
   const { branch } = useParams<{ branch: string }>();
-  const currentBranch = branch || '광명';
+  const activeBranch = currentBranch || branch || '광명';
   const currentPath = location.pathname;
   const isCollapsed = !open;
   
-  const navigationItems = getNavigationItems(currentBranch);
-  const adminItems = getAdminItems(currentBranch);
+  const getBranchTitle = () => {
+    switch (activeBranch) {
+      case '강서': return '면력한방병원';
+      case '광명': return '광명면력한방병원';
+      case '성동': return '성동면력한방병원';
+      default: return '면력한방병원';
+    }
+  };
+  
+  const navigationItems = getNavigationItems(activeBranch);
+  const adminItems = getAdminItems(activeBranch);
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive 
@@ -75,7 +84,7 @@ export function AppSidebar() {
           </div>
           {!isCollapsed && (
             <div>
-              <h1 className="text-white font-bold text-sm">면력한방병원</h1>
+              <h1 className="text-white font-bold text-sm">{getBranchTitle()}</h1>
               <p className="text-primary-light text-xs">환자 관리 시스템</p>
             </div>
           )}
