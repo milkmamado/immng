@@ -14,6 +14,32 @@ function extractPatientData() {
     return option?.text?.trim() || '';
   };
 
+  // 이전병원 대분류 - 값이 선택된 첫 번째 select 찾기
+  const getHospitalCategory = () => {
+    const selects = document.querySelectorAll('select[id*="_up_org_hspt_cd"]');
+    for (let i = 0; i < selects.length; i++) {
+      const select = selects[i];
+      const option = select.options[select.selectedIndex];
+      if (option && option.value) {
+        return option.text.trim();
+      }
+    }
+    return '';
+  };
+
+  // 이전병원 중분류 - 값이 선택된 첫 번째 select 찾기
+  const getHospitalBranch = () => {
+    const selects = document.querySelectorAll('select[id*="_org_hspt_cd"]:not([id*="_up_"])');
+    for (let i = 0; i < selects.length; i++) {
+      const select = selects[i];
+      const option = select.options[select.selectedIndex];
+      if (option && option.value) {
+        return option.text.trim();
+      }
+    }
+    return '';
+  };
+
   const data = {
     name: getValue('pagetabs_3013_4_bs_clnt_nm'),
     customer_number: getValue('pagetabs_3013_4_bs_clnt_no'),
@@ -25,8 +51,8 @@ function extractPatientData() {
     visit_motivation: getSelectedText('pagetabs_3013_4_cmhs_motv_cd'),
     diagnosis_category: getSelectedText('pagetabs_3013_4_dgns_cd'),
     diagnosis_detail: getSelectedText('pagetabs_3013_4_dgns_detl_cd'),
-    hospital_category: getSelectedText('pagetabs_2919_4_up_org_hspt_cd'),
-    hospital_branch: getSelectedText('pagetabs_2919_4_org_hspt_cd'),
+    hospital_category: getHospitalCategory(),
+    hospital_branch: getHospitalBranch(),
     crm_memo: getValue('pagetabs_3013_4_cms_call_memo')
   };
 
