@@ -25,7 +25,8 @@ function extractPatientData() {
     visit_motivation: getSelectedText('pagetabs_3013_4_cmhs_motv_cd'),
     diagnosis_category: getSelectedText('pagetabs_3013_4_dgns_cd'),
     diagnosis_detail: getSelectedText('pagetabs_3013_4_dgns_detl_cd'),
-    hospital_category: getSelectedText('pagetabs_3013_4_org_hspt_cd'),
+    hospital_category: getSelectedText('pagetabs_2919_4_up_org_hspt_cd'),
+    hospital_branch: getSelectedText('pagetabs_2919_4_org_hspt_cd'),
     crm_memo: getValue('pagetabs_3013_4_cms_call_memo')
   };
 
