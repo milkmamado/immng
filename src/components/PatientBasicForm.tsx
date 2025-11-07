@@ -635,11 +635,11 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
 
           {/* 진단명 */}
           <div>
-            <Label htmlFor="diagnosis_detail">진단명</Label>
+            <Label htmlFor="diagnosis_category">진단명</Label>
             <Input
-              id="diagnosis_detail"
-              name="diagnosis_detail"
-              value={formData.diagnosis_detail}
+              id="diagnosis_category"
+              name="diagnosis_category"
+              value={formData.diagnosis_category}
               placeholder="API에서 자동 입력"
               disabled
               className="bg-muted"
