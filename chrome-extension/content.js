@@ -14,27 +14,25 @@ function extractPatientData() {
     return option?.text?.trim() || '';
   };
 
-  // 이전병원 대분류 - 값이 선택된 첫 번째 select 찾기
+  // 이전병원 대분류 - selectedIndex > 0인 첫 번째 select 찾기
   const getHospitalCategory = () => {
     const selects = document.querySelectorAll('select[id*="_up_org_hspt_cd"]');
     for (let i = 0; i < selects.length; i++) {
       const select = selects[i];
-      const option = select.options[select.selectedIndex];
-      if (option && option.value) {
-        return option.text.trim();
+      if (select.selectedIndex > 0) {
+        return select.options[select.selectedIndex].text.trim();
       }
     }
     return '';
   };
 
-  // 이전병원 중분류 - 값이 선택된 첫 번째 select 찾기
+  // 이전병원 중분류 - selectedIndex > 0인 첫 번째 select 찾기
   const getHospitalBranch = () => {
     const selects = document.querySelectorAll('select[id*="_org_hspt_cd"]:not([id*="_up_"])');
     for (let i = 0; i < selects.length; i++) {
       const select = selects[i];
-      const option = select.options[select.selectedIndex];
-      if (option && option.value) {
-        return option.text.trim();
+      if (select.selectedIndex > 0) {
+        return select.options[select.selectedIndex].text.trim();
       }
     }
     return '';
