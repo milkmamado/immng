@@ -734,14 +734,14 @@ export function DailyStatusGrid({
         // 모달의 환자 정보 업데이트
         setSelectedPatientDetail(updatedPatient);
         
-        // 부모 컴포넌트의 patients 배열에서도 해당 환자 정보 업데이트
-        const updatedPatients = patients.map(p => 
-          p.id === updatedPatient.id ? updatedPatient : p
-        );
-        
         // 패키지 데이터 다시 조회
         await fetchPackageData(selectedPatientDetail.id);
         await calculatePatientStats(selectedPatientDetail.id);
+        
+        // management_status가 변경되었으면 부모 컴포넌트에 알림
+        if (editingFields.management_status && editingFields.management_status !== selectedPatientDetail.management_status) {
+          await onManagementStatusUpdate(selectedPatientDetail.id, editingFields.management_status);
+        }
       }
 
       setEditingFields({});
