@@ -126,32 +126,32 @@ export default function StatisticsManagement() {
     const isMaster = roleData?.role === 'master' || roleData?.role === 'admin';
     setIsMasterOrAdmin(isMaster);
 
-    if (isMaster) {
+    if (isMaster && roleData?.branch) {
       // 마스터/관리자는 현재 지점의 모든 사용자 목록 가져오기
-      const { data: userRolesData, error } = await supabase
+      // 1. 해당 지점의 user_roles 가져오기
+      const { data: userRolesData, error: rolesError } = await supabase
         .from('user_roles')
-        .select(`
-          user_id,
-          profiles:user_id (
-            name
-          )
-        `)
+        .select('user_id')
         .eq('approval_status', 'approved')
-        .eq('branch', roleData.branch)
-        .order('profiles(name)');
+        .eq('branch', roleData.branch);
 
-      console.log('User roles data:', userRolesData, 'Error:', error);
+      console.log('User roles data:', userRolesData, 'Error:', rolesError);
 
       if (userRolesData) {
-        const managersWithNames = userRolesData
-          .filter(ur => ur.profiles)
-          .map(ur => ({
-            id: ur.user_id,
-            name: (ur.profiles as any)?.name || '이름 없음'
-          }));
+        // 2. user_id들로 profiles 조회
+        const userIds = userRolesData.map(ur => ur.user_id);
         
-        console.log('Managers list:', managersWithNames);
-        setManagers(managersWithNames);
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, name')
+          .in('id', userIds)
+          .order('name');
+
+        console.log('Profiles data:', profilesData, 'Error:', profilesError);
+
+        if (profilesData) {
+          setManagers(profilesData.map(p => ({ id: p.id, name: p.name || '이름 없음' })));
+        }
       }
     } else {
       // 일반 매니저는 본인만
