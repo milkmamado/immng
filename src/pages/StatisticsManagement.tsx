@@ -131,7 +131,6 @@ export default function StatisticsManagement() {
       const { data: managersData } = await supabase
         .from('approved_users')
         .select('user_id, name')
-        .eq('role', 'manager')
         .eq('approval_status', 'approved')
         .order('name');
 
