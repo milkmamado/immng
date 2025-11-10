@@ -5,19 +5,27 @@
 
 /**
  * 마지막 체크 날짜로부터 경과 일수 계산
+ * 우선순위: last_visit_date > inflow_date > created_at
  */
 export const calculateDaysSinceLastCheck = (
   lastCheckDate: string | undefined,
-  createdAt: string
+  createdAt: string,
+  inflowDate?: string | null
 ): number => {
   const today = new Date();
   
-  if (!lastCheckDate) {
-    const createdDate = new Date(createdAt);
-    return Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-  } else {
+  if (lastCheckDate) {
+    // 1순위: last_visit_date (마지막 내원일)
     const lastDate = new Date(lastCheckDate);
     return Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+  } else if (inflowDate) {
+    // 2순위: inflow_date (유입일)
+    const inflow = new Date(inflowDate);
+    return Math.floor((today.getTime() - inflow.getTime()) / (1000 * 60 * 60 * 24));
+  } else {
+    // 3순위: created_at (환자 등록일)
+    const createdDate = new Date(createdAt);
+    return Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
   }
 };
 

@@ -213,8 +213,8 @@ export default function DailyStatusTracking() {
           continue;
         }
 
-        // 마지막 체크로부터 경과 일수 계산
-        const daysSinceCheck = calculateDaysSinceLastCheck(lastCheckDate, patient.created_at);
+        // 마지막 체크로부터 경과 일수 계산 (우선순위: last_visit_date > inflow_date > created_at)
+        const daysSinceCheck = calculateDaysSinceLastCheck(lastCheckDate, patient.created_at, patient.inflow_date);
         
         // 경과 일수에 따른 새 상태 계산
         const newManagementStatus = calculateAutoManagementStatus(daysSinceCheck);

@@ -195,8 +195,8 @@ export default function RiskManagement() {
           patient.last_visit_date = lastCheckDate; // 로컬 데이터도 업데이트
         }
         
-        // 마지막 체크로부터 경과 일수 계산
-        const daysSinceCheck = calculateDaysSinceLastCheck(lastCheckDate, patient.created_at);
+        // 마지막 체크로부터 경과 일수 계산 (우선순위: last_visit_date > inflow_date > created_at)
+        const daysSinceCheck = calculateDaysSinceLastCheck(lastCheckDate, patient.created_at, patient.inflow_date);
         
         let newManagementStatus = patient.management_status || "관리 중";
 

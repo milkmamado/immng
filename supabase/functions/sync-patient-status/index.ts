@@ -7,6 +7,7 @@ interface Patient {
   patient_number: string;
   management_status: string;
   last_visit_date: string | null;
+  inflow_date: string | null;
   created_at: string;
 }
 
@@ -38,7 +39,7 @@ Deno.serve(async (req) => {
     // 1. 모든 환자 조회
     const { data: patients, error: patientsError } = await supabaseClient
       .from('patients')
-      .select('id, name, patient_number, management_status, last_visit_date, created_at')
+      .select('id, name, patient_number, management_status, last_visit_date, inflow_date, created_at')
       .order('patient_number');
 
     if (patientsError) {
@@ -88,17 +89,22 @@ Deno.serve(async (req) => {
         syncCount++;
       }
 
-      // 경과 일수 계산
+      // 경과 일수 계산 (우선순위: last_visit_date > inflow_date > created_at)
       const today = new Date();
       let daysSinceCheck: number;
 
-      if (!lastCheckDate) {
-        // daily_patient_status 기록이 없으면 created_at 기준
-        const createdDate = new Date(patient.created_at);
-        daysSinceCheck = Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-      } else {
+      if (lastCheckDate) {
+        // 1순위: last_visit_date (마지막 내원일)
         const lastDate = new Date(lastCheckDate);
         daysSinceCheck = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+      } else if (patient.inflow_date) {
+        // 2순위: inflow_date (유입일)
+        const inflowDate = new Date(patient.inflow_date);
+        daysSinceCheck = Math.floor((today.getTime() - inflowDate.getTime()) / (1000 * 60 * 60 * 24));
+      } else {
+        // 3순위: created_at (환자 등록일)
+        const createdDate = new Date(patient.created_at);
+        daysSinceCheck = Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
       }
 
       // 자동 상태 계산
