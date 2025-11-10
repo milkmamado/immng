@@ -127,12 +127,17 @@ export default function StatisticsManagement() {
     setIsMasterOrAdmin(isMaster);
 
     if (isMaster) {
-      // 마스터/관리자는 모든 매니저 목록 가져오기 (approved_users view 사용)
-      const { data: managersData } = await supabase
+      // 마스터/관리자는 현재 지점의 모든 사용자 목록 가져오기
+      let query = supabase
         .from('approved_users')
         .select('user_id, name')
         .eq('approval_status', 'approved')
         .order('name');
+      
+      // 지점 필터 적용
+      query = applyBranchFilter(query);
+
+      const { data: managersData } = await query;
 
       if (managersData) {
         setManagers(managersData.map(m => ({ id: m.user_id!, name: m.name || '이름 없음' })));
