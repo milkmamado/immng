@@ -127,13 +127,13 @@ export default function StatisticsManagement() {
     setIsMasterOrAdmin(isMaster);
 
     if (isMaster && roleData?.branch) {
-      // 마스터/관리자는 현재 지점의 모든 사용자 목록 가져오기
-      // 1. 해당 지점의 user_roles 가져오기
+      // 마스터/관리자는 현재 지점의 매니저 목록 가져오기
       const { data: userRolesData, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id')
         .eq('approval_status', 'approved')
-        .eq('branch', roleData.branch);
+        .eq('branch', roleData.branch)
+        .eq('role', 'manager');  // 매니저만 필터링
 
       console.log('User roles data:', userRolesData, 'Error:', rolesError);
 
