@@ -114,17 +114,26 @@ export default function StatisticsManagement() {
   }, [selectedMonth, selectedManager, user, isMasterOrAdmin]);
 
   const checkUserRole = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('[checkUserRole] No user found');
+      return;
+    }
 
-    const { data: roleData } = await supabase
+    console.log('[checkUserRole] Starting with user:', user.id, user.email);
+
+    const { data: roleData, error: roleError } = await supabase
       .from('user_roles')
       .select('role, branch')
       .eq('user_id', user.id)
       .eq('approval_status', 'approved')
       .single();
 
+    console.log('[checkUserRole] Role data:', roleData, 'Error:', roleError);
+
     const isMaster = roleData?.role === 'master' || roleData?.role === 'admin';
     setIsMasterOrAdmin(isMaster);
+
+    console.log('[checkUserRole] isMaster:', isMaster, 'branch:', roleData?.branch);
 
     if (isMaster && roleData?.branch) {
       // 마스터/관리자는 현재 지점의 매니저 목록 가져오기
@@ -133,28 +142,36 @@ export default function StatisticsManagement() {
         .select('user_id')
         .eq('approval_status', 'approved')
         .eq('branch', roleData.branch)
-        .eq('role', 'manager');  // 매니저만 필터링
+        .eq('role', 'manager');
 
-      console.log('User roles data:', userRolesData, 'Error:', rolesError);
+      console.log('[checkUserRole] Manager user_roles:', userRolesData, 'Error:', rolesError);
 
-      if (userRolesData) {
+      if (userRolesData && userRolesData.length > 0) {
         // 2. user_id들로 profiles 조회
         const userIds = userRolesData.map(ur => ur.user_id);
         
+        console.log('[checkUserRole] User IDs to fetch:', userIds);
+
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('id, name')
           .in('id', userIds)
           .order('name');
 
-        console.log('Profiles data:', profilesData, 'Error:', profilesError);
+        console.log('[checkUserRole] Profiles data:', profilesData, 'Error:', profilesError);
 
         if (profilesData) {
-          setManagers(profilesData.map(p => ({ id: p.id, name: p.name || '이름 없음' })));
+          const managersList = profilesData.map(p => ({ id: p.id, name: p.name || '이름 없음' }));
+          console.log('[checkUserRole] Setting managers:', managersList);
+          setManagers(managersList);
         }
+      } else {
+        console.log('[checkUserRole] No managers found');
+        setManagers([]);
       }
     } else {
       // 일반 매니저는 본인만
+      console.log('[checkUserRole] Regular manager, setting selectedManager to:', user.id);
       setSelectedManager(user.id);
     }
   };
