@@ -10,7 +10,8 @@ import {
   TrendingUp,
   BookOpen,
   BookMarked,
-  Package
+  Package,
+  UserX
 } from "lucide-react";
 import { NavLink, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,6 +33,7 @@ const getNavigationItems = (branch: string) => [
   { title: "초진관리", url: `/${branch}/first-visit`, icon: Heart },
   { title: "관리 환자 리스트", url: `/${branch}/patient-list`, icon: Users },
   { title: "일별 환자 관리 현황", url: `/${branch}/daily-tracking`, icon: ClipboardCheck },
+  { title: "이탈 환자 스케줄 확인", url: `/${branch}/churned-schedule`, icon: UserX },
   { title: "이탈 리스크 관리", url: `/${branch}/risk-management`, icon: Calendar },
   { title: "통계 관리", url: `/${branch}/statistics`, icon: BarChart3 },
   { title: "CRM 연동", url: `/${branch}/crm-bookmarklet`, icon: BookMarked },

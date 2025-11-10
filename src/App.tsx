@@ -13,6 +13,7 @@ import AccountManagement from "./pages/AccountManagement";
 import FirstVisitManagement from "./pages/FirstVisitManagement";
 import PatientListManagement from "./pages/PatientListManagement";
 import DailyStatusTracking from "./pages/DailyStatusTracking";
+import ChurnedPatientSchedule from "./pages/ChurnedPatientSchedule";
 import RiskManagement from "./pages/RiskManagement";
 import StatisticsManagement from "./pages/StatisticsManagement";
 import MarketingStatistics from "./pages/MarketingStatistics";
@@ -83,6 +84,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <DailyStatusTracking />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="churned-schedule" 
+          element={
+            <ProtectedRoute>
+              <ChurnedPatientSchedule />
             </ProtectedRoute>
           } 
         />
