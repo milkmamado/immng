@@ -118,7 +118,7 @@ export default function StatisticsManagement() {
 
     const { data: roleData } = await supabase
       .from('user_roles')
-      .select('role')
+      .select('role, branch')
       .eq('user_id', user.id)
       .eq('approval_status', 'approved')
       .single();
@@ -128,19 +128,30 @@ export default function StatisticsManagement() {
 
     if (isMaster) {
       // 마스터/관리자는 현재 지점의 모든 사용자 목록 가져오기
-      let query = supabase
-        .from('approved_users')
-        .select('user_id, name')
+      const { data: userRolesData, error } = await supabase
+        .from('user_roles')
+        .select(`
+          user_id,
+          profiles:user_id (
+            name
+          )
+        `)
         .eq('approval_status', 'approved')
-        .order('name');
-      
-      // 지점 필터 적용
-      query = applyBranchFilter(query);
+        .eq('branch', roleData.branch)
+        .order('profiles(name)');
 
-      const { data: managersData } = await query;
+      console.log('User roles data:', userRolesData, 'Error:', error);
 
-      if (managersData) {
-        setManagers(managersData.map(m => ({ id: m.user_id!, name: m.name || '이름 없음' })));
+      if (userRolesData) {
+        const managersWithNames = userRolesData
+          .filter(ur => ur.profiles)
+          .map(ur => ({
+            id: ur.user_id,
+            name: (ur.profiles as any)?.name || '이름 없음'
+          }));
+        
+        console.log('Managers list:', managersWithNames);
+        setManagers(managersWithNames);
       }
     } else {
       // 일반 매니저는 본인만
