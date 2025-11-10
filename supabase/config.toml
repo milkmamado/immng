@@ -1,1 +1,4 @@
 project_id = "vepfjhpccvimepmpqvod"
+
+[functions.sync-patient-status]
+verify_jwt = false
