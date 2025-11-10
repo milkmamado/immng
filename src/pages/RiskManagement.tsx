@@ -182,9 +182,18 @@ export default function RiskManagement() {
       const riskyPatients: Patient[] = [];
       const manuallySetStatuses = ['아웃', '아웃위기'];
 
-      // 각 환자의 management_status를 자동으로 업데이트
+      // 각 환자의 last_visit_date를 daily_patient_status와 동기화하고 management_status를 자동 업데이트
       for (const patient of patientsData || []) {
         const lastCheckDate = lastCheckMap.get(patient.id);
+        
+        // last_visit_date가 없거나 daily_patient_status의 최근 날짜와 다르면 동기화
+        if (lastCheckDate && patient.last_visit_date !== lastCheckDate) {
+          await supabase
+            .from("patients")
+            .update({ last_visit_date: lastCheckDate })
+            .eq("id", patient.id);
+          patient.last_visit_date = lastCheckDate; // 로컬 데이터도 업데이트
+        }
         
         // 마지막 체크로부터 경과 일수 계산
         const daysSinceCheck = calculateDaysSinceLastCheck(lastCheckDate, patient.created_at);
