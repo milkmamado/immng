@@ -189,6 +189,7 @@ export default function RevenueBulkManagement() {
           transaction_type: transactionType,
           amount: item.amount,
           count: 0,
+          branch: currentBranch,
           note: `${revenueType === 'inpatient' ? '입원' : '외래'} 매출 (일괄 업로드)`
         });
       }
