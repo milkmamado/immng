@@ -7,7 +7,6 @@ import {
   ClipboardCheck,
   Settings,
   BarChart3,
-  TrendingUp,
   BookOpen,
   BookMarked,
   Package,
@@ -45,7 +44,6 @@ const getNavigationItems = (branch: string) => [
 const managementItems: never[] = [];
 
 const getAdminItems = (branch: string) => [
-  { title: "마케팅 통계", url: `/${branch}/marketing-statistics`, icon: TrendingUp, requiredRole: 'master' as const },
   { title: "입원/외래매출 관리", url: `/${branch}/revenue-bulk-management`, icon: FileSpreadsheet, requiredRole: 'master' as const },
   { title: "계정 관리", url: `/${branch}/account-management`, icon: Shield, requiredRole: 'master' as const },
 ];
