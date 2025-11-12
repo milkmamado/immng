@@ -40,7 +40,6 @@ interface Patient {
   visit_type?: string;
   visit_motivation?: string;
   
-  diagnosis_category?: string;
   diagnosis_detail?: string;
   counselor?: string;
   hospital_category?: string;
@@ -458,7 +457,7 @@ export default function PatientListManagement() {
           ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
           : new Date(patient.created_at).toLocaleDateString('ko-KR'),
         '입원/외래': patient.visit_type || '-',
-        '진단명': patient.diagnosis_category || '-',
+        '진단명': patient.diagnosis_detail || '-',
         '세부진단명': patient.diagnosis_detail || '-',
         '이전병원': patient.hospital_category || '-',
         '담당자': patient.manager_name || '-',
