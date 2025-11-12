@@ -12,7 +12,7 @@ interface UploadResult {
   success: number;
   failed: number;
   duplicates: number;
-  notFound: Array<{ chartNumber: string; patientName: string; date: string; amount: number }>;
+  notFound: Array<{ chartNumber: string; patientName: string; date: string; time: string; amount: number }>;
 }
 
 export default function RevenueBulkManagement() {
@@ -67,11 +67,12 @@ export default function RevenueBulkManagement() {
 
       console.log('📊 엑셀 전체 데이터:', jsonData.length, '행');
 
-      // 차트번호, 환자성명, 수납일자, 입금총액 추출
+      // 차트번호, 환자성명, 수납일자, 수납시간, 입금총액 추출
       const extractedData: Array<{
         chartNumber: string;
         patientName: string;
         date: string;
+        time: string;
         amount: number;
       }> = [];
 
@@ -87,6 +88,7 @@ export default function RevenueBulkManagement() {
         const chartNumber = String(row['차트번호']).trim();
         const patientName = String(row['환자성명']).trim();
         const dateStr = row['수납일자'];
+        const timeStr = row['수납시간'] || '';
         const amountStr = row['입금총액'];
 
         // 날짜 파싱
@@ -116,6 +118,7 @@ export default function RevenueBulkManagement() {
             chartNumber,
             patientName,
             date: date.toISOString().split('T')[0],
+            time: String(timeStr).trim(),
             amount
           });
         }
@@ -166,14 +169,15 @@ export default function RevenueBulkManagement() {
           continue;
         }
 
-        // 중복 체크 (같은 환자, 같은 날짜, 같은 금액, 같은 타입 or deposit_in)
+        // 중복 체크 (같은 환자, 같은 날짜, 같은 수납시간, 같은 타입)
+        const noteWithTime = `${revenueType === 'inpatient' ? '입원' : '외래'} 매출 (${item.time})`;
         const { data: existingTxn } = await supabase
           .from('package_transactions')
           .select('id')
           .eq('patient_id', patient.id)
           .eq('transaction_date', item.date)
-          .eq('amount', item.amount)
-          .in('transaction_type', ['deposit_in', transactionType])
+          .eq('transaction_type', transactionType)
+          .eq('note', noteWithTime)
           .limit(1);
 
         if (existingTxn && existingTxn.length > 0) {
@@ -181,7 +185,7 @@ export default function RevenueBulkManagement() {
           continue;
         }
 
-        // 삽입 준비
+        // 삽입 준비 (수납시간 포함)
         transactionsToInsert.push({
           patient_id: patient.id,
           customer_number: patient.customer_number,
@@ -190,7 +194,7 @@ export default function RevenueBulkManagement() {
           amount: item.amount,
           count: 0,
           branch: currentBranch,
-          note: `${revenueType === 'inpatient' ? '입원' : '외래'} 매출 (일괄 업로드)`
+          note: `${revenueType === 'inpatient' ? '입원' : '외래'} 매출 (${item.time})`
         });
       }
 
@@ -354,6 +358,7 @@ export default function RevenueBulkManagement() {
                             <th className="p-2 text-left">차트번호</th>
                             <th className="p-2 text-left">환자명</th>
                             <th className="p-2 text-left">날짜</th>
+                            <th className="p-2 text-left">시간</th>
                             <th className="p-2 text-right">금액</th>
                           </tr>
                         </thead>
@@ -363,6 +368,7 @@ export default function RevenueBulkManagement() {
                               <td className="p-2">{item.chartNumber}</td>
                               <td className="p-2">{item.patientName}</td>
                               <td className="p-2">{item.date}</td>
+                              <td className="p-2">{item.time}</td>
                               <td className="p-2 text-right">{item.amount.toLocaleString()}원</td>
                             </tr>
                           ))}
@@ -454,6 +460,7 @@ export default function RevenueBulkManagement() {
                             <th className="p-2 text-left">차트번호</th>
                             <th className="p-2 text-left">환자명</th>
                             <th className="p-2 text-left">날짜</th>
+                            <th className="p-2 text-left">시간</th>
                             <th className="p-2 text-right">금액</th>
                           </tr>
                         </thead>
@@ -463,6 +470,7 @@ export default function RevenueBulkManagement() {
                               <td className="p-2">{item.chartNumber}</td>
                               <td className="p-2">{item.patientName}</td>
                               <td className="p-2">{item.date}</td>
+                              <td className="p-2">{item.time}</td>
                               <td className="p-2 text-right">{item.amount.toLocaleString()}원</td>
                             </tr>
                           ))}
