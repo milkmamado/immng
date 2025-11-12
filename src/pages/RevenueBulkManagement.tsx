@@ -113,7 +113,8 @@ export default function RevenueBulkManagement() {
           amount = isNaN(parsed) ? 0 : parsed;
         }
 
-        if (!isNaN(date.getTime()) && chartNumber && patientName) {
+        // 금액이 0원인 데이터는 제외
+        if (!isNaN(date.getTime()) && chartNumber && patientName && amount > 0) {
           extractedData.push({
             chartNumber,
             patientName,
