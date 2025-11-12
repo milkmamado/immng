@@ -169,13 +169,14 @@ export default function RevenueBulkManagement() {
           continue;
         }
 
-        // 중복 체크 (같은 환자, 같은 날짜, 같은 수납시간, 같은 타입)
+        // 중복 체크 (같은 환자, 같은 날짜, 같은 금액, 같은 수납시간)
         const noteWithTime = `${revenueType === 'inpatient' ? '입원' : '외래'} 매출 (${item.time})`;
         const { data: existingTxn } = await supabase
           .from('package_transactions')
           .select('id')
           .eq('patient_id', patient.id)
           .eq('transaction_date', item.date)
+          .eq('amount', item.amount)
           .eq('transaction_type', transactionType)
           .eq('note', noteWithTime)
           .limit(1);
