@@ -17,6 +17,7 @@ import ChurnedPatientSchedule from "./pages/ChurnedPatientSchedule";
 import RiskManagement from "./pages/RiskManagement";
 import StatisticsManagement from "./pages/StatisticsManagement";
 import MarketingStatistics from "./pages/MarketingStatistics";
+import RevenueBulkManagement from "./pages/RevenueBulkManagement";
 import UserManual from "./pages/UserManual";
 import CRMBookmarklet from "./pages/CRMBookmarklet";
 import PackageIntegration from "./pages/PackageIntegration";
@@ -140,6 +141,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute requiredRole="master">
               <MarketingStatistics />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="revenue-bulk-management"
+          element={
+            <ProtectedRoute requiredRole="master">
+              <RevenueBulkManagement />
             </ProtectedRoute>
           } 
         />
