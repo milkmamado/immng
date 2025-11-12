@@ -122,8 +122,8 @@ export function AppSidebar() {
         </SidebarGroup>
 
 
-        {/* 마스터 전용 메뉴 */}
-        {userRole === 'master' && (
+        {/* 관리자 전용 메뉴 */}
+        {(userRole === 'master' || userRole === 'admin') && (
           <SidebarGroup className="mt-4">
             <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground px-3">
               {!isCollapsed && "시스템 관리"}

@@ -147,7 +147,7 @@ function AppRoutes() {
         <Route 
           path="revenue-bulk-management"
           element={
-            <ProtectedRoute requiredRole="master">
+            <ProtectedRoute allowedRoles={['master', 'admin']}>
               <RevenueBulkManagement />
             </ProtectedRoute>
           } 
