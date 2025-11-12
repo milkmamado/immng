@@ -136,14 +136,14 @@ export default function RevenueBulkManagement() {
       // 모든 환자 조회 (현재 지점)
       const { data: allPatients, error: patientsError } = await supabase
         .from('patients')
-        .select('id, chart_number, name, customer_number')
+        .select('id, customer_number, name')
         .eq('branch', currentBranch);
 
       if (patientsError) throw patientsError;
 
       console.log(`📋 DB 환자 수: ${allPatients?.length || 0}명`);
 
-      // 차트번호와 이름으로 환자 매칭
+      // 고객번호(customer_number)와 환자명으로 매칭
       const result: UploadResult = {
         success: 0,
         failed: 0,
@@ -155,9 +155,9 @@ export default function RevenueBulkManagement() {
       const transactionsToInsert: Array<any> = [];
 
       for (const item of extractedData) {
-        // 차트번호와 이름으로 환자 찾기
+        // 엑셀의 차트번호를 DB의 고객번호(customer_number)와 매칭, 그리고 환자명도 확인
         const patient = allPatients?.find(p => 
-          p.chart_number === item.chartNumber && p.name === item.patientName
+          p.customer_number === item.chartNumber && p.name === item.patientName
         );
 
         if (!patient) {
