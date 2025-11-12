@@ -1802,45 +1802,16 @@ export default function PatientListManagement() {
               <FileSpreadsheet className="h-5 w-5 text-primary" />
               <h3 className="text-lg font-semibold">입원 매출 관리</h3>
             </div>
-            <div className="flex gap-2">
-              <label htmlFor="inpatient-excel-upload">
-                <input
-                  id="inpatient-excel-upload"
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      handleExcelUpload(file, 'inpatient');
-                    }
-                    e.target.value = '';
-                  }}
-                  className="hidden"
-                />
-                <Button
-                  size="sm"
-                  className="gap-2"
-                  disabled={uploadingInpatient}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById('inpatient-excel-upload')?.click();
-                  }}
-                >
-                  <Upload className={`h-4 w-4 ${uploadingInpatient ? 'animate-pulse' : ''}`} />
-                  {uploadingInpatient ? '업로드 중...' : '엑셀 업로드'}
-                </Button>
-              </label>
-              <Button
-                size="sm"
-                variant="destructive"
-                className="gap-2"
-                onClick={() => handleDeleteRevenueData('inpatient')}
-                disabled={packageTransactions.filter(t => t.transaction_type === 'inpatient_revenue').length === 0}
-              >
-                <Trash2 className="h-4 w-4" />
-                데이터 삭제
-              </Button>
-            </div>
+            <Button
+              size="sm"
+              variant="destructive"
+              className="gap-2"
+              onClick={() => handleDeleteRevenueData('inpatient')}
+              disabled={packageTransactions.filter(t => t.transaction_type === 'inpatient_revenue').length === 0}
+            >
+              <Trash2 className="h-4 w-4" />
+              데이터 삭제
+            </Button>
           </div>
           
           {packageTransactions.filter(t => t.transaction_type === 'inpatient_revenue').length > 0 ? (
@@ -1916,45 +1887,16 @@ export default function PatientListManagement() {
               <FileSpreadsheet className="h-5 w-5 text-primary" />
               <h3 className="text-lg font-semibold">외래 매출 관리</h3>
             </div>
-            <div className="flex gap-2">
-              <label htmlFor="outpatient-excel-upload">
-                <input
-                  id="outpatient-excel-upload"
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      handleExcelUpload(file, 'outpatient');
-                    }
-                    e.target.value = '';
-                  }}
-                  className="hidden"
-                />
-                <Button
-                  size="sm"
-                  className="gap-2"
-                  disabled={uploadingOutpatient}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById('outpatient-excel-upload')?.click();
-                  }}
-                >
-                  <Upload className={`h-4 w-4 ${uploadingOutpatient ? 'animate-pulse' : ''}`} />
-                  {uploadingOutpatient ? '업로드 중...' : '엑셀 업로드'}
-                </Button>
-              </label>
-              <Button
-                size="sm"
-                variant="destructive"
-                className="gap-2"
-                onClick={() => handleDeleteRevenueData('outpatient')}
-                disabled={packageTransactions.filter(t => t.transaction_type === 'outpatient_revenue').length === 0}
-              >
-                <Trash2 className="h-4 w-4" />
-                데이터 삭제
-              </Button>
-            </div>
+            <Button
+              size="sm"
+              variant="destructive"
+              className="gap-2"
+              onClick={() => handleDeleteRevenueData('outpatient')}
+              disabled={packageTransactions.filter(t => t.transaction_type === 'outpatient_revenue').length === 0}
+            >
+              <Trash2 className="h-4 w-4" />
+              데이터 삭제
+            </Button>
           </div>
           
           {packageTransactions.filter(t => t.transaction_type === 'outpatient_revenue').length > 0 ? (
