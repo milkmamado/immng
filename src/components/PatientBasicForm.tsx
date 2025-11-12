@@ -351,11 +351,13 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
       if (!user) throw new Error('로그인이 필요합니다.');
 
       // 고객번호 중복 체크 (신규 등록 또는 고객번호가 변경된 경우)
+      // 같은 지점 내에서만 중복을 확인합니다
       if (formData.customer_number) {
         const { data: existingPatient, error: checkError } = await supabase
           .from('patients')
           .select('id, name')
           .eq('customer_number', formData.customer_number)
+          .eq('branch', currentBranch) // 현재 지점에서만 중복 체크
           .maybeSingle();
 
         if (checkError) throw checkError;
@@ -364,7 +366,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         if (existingPatient && (!patient || existingPatient.id !== patient.id)) {
           toast({
             title: "중복된 고객번호",
-            description: `고객번호 ${formData.customer_number}는 이미 환자 "${existingPatient.name}"에게 등록되어 있습니다.`,
+            description: `고객번호 ${formData.customer_number}는 이미 ${currentBranch}점의 환자 "${existingPatient.name}"에게 등록되어 있습니다.`,
             variant: "destructive",
             duration: 3000,
           });
