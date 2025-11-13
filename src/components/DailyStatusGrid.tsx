@@ -1747,7 +1747,7 @@ export function DailyStatusGrid({
 
                   {/* 진단명 대분류 */}
                   <div>
-                    <Label>진단명 (대분류)</Label>
+                    <Label>진단명</Label>
                     <Input
                       value={selectedPatientDetail?.diagnosis_category || ''}
                       disabled
