@@ -24,6 +24,7 @@ interface Patient {
   id: string;
   name: string;
   customer_number?: string;
+  diagnosis_category?: string;
   diagnosis_detail?: string;
   korean_doctor?: string;
   western_doctor?: string;
@@ -148,7 +149,7 @@ export default function ChurnedPatientSchedule() {
       let patientsQuery = supabase
         .from('patients')
         .select(`
-          id, name, customer_number, diagnosis_detail, 
+          id, name, customer_number, diagnosis_category, diagnosis_detail, 
           korean_doctor, western_doctor, manager_name,
           management_status, created_at, phone, gender, age,
           visit_motivation, address,
