@@ -1486,7 +1486,7 @@ export function DailyStatusGrid({
                         담당: {patient.manager_name || '-'}
                       </div>
                       <div className="text-[10px] text-muted-foreground">
-                        진단: {patient.diagnosis || '-'}
+                        진단: {patient.diagnosis_category || '-'}
                       </div>
                       <div className="flex items-center gap-1">
                         <Badge variant={
