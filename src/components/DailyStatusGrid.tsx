@@ -1749,7 +1749,7 @@ export function DailyStatusGrid({
                   <div>
                     <Label>진단명</Label>
                     <Input
-                      value={selectedPatientDetail?.diagnosis_category || ''}
+                      value={selectedPatientDetail?.diagnosis_category || selectedPatientDetail?.diagnosis_detail || ''}
                       disabled
                       className="bg-muted"
                     />
