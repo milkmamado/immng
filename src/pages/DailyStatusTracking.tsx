@@ -74,7 +74,7 @@ interface DailyStatus {
 }
 
 export default function DailyStatusTracking() {
-  const { applyBranchFilter } = useBranchFilter();
+  const { applyBranchFilter, currentBranch } = useBranchFilter();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [dailyStatuses, setDailyStatuses] = useState<DailyStatus[]>([]);
@@ -400,15 +400,18 @@ export default function DailyStatusTracking() {
         });
       } else {
         // 상태가 있으면 업데이트/삽입
+        const statusData: any = {
+          patient_id: patientId,
+          status_date: date,
+          status_type: statusType,
+          notes: notes || null,
+          created_by: user.id,
+          branch: currentBranch
+        };
+
         const { data, error } = await supabase
           .from('daily_patient_status')
-          .upsert({
-            patient_id: patientId,
-            status_date: date,
-            status_type: statusType,
-            notes: notes || null,
-            created_by: user.id
-          }, {
+          .upsert(statusData, {
             onConflict: 'patient_id,status_date'
           })
           .select()
@@ -437,10 +440,37 @@ export default function DailyStatusTracking() {
           });
         }
 
-        toast({
-          title: "성공",
-          description: "상태가 업데이트되었습니다.",
-        });
+        // 🔥 부인과수술후회복 / 척추관절 환자가 퇴원하면 자동으로 치료종료 처리
+        if (statusType === '퇴원' && 
+            (patient.diagnosis_category === '부인과 수술 후 회복' || 
+             patient.diagnosis_category === '척추관절')) {
+          
+          const { error: updateError } = await supabase
+            .from('patients')
+            .update({ management_status: '치료종료' })
+            .eq('id', patientId);
+
+          if (updateError) {
+            console.error('Error auto-updating to 치료종료:', updateError);
+          } else {
+            // 로컬 상태 업데이트
+            setPatients(prev => prev.map(p => 
+              p.id === patientId 
+                ? { ...p, management_status: '치료종료' }
+                : p
+            ));
+            
+            toast({
+              title: "자동 처리 완료",
+              description: "퇴원 처리되어 관리상태가 '치료종료'로 변경되었습니다.",
+            });
+          }
+        } else {
+          toast({
+            title: "성공",
+            description: "상태가 업데이트되었습니다.",
+          });
+        }
       }
     } catch (error: any) {
       console.error('Error updating status:', error);
