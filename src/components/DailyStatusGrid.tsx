@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { isShortTermTreatmentPatient } from "@/utils/patientStatusUtils";
 
 interface AdmissionCycle {
   id: string;
@@ -1582,11 +1583,19 @@ export function DailyStatusGrid({
                   <SelectValue placeholder="상태를 선택하세요" />
                 </SelectTrigger>
                 <SelectContent className="z-50 bg-background">
-                  {statusTypes.map(type => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
+                  {(() => {
+                    const patient = patients.find(p => p.id === selectedCell?.patientId);
+                    const isShortTerm = patient ? isShortTermTreatmentPatient(patient.diagnosis_category || '') : false;
+                    const availableStatuses = isShortTerm 
+                      ? ['입원', '외래', '퇴원']
+                      : statusTypes;
+                    
+                    return availableStatuses.map(type => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ));
+                  })()}
                 </SelectContent>
               </Select>
             </div>
@@ -2081,11 +2090,20 @@ export function DailyStatusGrid({
                         <SelectValue placeholder="관리 상태를 선택하세요" />
                       </SelectTrigger>
                       <SelectContent className="z-[100] bg-background">
-                        {patientStatusOptions.map((option: any) => (
-                          <SelectItem key={option.id} value={option.name}>
-                            {option.name}
-                          </SelectItem>
-                        ))}
+                        {(() => {
+                          const isShortTerm = isShortTermTreatmentPatient(selectedPatientDetail?.diagnosis_category || '');
+                          const availableStatuses = isShortTerm
+                            ? patientStatusOptions.filter((option: any) => 
+                                option.name === '관리 중' || option.name === '치료종료'
+                              )
+                            : patientStatusOptions;
+                          
+                          return availableStatuses.map((option: any) => (
+                            <SelectItem key={option.id} value={option.name}>
+                              {option.name}
+                            </SelectItem>
+                          ));
+                        })()}
                       </SelectContent>
                     </Select>
                   </div>

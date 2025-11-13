@@ -4,6 +4,16 @@
  */
 
 /**
+ * 단기 치료 환자 판별
+ * - 부인과 수술 후 회복
+ * - 척추질환
+ */
+export const isShortTermTreatmentPatient = (diagnosisCategory: string): boolean => {
+  const shortTermCategories = ['부인과 수술 후 회복', '척추질환'];
+  return shortTermCategories.includes(diagnosisCategory);
+};
+
+/**
  * 마지막 체크 날짜로부터 경과 일수 계산
  * 우선순위: last_visit_date > inflow_date > created_at
  */
