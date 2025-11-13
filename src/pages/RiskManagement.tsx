@@ -833,7 +833,7 @@ export default function RiskManagement() {
                     <div>
                       <span className="font-medium">진단:</span>{" "}
                       <span className="text-muted-foreground">
-                        {patient.diagnosis_detail || "-"}
+                        {patient.diagnosis_category || "-"}
                       </span>
                     </div>
                     <div>
