@@ -2235,7 +2235,7 @@ export default function PatientListManagement() {
                   <div>
                     <Label>진단명</Label>
                     <Input
-                      value={selectedPatientDetail?.diagnosis_detail || ''}
+                      value={selectedPatientDetail?.diagnosis_category || ''}
                       disabled
                       className="bg-muted"
                     />
