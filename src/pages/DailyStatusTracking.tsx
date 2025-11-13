@@ -535,7 +535,7 @@ export default function DailyStatusTracking() {
         const row: any = {
           '환자명': patient.name || '-',
           '담당자': patient.manager_name || '-',
-          '진단': patient.diagnosis_detail || '-',
+          '진단': patient.diagnosis_category || '-',
           '관리상태': patient.management_status || '관리 중',
           '메모': patient.memo1 || '-'
         };
