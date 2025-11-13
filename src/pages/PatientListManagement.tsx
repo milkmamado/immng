@@ -23,6 +23,7 @@ import { DiagnosisFilter } from "@/components/TableFilters/DiagnosisFilter";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { isShortTermTreatmentPatient } from "@/utils/patientStatusUtils";
 
 interface Patient {
   id: string;
@@ -2567,11 +2568,20 @@ export default function PatientListManagement() {
                         <SelectValue placeholder="관리 상태를 선택하세요" />
                       </SelectTrigger>
                       <SelectContent className="z-[100] bg-background">
-                        {patientStatusOptions.map(option => (
-                          <SelectItem key={option.id} value={option.name}>
-                            {option.name}
-                          </SelectItem>
-                        ))}
+                        {(() => {
+                          const isShortTerm = isShortTermTreatmentPatient(selectedPatientDetail?.diagnosis_category || '');
+                          const availableStatuses = isShortTerm
+                            ? patientStatusOptions.filter((option: any) => 
+                                option.name === '관리 중' || option.name === '치료종료'
+                              )
+                            : patientStatusOptions;
+                          
+                          return availableStatuses.map(option => (
+                            <SelectItem key={option.id} value={option.name}>
+                              {option.name}
+                            </SelectItem>
+                          ));
+                        })()}
                       </SelectContent>
                     </Select>
                   </div>
