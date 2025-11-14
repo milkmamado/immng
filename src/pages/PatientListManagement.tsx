@@ -1982,7 +1982,7 @@ export default function PatientListManagement() {
       </div>
 
       <Card className="w-full">
-        <CardHeader>
+        <CardHeader className="pb-6">
           <div className="flex justify-between items-center">
             <CardTitle>유입 환자 목록 ({filteredPatients.length}명)</CardTitle>
             <div className="flex items-center gap-2">
@@ -2007,12 +2007,12 @@ export default function PatientListManagement() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="max-h-[calc(100vh-300px)] overflow-auto">
+          <div className="max-h-[calc(100vh-350px)] overflow-auto border-t">
             <Table className="min-w-[1600px]">
-              <TableHeader className="sticky top-0 z-10">
-                <TableRow className="bg-card hover:bg-card border-b">
-                  <TableHead className="bg-card">고객번호</TableHead>
-                  <TableHead className="bg-card">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>고객번호</TableHead>
+                  <TableHead>
                     <div className="flex items-center gap-1">
                       외래/입원구분
                       <VisitTypeFilter
@@ -2021,9 +2021,9 @@ export default function PatientListManagement() {
                       />
                     </div>
                   </TableHead>
-                  <TableHead className="bg-card">담당실장</TableHead>
-                  <TableHead className="bg-card">환자명</TableHead>
-                  <TableHead className="bg-card">
+                  <TableHead>담당실장</TableHead>
+                  <TableHead>환자명</TableHead>
+                  <TableHead>
                     <div className="flex items-center gap-1">
                       진단명
                       <DiagnosisFilter
@@ -2032,8 +2032,8 @@ export default function PatientListManagement() {
                       />
                     </div>
                   </TableHead>
-                  <TableHead className="bg-card">상담일</TableHead>
-                  <TableHead className="bg-card">
+                  <TableHead>상담일</TableHead>
+                  <TableHead>
                     <div className="flex items-center gap-1">
                       유입일
                       <DateRangeFilter
@@ -2046,11 +2046,11 @@ export default function PatientListManagement() {
                       />
                     </div>
                   </TableHead>
-                  <TableHead className="bg-card">우리병원치료계획</TableHead>
-                  <TableHead className="bg-card">월평균입원일수</TableHead>
-                  <TableHead className="bg-card">월평균외래일수</TableHead>
-                  <TableHead className="bg-card">마지막내원일</TableHead>
-                  <TableHead className="bg-card">총 수납금액 (예치금 + 입원/외래 매출)</TableHead>
+                  <TableHead>우리병원치료계획</TableHead>
+                  <TableHead>월평균입원일수</TableHead>
+                  <TableHead>월평균외래일수</TableHead>
+                  <TableHead>마지막내원일</TableHead>
+                  <TableHead>총 수납금액 (예치금 + 입원/외래 매출)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
