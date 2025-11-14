@@ -577,8 +577,7 @@ export default function StatisticsManagement() {
             name
           )
         `)
-        .in('management_status', ['관리 중', '아웃위기'])
-        .or(`inflow_date.lte.${cutoffDate.toISOString().split('T')[0]},consultation_date.lte.${cutoffDate.toISOString().split('T')[0]}`);
+        .in('management_status', ['관리 중', '아웃위기']);
 
       // 권한별 필터링
       if (!isMasterOrAdmin) {
@@ -591,14 +590,23 @@ export default function StatisticsManagement() {
       
       query = applyBranchFilter(query);
 
-      const { data: patients, error } = await query;
+      const { data: allPatients, error } = await query;
 
       if (error) throw error;
+
+      // 클라이언트 측에서 날짜 필터링
+      const filteredPatients = (allPatients || []).filter(patient => {
+        const referenceDate = patient.inflow_date || patient.consultation_date;
+        if (!referenceDate) return false;
+        
+        const patientDate = new Date(referenceDate);
+        return patientDate <= cutoffDate;
+      });
 
       setSelectedPeriodDialog({
         open: true,
         period,
-        patients: patients || []
+        patients: filteredPatients
       });
     } catch (error) {
       console.error('Error fetching period patients:', error);
