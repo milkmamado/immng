@@ -783,7 +783,12 @@ export default function StatisticsManagement() {
       {/* 관리 기간별 통계 */}
       <Card>
         <CardHeader>
-          <CardTitle>관리 기간별 환자 현황</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>관리 기간별 환자 현황</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {selectedMonth}월 말 기준
+            </p>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
