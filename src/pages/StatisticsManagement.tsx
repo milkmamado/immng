@@ -349,7 +349,7 @@ export default function StatisticsManagement() {
       // 1. 아웃 환자 수 - 담당자 필터 및 지점 필터 적용
       let statusQuery = supabase
         .from('patients')
-        .select('id, management_status, created_at, first_visit_date, assigned_manager')
+        .select('id, management_status, created_at, first_visit_date, assigned_manager, inflow_date')
         .eq('inflow_status', '유입');
       
       // 담당자 필터 적용 (일반 매니저 또는 특정 매니저 선택 시)
@@ -469,17 +469,20 @@ export default function StatisticsManagement() {
       ) || [];
 
       const patients1MonthPlus = activePatients.filter(p => {
-        const inflowDate = new Date(p.first_visit_date || p.created_at);
+        if (!p.inflow_date) return false;
+        const inflowDate = new Date(p.inflow_date);
         return inflowDate <= oneMonthAgo;
       }).length;
 
       const patients3MonthPlus = activePatients.filter(p => {
-        const inflowDate = new Date(p.first_visit_date || p.created_at);
+        if (!p.inflow_date) return false;
+        const inflowDate = new Date(p.inflow_date);
         return inflowDate <= threeMonthsAgo;
       }).length;
 
       const patients6MonthPlus = activePatients.filter(p => {
-        const inflowDate = new Date(p.first_visit_date || p.created_at);
+        if (!p.inflow_date) return false;
+        const inflowDate = new Date(p.inflow_date);
         return inflowDate <= sixMonthsAgo;
       }).length;
 
