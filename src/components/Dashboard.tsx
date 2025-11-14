@@ -176,8 +176,8 @@ export function Dashboard() {
           daysSinceCheck = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
         }
 
-        // 14일 이상인 환자만 리스크 환자로 판단
-        return daysSinceCheck >= 14;
+        // 21일 이상인 환자만 리스크 환자로 판단
+        return daysSinceCheck >= 21;
       }).slice(0, 10) || [];
 
       setStats({
@@ -290,7 +290,7 @@ export function Dashboard() {
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">{stats.riskPatients.length}</div>
             <p className="text-xs text-muted-foreground">
-              14일 이상 체크 없음
+              21일 이상 체크 없음
             </p>
           </CardContent>
         </Card>
