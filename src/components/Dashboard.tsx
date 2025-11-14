@@ -117,6 +117,11 @@ export function Dashboard() {
         .gte('transaction_date', startDate)
         .lte('transaction_date', endDate);
 
+      // 지점 필터 추가
+      if (currentBranch) {
+        monthlyTransactionsQuery = monthlyTransactionsQuery.eq('branch', currentBranch);
+      }
+
       if (patientIds.length > 0) {
         monthlyTransactionsQuery = monthlyTransactionsQuery.in('patient_id', patientIds);
       }
@@ -130,6 +135,11 @@ export function Dashboard() {
         .from('package_transactions')
         .select('amount, transaction_type')
         .in('transaction_type', ['deposit_in', 'inpatient_revenue', 'outpatient_revenue']);
+
+      // 지점 필터 추가
+      if (currentBranch) {
+        totalTransactionsQuery = totalTransactionsQuery.eq('branch', currentBranch);
+      }
 
       if (patientIds.length > 0) {
         totalTransactionsQuery = totalTransactionsQuery.in('patient_id', patientIds);

@@ -271,6 +271,9 @@ export default function StatisticsManagement() {
         .gte('transaction_date', startDate)
         .lte('transaction_date', endDate);
 
+      // 지점 필터 적용
+      monthlyTransactionsQuery = applyBranchFilter(monthlyTransactionsQuery);
+
       if (patientIds.length > 0) {
         monthlyTransactionsQuery = monthlyTransactionsQuery.in('patient_id', patientIds);
       }
@@ -319,6 +322,9 @@ export default function StatisticsManagement() {
         .from('package_transactions')
         .select('amount, transaction_type, patient_id')
         .in('transaction_type', ['deposit_in', 'inpatient_revenue', 'outpatient_revenue']);
+
+      // 지점 필터 적용
+      totalTransactionsQuery = applyBranchFilter(totalTransactionsQuery);
 
       if (patientIds.length > 0) {
         totalTransactionsQuery = totalTransactionsQuery.in('patient_id', patientIds);
