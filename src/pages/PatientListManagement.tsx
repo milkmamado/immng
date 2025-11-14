@@ -2007,11 +2007,10 @@ export default function PatientListManagement() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border max-h-[calc(100vh-300px)] overflow-y-auto">
-            <div className="overflow-x-auto">
-              <Table className="min-w-[1600px]">
-                <TableHeader className="sticky top-0 bg-background z-10 shadow-sm border-b">
-                <TableRow>
+          <div className="relative rounded-md border max-h-[calc(100vh-300px)] overflow-auto">
+            <Table className="min-w-[1600px]">
+              <TableHeader className="sticky top-0 bg-background z-10 border-b">
+                <TableRow className="bg-background">
                   <TableHead>고객번호</TableHead>
                   <TableHead>
                     <div className="flex items-center gap-1">
@@ -2126,7 +2125,6 @@ export default function PatientListManagement() {
                 })}
               </TableBody>
             </Table>
-            </div>
           </div>
           
           {filteredPatients.length === 0 && (
