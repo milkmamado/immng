@@ -493,8 +493,8 @@ export default function UserManual() {
                   <li>2. 환자 리스트에서 상태를 기록할 환자의 날짜 칸 클릭</li>
                   <li>3. 드롭다운에서 해당 날짜 환자 상태 선택:
                     <div className="mt-2 space-y-1 ml-4">
-                      <div><Badge className="bg-blue-500">입원</Badge> - 신규 입원</div>
-                      <div><Badge className="bg-indigo-500">재원</Badge> - 재입원 환자</div>
+                      <div><Badge className="bg-blue-500">입원</Badge> - 신규 또는 재진 입원 모두</div>
+                      <div><Badge className="bg-indigo-500">재원</Badge> - 입원 중으로 입/퇴원일을 제외하고 재원으로 표기</div>
                       <div><Badge className="bg-green-500">외래</Badge> - 외래 진료</div>
                       <div><Badge className="bg-yellow-500">낮병동</Badge> - 낮병동 이용</div>
                       <div><Badge className="bg-orange-500">전화F/U</Badge> - 전화 상담</div>
