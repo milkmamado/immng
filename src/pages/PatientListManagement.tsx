@@ -1981,8 +1981,8 @@ export default function PatientListManagement() {
         <h1 className="text-3xl font-bold">관리 환자 리스트</h1>
       </div>
 
-      <Card className="w-full">
-        <CardHeader className="pb-6">
+      <Card className="w-full overflow-x-auto">
+        <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle>유입 환자 목록 ({filteredPatients.length}명)</CardTitle>
             <div className="flex items-center gap-2">
@@ -2006,8 +2006,8 @@ export default function PatientListManagement() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
-          <div className="max-h-[calc(100vh-350px)] overflow-auto border-t">
+        <CardContent>
+          <div className="rounded-md border overflow-x-auto">
             <Table className="min-w-[1600px]">
               <TableHeader>
                 <TableRow>
