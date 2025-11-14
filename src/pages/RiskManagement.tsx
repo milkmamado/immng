@@ -624,7 +624,7 @@ export default function RiskManagement() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">이탈 리스크 관리</h1>
           <p className="text-muted-foreground mt-1">
-            2주 이상 일정 체크가 없는 유입 환자 목록
+            3주 이상 일정 체크가 없는 유입 환자 목록
           </p>
         </div>
         <div className="flex gap-4 items-center">
@@ -654,7 +654,7 @@ export default function RiskManagement() {
           <div className="flex items-center gap-2">
             <Badge variant="destructive" className="gap-1">
               <AlertCircle className="w-3 h-3" />
-              아웃 (3주+)
+              아웃 (1개월+)
             </Badge>
             <span className="text-sm text-muted-foreground">
               {riskPatients.filter(p => p.risk_level === "아웃").length}명
@@ -663,7 +663,7 @@ export default function RiskManagement() {
           <div className="flex items-center gap-2">
             <Badge variant="default" className="gap-1 bg-orange-500">
               <AlertTriangle className="w-3 h-3" />
-              아웃위기 (2주+)
+              아웃위기 (3주+)
             </Badge>
             <span className="text-sm text-muted-foreground">
               {riskPatients.filter(p => p.risk_level === "아웃위기").length}명
