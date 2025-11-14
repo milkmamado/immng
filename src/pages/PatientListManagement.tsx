@@ -2067,58 +2067,114 @@ export default function PatientListManagement() {
                         fetchPackageData(patient.id);
                       }}
                     >
-                    <TableCell className="font-mono">{patient.customer_number || '-'}</TableCell>
-                    <TableCell>{patient.visit_type || '-'}</TableCell>
-                    <TableCell>{patient.manager_name || '-'}</TableCell>
-                    <TableCell className="font-medium">{patient.name}</TableCell>
-                    <TableCell className="max-w-32 truncate">
-                      {patient.diagnosis_category || '-'}
+                    <TableCell>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/30">고객번호</span>
+                        <span className="font-mono whitespace-nowrap">{patient.customer_number || '-'}</span>
+                      </div>
                     </TableCell>
                     <TableCell>
-                      {patient.consultation_date 
-                        ? new Date(patient.consultation_date).toLocaleDateString('ko-KR')
-                        : '-'}
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/30">입원/외래</span>
+                        <span className="whitespace-nowrap">{patient.visit_type || '-'}</span>
+                      </div>
                     </TableCell>
                     <TableCell>
-                      {patient.inflow_date 
-                        ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
-                        : new Date(patient.created_at).toLocaleDateString('ko-KR')}
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/30">담당</span>
+                        <span className="whitespace-nowrap">{patient.manager_name || '-'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/30">이름</span>
+                        <span className="font-medium whitespace-nowrap">{patient.name}</span>
+                      </div>
                     </TableCell>
                     <TableCell className="max-w-32">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate flex-1">
-                          {patient.treatment_plan || '-'}
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/30">진단</span>
+                        <span className="truncate">{patient.diagnosis_category || '-'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/30">상담일</span>
+                        <span className="whitespace-nowrap">
+                          {patient.consultation_date 
+                            ? new Date(patient.consultation_date).toLocaleDateString('ko-KR')
+                            : '-'}
                         </span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedPatientDetail(patient);
-                            setViewMode('treatment-only');
-                            fetchPackageData(patient.id);
-                          }}
-                          className="px-2 py-1 h-6 text-xs"
-                        >
-                          상세보기
-                        </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/30">유입일</span>
+                        <span className="whitespace-nowrap">
+                          {patient.inflow_date 
+                            ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
+                            : new Date(patient.created_at).toLocaleDateString('ko-KR')}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="max-w-32">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/30">치료계획</span>
+                        <div className="flex items-center gap-2">
+                          <span className="truncate flex-1">
+                            {patient.treatment_plan || '-'}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedPatientDetail(patient);
+                              setViewMode('treatment-only');
+                              fetchPackageData(patient.id);
+                            }}
+                            className="px-2 py-1 h-6 text-xs"
+                          >
+                            상세보기
+                          </Button>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      {patient.monthly_avg_inpatient_days ? `${patient.monthly_avg_inpatient_days}일` : '-'}
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/30">입원일수</span>
+                        <span className="whitespace-nowrap">
+                          {patient.monthly_avg_inpatient_days ? `${patient.monthly_avg_inpatient_days}일` : '-'}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      {patient.monthly_avg_outpatient_days ? `${patient.monthly_avg_outpatient_days}일` : '-'}
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/30">외래일수</span>
+                        <span className="whitespace-nowrap">
+                          {patient.monthly_avg_outpatient_days ? `${patient.monthly_avg_outpatient_days}일` : '-'}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell>
-                      {patient.last_visit_date ? 
-                        new Date(patient.last_visit_date).toLocaleDateString('ko-KR') : '-'
-                      }
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/30">마지막내원일</span>
+                        <span className="whitespace-nowrap">
+                          {patient.last_visit_date ? 
+                            new Date(patient.last_visit_date).toLocaleDateString('ko-KR') : '-'
+                          }
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      {patient.payment_amount ? 
-                        `${patient.payment_amount.toLocaleString()}원` : '-'
-                      }
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/30">수납금액</span>
+                        <span className="whitespace-nowrap">
+                          {patient.payment_amount ? 
+                            `${patient.payment_amount.toLocaleString()}원` : '-'
+                          }
+                        </span>
+                      </div>
                     </TableCell>
                   </TableRow>
                   );
