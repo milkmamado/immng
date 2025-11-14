@@ -41,16 +41,16 @@ export const calculateDaysSinceLastCheck = (
 
 /**
  * 경과 일수에 따른 자동 상태 계산
- * - 21일 이상: "아웃"
- * - 14~20일: "아웃위기"
- * - 14일 미만: "관리 중"
+ * - 30일 이상: "아웃"
+ * - 21~29일: "아웃위기"
+ * - 21일 미만: "관리 중"
  */
 export const calculateAutoManagementStatus = (
   daysSinceCheck: number
 ): string => {
-  if (daysSinceCheck >= 21) {
+  if (daysSinceCheck >= 30) {
     return "아웃";
-  } else if (daysSinceCheck >= 14) {
+  } else if (daysSinceCheck >= 21) {
     return "아웃위기";
   } else {
     return "관리 중";

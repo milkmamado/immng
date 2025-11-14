@@ -109,9 +109,9 @@ Deno.serve(async (req) => {
 
       // 자동 상태 계산
       let autoStatus: string;
-      if (daysSinceCheck >= 21) {
+      if (daysSinceCheck >= 30) {
         autoStatus = '아웃';
-      } else if (daysSinceCheck >= 14) {
+      } else if (daysSinceCheck >= 21) {
         autoStatus = '아웃위기';
       } else {
         autoStatus = '관리 중';

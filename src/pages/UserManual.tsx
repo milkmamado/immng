@@ -177,7 +177,7 @@ export default function UserManual() {
                 </div>
                 <div className="border rounded-lg p-3">
                   <div className="font-medium mb-1">⚠️ 이탈 리스크 환자</div>
-                  <p className="text-sm text-muted-foreground">14일 이상 체크 없는 환자 수</p>
+                  <p className="text-sm text-muted-foreground">21일 이상 체크 없는 환자 수</p>
                 </div>
                 <div className="border rounded-lg p-3">
                   <div className="font-medium mb-1">💰 당월 현재 매출</div>
@@ -443,7 +443,7 @@ export default function UserManual() {
                       <Badge className="bg-orange-600">아웃위기</Badge>
                     </div>
                     <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• 14일 이상 연락 없는 환자 자동 분류</li>
+                      <li>• 21일 이상 연락 없는 환자 자동 분류</li>
                       <li>• 이탈 리스크 관리 페이지에 표시됨</li>
                       <li>• 대시보드 이탈 리스크 수에 포함됨</li>
                     </ul>
@@ -454,7 +454,7 @@ export default function UserManual() {
                       <Badge className="bg-red-600">아웃</Badge>
                     </div>
                     <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• 21일 이상 연락 없는 환자 자동 분류</li>
+                      <li>• 30일 이상 연락 없는 환자 자동 분류</li>
                       <li>• 이탈 리스크 관리 페이지에 표시됨</li>
                       <li>• 통계의 아웃 환자 수에 집계됨</li>
                     </ul>
@@ -525,12 +525,12 @@ export default function UserManual() {
                 <div className="space-y-2">
                   <div className="bg-orange-50 border-l-4 border-orange-500 p-3">
                     <p className="text-sm">
-                      <strong>아웃위기 (14일):</strong> 마지막 체크 후 14일 이상 경과 시 자동 변경
+                      <strong>아웃위기 (21일):</strong> 마지막 체크 후 21일 이상 경과 시 자동 변경
                     </p>
                   </div>
                   <div className="bg-red-50 border-l-4 border-red-500 p-3">
                     <p className="text-sm">
-                      <strong>아웃 (21일):</strong> 마지막 체크 후 21일 이상 경과 시 자동 변경
+                      <strong>아웃 (30일):</strong> 마지막 체크 후 30일 이상 경과 시 자동 변경
                     </p>
                   </div>
                 </div>
@@ -563,13 +563,13 @@ export default function UserManual() {
                   <div className="border rounded-lg p-3">
                     <div className="font-medium text-orange-600 mb-1">아웃위기 환자</div>
                     <p className="text-sm text-muted-foreground">
-                      마지막 일별 체크 후 14일 이상 경과한 환자
+                      마지막 일별 체크 후 21일 이상 경과한 환자
                     </p>
                   </div>
                   <div className="border rounded-lg p-3">
                     <div className="font-medium text-red-600 mb-1">아웃 환자</div>
                     <p className="text-sm text-muted-foreground">
-                      마지막 일별 체크 후 21일 이상 경과한 환자
+                      마지막 일별 체크 후 30일 이상 경과한 환자
                     </p>
                   </div>
                 </div>
