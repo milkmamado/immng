@@ -1600,9 +1600,9 @@ export function DailyStatusGrid({
               </Select>
             </div>
             
-            {(selectedStatus === '기타' || selectedStatus === '전화F/U') && (
+            {selectedStatus && (
               <div>
-                <Label htmlFor="notes">메모 {selectedStatus === '기타' ? '(기타)' : '(전화F/U)'}</Label>
+                <Label htmlFor="notes">메모</Label>
                 <Textarea
                   id="notes"
                   value={notes}
