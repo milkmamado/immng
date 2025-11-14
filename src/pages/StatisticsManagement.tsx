@@ -571,11 +571,9 @@ export default function StatisticsManagement() {
           diagnosis_category,
           diagnosis_detail,
           assigned_manager,
+          manager_name,
           inflow_date,
-          consultation_date,
-          profiles!patients_assigned_manager_fkey (
-            name
-          )
+          consultation_date
         `)
         .in('management_status', ['관리 중', '아웃위기']);
 
@@ -888,6 +886,47 @@ export default function StatisticsManagement() {
           </div>
         </div>
       )}
+
+      {/* 관리 기간별 환자 리스트 다이얼로그 */}
+      <Dialog open={selectedPeriodDialog.open} onOpenChange={(open) => setSelectedPeriodDialog({ open, period: null, patients: [] })}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{getPeriodTitle(selectedPeriodDialog.period)}</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {selectedPeriodDialog.patients.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                해당 기간의 환자가 없습니다.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="grid grid-cols-4 gap-4 pb-2 border-b font-semibold text-sm">
+                  <div>환자명</div>
+                  <div>질환</div>
+                  <div>담당 매니저</div>
+                  <div>유입일</div>
+                </div>
+                {selectedPeriodDialog.patients.map((patient) => (
+                  <div key={patient.id} className="grid grid-cols-4 gap-4 py-3 border-b hover:bg-muted/50">
+                    <div className="font-medium">{patient.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {patient.diagnosis_category || patient.diagnosis_detail || '-'}
+                    </div>
+                    <div className="text-sm">
+                      {patient.manager_name || '-'}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {patient.inflow_date || patient.consultation_date 
+                        ? new Date(patient.inflow_date || patient.consultation_date).toLocaleDateString('ko-KR')
+                        : '-'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
