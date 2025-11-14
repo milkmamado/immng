@@ -726,13 +726,55 @@ export default function UserManual() {
             <div className="space-y-4">
               <div>
                 <h4 className="font-semibold mb-3">📤 엑셀 파일 업로드</h4>
-                <p className="mb-2">다음 3가지 엑셀 파일을 업로드할 수 있습니다:</p>
+                <p className="mb-2">패키지 거래 내역 엑셀 파일을 업로드할 수 있습니다:</p>
                 <div className="space-y-3">
                   <div className="border rounded-lg p-3">
-                    <div className="font-medium mb-1">1. 패키지 거래 내역</div>
+                    <div className="font-medium mb-1">패키지 거래 내역</div>
                     <p className="text-sm text-muted-foreground">
                       예치금 입금, 예치금 사용, 리워드 적립/사용, 횟수권 등록/사용
                     </p>
                   </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold mb-3">📋 업로드 절차</h4>
+                <ol className="space-y-2 ml-4">
+                  <li>1. <Badge variant="outline">엑셀 업로드</Badge> 버튼 클릭</li>
+                  <li>2. 병원 시스템에서 다운로드한 엑셀 파일 선택</li>
+                  <li>3. 자동으로 데이터 매칭 및 저장</li>
+                  <li>4. 업로드 결과 확인 (성공/실패 건수)</li>
+                </ol>
+              </div>
+
+              <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                <p className="text-sm">
+                  <strong>⚠️ 주의:</strong> 엑셀 파일의 차트번호가 시스템에 등록된 환자와 일치해야 
+                  정상적으로 연동됩니다. 차트번호가 없는 환자는 먼저 초진관리에서 등록해주세요.
+                </p>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold mb-3">💰 수납금액 계산</h4>
+                <div className="bg-primary/5 border-l-4 border-primary p-4">
+                  <p className="text-sm">
+                    <strong>수납금액 = 예치금 입금</strong>
+                  </p>
+                  <p className="text-sm mt-2 text-muted-foreground">
+                    • 환자 리스트의 수납금액은 예치금 입금 내역을 기준으로 계산됩니다<br/>
+                    • 각 거래 내역은 환자 상세 팝업에서 확인할 수 있습니다<br/>
+                    • 대시보드와 통계 관리의 매출도 이 데이터를 기준으로 집계됩니다
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
