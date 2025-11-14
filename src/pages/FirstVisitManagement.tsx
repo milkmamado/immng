@@ -503,13 +503,13 @@ export default function FirstVisitManagement() {
                   >
                     <TableCell>
                       <div>
-                        <span className="text-xs text-muted-foreground">고객번호 </span>
+                        <span className="text-[10px] text-muted-foreground/50">고객번호 </span>
                         <span>{patient.customer_number || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <span className="text-xs text-muted-foreground">상담일 </span>
+                        <span className="text-[10px] text-muted-foreground/50">상담일 </span>
                         <span>
                           {patient.consultation_date 
                             ? new Date(patient.consultation_date).toLocaleDateString('ko-KR')
@@ -519,7 +519,7 @@ export default function FirstVisitManagement() {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <span className="text-xs text-muted-foreground">유입일 </span>
+                        <span className="text-[10px] text-muted-foreground/50">유입일 </span>
                         <span>
                           {patient.inflow_date 
                             ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
@@ -529,7 +529,7 @@ export default function FirstVisitManagement() {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <span className="text-xs text-muted-foreground">유입/실패 </span>
+                        <span className="text-[10px] text-muted-foreground/50">유입 </span>
                         <Badge variant={getInflowStatusColor(patient.inflow_status)}>
                           {patient.inflow_status || '-'}
                         </Badge>
@@ -537,61 +537,61 @@ export default function FirstVisitManagement() {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <span className="text-xs text-muted-foreground">입원/외래 </span>
+                        <span className="text-[10px] text-muted-foreground/50">입원 </span>
                         <span>{patient.visit_type || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell className="max-w-32">
                       <div>
-                        <span className="text-xs text-muted-foreground">내원동기 </span>
+                        <span className="text-[10px] text-muted-foreground/50">동기 </span>
                         <span className="truncate block">{patient.visit_motivation || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <span className="text-xs text-muted-foreground">이름 </span>
+                        <span className="text-[10px] text-muted-foreground/50">이름 </span>
                         <span className="font-medium">{patient.name}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <span className="text-xs text-muted-foreground">진단명 </span>
+                        <span className="text-[10px] text-muted-foreground/50">진단 </span>
                         <span>{patient.diagnosis_category || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell className="max-w-32">
                       <div>
-                        <span className="text-xs text-muted-foreground">세부진단명 </span>
+                        <span className="text-[10px] text-muted-foreground/50">세부 </span>
                         <span className="truncate block">{patient.diagnosis_detail || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <span className="text-xs text-muted-foreground">환자/보호자 </span>
+                        <span className="text-[10px] text-muted-foreground/50">환/보 </span>
                         <span>{patient.patient_or_guardian || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <span className="text-xs text-muted-foreground">이전병원 </span>
+                        <span className="text-[10px] text-muted-foreground/50">병원 </span>
                         <span>{patient.hospital_category || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <span className="text-xs text-muted-foreground">한방주치의 </span>
+                        <span className="text-[10px] text-muted-foreground/50">한방 </span>
                         <span>{patient.korean_doctor || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <span className="text-xs text-muted-foreground">담당자 </span>
+                        <span className="text-[10px] text-muted-foreground/50">담당 </span>
                         <span>{patient.manager_name || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <span className="text-xs text-muted-foreground">양방주치의 </span>
+                        <span className="text-[10px] text-muted-foreground/50">양방 </span>
                         <span>{patient.western_doctor || '-'}</span>
                       </div>
                     </TableCell>
