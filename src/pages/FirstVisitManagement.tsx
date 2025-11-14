@@ -501,36 +501,100 @@ export default function FirstVisitManagement() {
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => setSelectedPatientDetail(patient)}
                   >
-                    <TableCell>{patient.customer_number || '-'}</TableCell>
                     <TableCell>
-                      {patient.consultation_date 
-                        ? new Date(patient.consultation_date).toLocaleDateString('ko-KR')
-                        : '-'}
-                    </TableCell>
-                    <TableCell>
-                      {patient.inflow_date 
-                        ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
-                        : new Date(patient.created_at).toLocaleDateString('ko-KR')}
+                      <div>
+                        <span className="text-xs text-muted-foreground">고객번호 </span>
+                        <span>{patient.customer_number || '-'}</span>
+                      </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getInflowStatusColor(patient.inflow_status)}>
-                        {patient.inflow_status || '-'}
-                      </Badge>
+                      <div>
+                        <span className="text-xs text-muted-foreground">상담일 </span>
+                        <span>
+                          {patient.consultation_date 
+                            ? new Date(patient.consultation_date).toLocaleDateString('ko-KR')
+                            : '-'}
+                        </span>
+                      </div>
                     </TableCell>
-                    <TableCell>{patient.visit_type || '-'}</TableCell>
-                    <TableCell className="max-w-32 truncate">
-                      {patient.visit_motivation || '-'}
+                    <TableCell>
+                      <div>
+                        <span className="text-xs text-muted-foreground">유입일 </span>
+                        <span>
+                          {patient.inflow_date 
+                            ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
+                            : new Date(patient.created_at).toLocaleDateString('ko-KR')}
+                        </span>
+                      </div>
                     </TableCell>
-                    <TableCell className="font-medium">{patient.name}</TableCell>
-                    <TableCell>{patient.diagnosis_category || '-'}</TableCell>
-                    <TableCell className="max-w-32 truncate">
-                      {patient.diagnosis_detail || '-'}
+                    <TableCell>
+                      <div>
+                        <span className="text-xs text-muted-foreground">유입/실패 </span>
+                        <Badge variant={getInflowStatusColor(patient.inflow_status)}>
+                          {patient.inflow_status || '-'}
+                        </Badge>
+                      </div>
                     </TableCell>
-                    <TableCell>{patient.patient_or_guardian || '-'}</TableCell>
-                    <TableCell>{patient.hospital_category || '-'}</TableCell>
-                    <TableCell>{patient.korean_doctor || '-'}</TableCell>
-                    <TableCell>{patient.manager_name || '-'}</TableCell>
-                    <TableCell>{patient.western_doctor || '-'}</TableCell>
+                    <TableCell>
+                      <div>
+                        <span className="text-xs text-muted-foreground">입원/외래 </span>
+                        <span>{patient.visit_type || '-'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="max-w-32">
+                      <div>
+                        <span className="text-xs text-muted-foreground">내원동기 </span>
+                        <span className="truncate block">{patient.visit_motivation || '-'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <span className="text-xs text-muted-foreground">이름 </span>
+                        <span className="font-medium">{patient.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <span className="text-xs text-muted-foreground">진단명 </span>
+                        <span>{patient.diagnosis_category || '-'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="max-w-32">
+                      <div>
+                        <span className="text-xs text-muted-foreground">세부진단명 </span>
+                        <span className="truncate block">{patient.diagnosis_detail || '-'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <span className="text-xs text-muted-foreground">환자/보호자 </span>
+                        <span>{patient.patient_or_guardian || '-'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <span className="text-xs text-muted-foreground">이전병원 </span>
+                        <span>{patient.hospital_category || '-'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <span className="text-xs text-muted-foreground">한방주치의 </span>
+                        <span>{patient.korean_doctor || '-'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <span className="text-xs text-muted-foreground">담당자 </span>
+                        <span>{patient.manager_name || '-'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <span className="text-xs text-muted-foreground">양방주치의 </span>
+                        <span>{patient.western_doctor || '-'}</span>
+                      </div>
+                    </TableCell>
                     <TableCell className="max-w-32 truncate">{patient.crm_memo || '-'}</TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <Button
