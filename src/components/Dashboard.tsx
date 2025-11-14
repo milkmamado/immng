@@ -290,7 +290,7 @@ export function Dashboard() {
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">{stats.riskPatients.length}</div>
             <p className="text-xs text-muted-foreground">
-              21일 이상 체크 없음
+              3주 이상 체크 없음
             </p>
           </CardContent>
         </Card>
