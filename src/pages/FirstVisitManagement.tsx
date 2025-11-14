@@ -502,15 +502,15 @@ export default function FirstVisitManagement() {
                     onClick={() => setSelectedPatientDetail(patient)}
                   >
                     <TableCell>
-                      <div>
-                        <span className="text-[10px] text-muted-foreground/50">고객번호 </span>
-                        <span>{patient.customer_number || '-'}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/50">고객번호</span>
+                        <span className="whitespace-nowrap">{patient.customer_number || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <span className="text-[10px] text-muted-foreground/50">상담일 </span>
-                        <span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/50">상담일</span>
+                        <span className="whitespace-nowrap">
                           {patient.consultation_date 
                             ? new Date(patient.consultation_date).toLocaleDateString('ko-KR')
                             : '-'}
@@ -518,9 +518,9 @@ export default function FirstVisitManagement() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <span className="text-[10px] text-muted-foreground/50">유입일 </span>
-                        <span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/50">유입일</span>
+                        <span className="whitespace-nowrap">
                           {patient.inflow_date 
                             ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
                             : new Date(patient.created_at).toLocaleDateString('ko-KR')}
@@ -528,71 +528,71 @@ export default function FirstVisitManagement() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <span className="text-[10px] text-muted-foreground/50">유입 </span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/50">유입</span>
                         <Badge variant={getInflowStatusColor(patient.inflow_status)}>
                           {patient.inflow_status || '-'}
                         </Badge>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <span className="text-[10px] text-muted-foreground/50">입원 </span>
-                        <span>{patient.visit_type || '-'}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/50">입원</span>
+                        <span className="whitespace-nowrap">{patient.visit_type || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell className="max-w-32">
-                      <div>
-                        <span className="text-[10px] text-muted-foreground/50">동기 </span>
-                        <span className="truncate block">{patient.visit_motivation || '-'}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/50">동기</span>
+                        <span className="truncate">{patient.visit_motivation || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <span className="text-[10px] text-muted-foreground/50">이름 </span>
-                        <span className="font-medium">{patient.name}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/50">이름</span>
+                        <span className="font-medium whitespace-nowrap">{patient.name}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <span className="text-[10px] text-muted-foreground/50">진단 </span>
-                        <span>{patient.diagnosis_category || '-'}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/50">진단</span>
+                        <span className="whitespace-nowrap">{patient.diagnosis_category || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell className="max-w-32">
-                      <div>
-                        <span className="text-[10px] text-muted-foreground/50">세부 </span>
-                        <span className="truncate block">{patient.diagnosis_detail || '-'}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/50">세부</span>
+                        <span className="truncate">{patient.diagnosis_detail || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <span className="text-[10px] text-muted-foreground/50">환/보 </span>
-                        <span>{patient.patient_or_guardian || '-'}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/50">환/보</span>
+                        <span className="whitespace-nowrap">{patient.patient_or_guardian || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <span className="text-[10px] text-muted-foreground/50">병원 </span>
-                        <span>{patient.hospital_category || '-'}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/50">병원</span>
+                        <span className="whitespace-nowrap">{patient.hospital_category || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <span className="text-[10px] text-muted-foreground/50">한방 </span>
-                        <span>{patient.korean_doctor || '-'}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/50">한방</span>
+                        <span className="whitespace-nowrap">{patient.korean_doctor || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <span className="text-[10px] text-muted-foreground/50">담당 </span>
-                        <span>{patient.manager_name || '-'}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/50">담당</span>
+                        <span className="whitespace-nowrap">{patient.manager_name || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <span className="text-[10px] text-muted-foreground/50">양방 </span>
-                        <span>{patient.western_doctor || '-'}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-muted-foreground/50">양방</span>
+                        <span className="whitespace-nowrap">{patient.western_doctor || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell className="max-w-32 truncate">{patient.crm_memo || '-'}</TableCell>
