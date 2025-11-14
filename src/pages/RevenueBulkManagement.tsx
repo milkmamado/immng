@@ -27,6 +27,29 @@ export default function RevenueBulkManagement() {
     const setLoading = revenueType === 'inpatient' ? setUploadingInpatient : setUploadingOutpatient;
     const setResult = revenueType === 'inpatient' ? setInpatientResult : setOutpatientResult;
     
+    // 파일명 검증
+    const fileName = file.name.toLowerCase();
+    const isInpatientFile = fileName.includes('입원');
+    const isOutpatientFile = fileName.includes('외래');
+    
+    if (revenueType === 'inpatient' && isOutpatientFile) {
+      toast({
+        title: "파일명 오류",
+        description: "입원 매출 업로드인데 파일명에 '외래'가 포함되어 있습니다. 올바른 파일을 선택해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (revenueType === 'outpatient' && isInpatientFile) {
+      toast({
+        title: "파일명 오류",
+        description: "외래 매출 업로드인데 파일명에 '입원'이 포함되어 있습니다. 올바른 파일을 선택해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true);
     setResult(null);
 
