@@ -476,11 +476,12 @@ export default function StatisticsManagement() {
         ? Math.round((retainedPatients / prevMonthPatients.length) * 100) 
         : 0;
 
-      // 4. 관리 기간별 환자 수
-      const now = new Date();
-      const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-      const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
-      const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+      // 4. 관리 기간별 환자 수 - 선택한 월의 마지막 날 기준
+      const [selectedYear, selectedMonthNum] = selectedMonth.split('-').map(Number);
+      const referenceDate = new Date(selectedYear, selectedMonthNum, 0); // 해당 월의 마지막 날
+      const oneMonthAgo = new Date(selectedYear, selectedMonthNum - 2, referenceDate.getDate());
+      const threeMonthsAgo = new Date(selectedYear, selectedMonthNum - 4, referenceDate.getDate());
+      const sixMonthsAgo = new Date(selectedYear, selectedMonthNum - 7, referenceDate.getDate());
 
       const activePatients = allPatientsWithStatus?.filter(
         p => p.management_status !== '아웃' && p.management_status !== '사망' && p.management_status !== '치료종료'
