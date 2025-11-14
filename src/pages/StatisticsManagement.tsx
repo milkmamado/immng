@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useBranchFilter } from '@/hooks/useBranchFilter';
@@ -52,6 +53,17 @@ export default function StatisticsManagement() {
     patients6MonthPlus: 0
   });
   const { toast } = useToast();
+  
+  // 관리 기간별 환자 리스트 다이얼로그 state
+  const [selectedPeriodDialog, setSelectedPeriodDialog] = useState<{
+    open: boolean;
+    period: '1month' | '3month' | '6month' | null;
+    patients: any[];
+  }>({
+    open: false,
+    period: null,
+    patients: []
+  });
 
   useEffect(() => {
     if (user) {
@@ -537,6 +549,74 @@ export default function StatisticsManagement() {
     return options;
   };
 
+  const handlePeriodCardClick = async (period: '1month' | '3month' | '6month') => {
+    if (!user) return;
+
+    try {
+      const now = new Date();
+      let monthsAgo: number;
+      
+      if (period === '1month') monthsAgo = 1;
+      else if (period === '3month') monthsAgo = 3;
+      else monthsAgo = 6;
+
+      const cutoffDate = new Date(now.getFullYear(), now.getMonth() - monthsAgo, now.getDate());
+      
+      // 환자 데이터 조회 - 권한별로 필터링
+      let query = supabase
+        .from('patients')
+        .select(`
+          id,
+          name,
+          diagnosis_category,
+          diagnosis_detail,
+          assigned_manager,
+          inflow_date,
+          consultation_date,
+          profiles!patients_assigned_manager_fkey (
+            name
+          )
+        `)
+        .in('management_status', ['관리 중', '아웃위기'])
+        .or(`inflow_date.lte.${cutoffDate.toISOString().split('T')[0]},consultation_date.lte.${cutoffDate.toISOString().split('T')[0]}`);
+
+      // 권한별 필터링
+      if (!isMasterOrAdmin) {
+        // 매니저는 자신의 환자만
+        query = query.eq('assigned_manager', user.id);
+      } else if (selectedManager !== 'all') {
+        // 관리자/마스터가 특정 매니저 선택시
+        query = query.eq('assigned_manager', selectedManager);
+      }
+      
+      query = applyBranchFilter(query);
+
+      const { data: patients, error } = await query;
+
+      if (error) throw error;
+
+      setSelectedPeriodDialog({
+        open: true,
+        period,
+        patients: patients || []
+      });
+    } catch (error) {
+      console.error('Error fetching period patients:', error);
+      toast({
+        title: '오류',
+        description: '환자 목록을 불러오는 중 오류가 발생했습니다.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const getPeriodTitle = (period: '1month' | '3month' | '6month' | null) => {
+    if (!period) return '';
+    if (period === '1month') return '1개월 이상 관리 환자';
+    if (period === '3month') return '3개월 이상 관리 환자';
+    return '6개월 이상 관리 환자';
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -700,19 +780,28 @@ export default function StatisticsManagement() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
+            <div 
+              className="p-4 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
+              onClick={() => handlePeriodCardClick('1month')}
+            >
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-gray-700">1개월 이상 관리</span>
                 <span className="text-2xl font-bold text-blue-600">{additionalStats.patients1MonthPlus}명</span>
               </div>
             </div>
-            <div className="p-4 bg-purple-50 rounded-lg">
+            <div 
+              className="p-4 bg-purple-50 rounded-lg cursor-pointer hover:bg-purple-100 transition-colors"
+              onClick={() => handlePeriodCardClick('3month')}
+            >
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-gray-700">3개월 이상 관리</span>
                 <span className="text-2xl font-bold text-purple-600">{additionalStats.patients3MonthPlus}명</span>
               </div>
             </div>
-            <div className="p-4 bg-pink-50 rounded-lg">
+            <div 
+              className="p-4 bg-pink-50 rounded-lg cursor-pointer hover:bg-pink-100 transition-colors"
+              onClick={() => handlePeriodCardClick('6month')}
+            >
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-gray-700">6개월 이상 관리</span>
                 <span className="text-2xl font-bold text-pink-600">{additionalStats.patients6MonthPlus}명</span>
