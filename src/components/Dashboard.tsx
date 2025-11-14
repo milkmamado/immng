@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, DollarSign, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { calculateDaysSinceLastCheck, shouldAutoUpdateStatus } from "@/utils/patientStatusUtils";
 
 interface DashboardStats {
   totalPatients: number;
@@ -82,7 +83,7 @@ export function Dashboard() {
       // 환자 통계 - 역할에 따라 필터링
       let patientsQuery = supabase
         .from('patients')
-        .select('id, name, customer_number, assigned_manager, manager_name, last_visit_date, payment_amount, created_at')
+        .select('id, name, customer_number, assigned_manager, manager_name, last_visit_date, inflow_date, management_status, payment_amount, created_at')
         .eq('inflow_status', '유입');
 
       // 지점 필터 추가
@@ -149,34 +150,21 @@ export function Dashboard() {
 
       const totalRevenue = totalTransactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
 
-      // 이탈 리스크 환자 계산 (이탈리스크관리 페이지와 동일한 로직)
-      // daily_patient_status에서 마지막 체크 날짜 가져오기
-      const { data: statusData } = await supabase
-        .from('daily_patient_status')
-        .select('patient_id, status_date')
-        .order('status_date', { ascending: false });
-
-      const lastCheckMap = new Map<string, string>();
-      statusData?.forEach(status => {
-        if (!lastCheckMap.has(status.patient_id)) {
-          lastCheckMap.set(status.patient_id, status.status_date);
-        }
-      });
-
-      const today = new Date();
+      // 이탈 리스크 환자 계산 (patientStatusUtils.ts와 동일한 로직 사용)
       const riskPatients = patients?.filter(patient => {
-        const lastCheckDate = lastCheckMap.get(patient.id);
-        let daysSinceCheck = 0;
-
-        if (!lastCheckDate) {
-          const createdDate = new Date(patient.created_at);
-          daysSinceCheck = Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-        } else {
-          const lastDate = new Date(lastCheckDate);
-          daysSinceCheck = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+        // 최종 상태 환자는 제외
+        if (!shouldAutoUpdateStatus(patient.management_status, false)) {
+          return false;
         }
 
-        // 21일 이상인 환자만 리스크 환자로 판단
+        // 경과 일수 계산 (우선순위: last_visit_date > inflow_date > created_at)
+        const daysSinceCheck = calculateDaysSinceLastCheck(
+          patient.last_visit_date,
+          patient.created_at,
+          patient.inflow_date
+        );
+
+        // 21일 이상인 환자만 리스크 환자로 판단 (아웃위기 + 아웃)
         return daysSinceCheck >= 21;
       }).slice(0, 10) || [];
 
