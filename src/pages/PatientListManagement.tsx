@@ -2007,9 +2007,9 @@ export default function PatientListManagement() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border overflow-x-auto">
+          <div className="rounded-md border overflow-x-auto max-h-[calc(100vh-300px)]">
             <Table className="min-w-[1600px]">
-              <TableHeader>
+              <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
                 <TableRow>
                   <TableHead>고객번호</TableHead>
                   <TableHead>
