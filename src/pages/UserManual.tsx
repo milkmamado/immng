@@ -182,13 +182,13 @@ export default function UserManual() {
                 <div className="border rounded-lg p-3">
                   <div className="font-medium mb-1">💰 당월 현재 매출</div>
                   <p className="text-sm text-muted-foreground">
-                    해당 월 예치금 입금 + 입원/외래 매출 합계
+                    해당 월 예치금 입금 합계
                   </p>
                 </div>
                 <div className="border rounded-lg p-3">
                   <div className="font-medium mb-1">📈 누적 매출</div>
                   <p className="text-sm text-muted-foreground">
-                    전체 기간 예치금 입금 + 입원/외래 매출 합계
+                    전체 기간 예치금 입금 합계
                   </p>
                 </div>
               </div>
@@ -371,7 +371,7 @@ export default function UserManual() {
                 </h4>
                 <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
                   <p className="text-sm">
-                    <strong>수납금액 = 예치금 입금 + 입원 매출 + 외래 매출</strong>
+                    <strong>수납금액 = 예치금 입금</strong>
                   </p>
                   <p className="text-sm mt-2 text-muted-foreground">
                     거래 내역은 환자 상세 팝업에서 확인할 수 있습니다.
@@ -427,71 +427,6 @@ export default function UserManual() {
 
               <Separator />
 
-              <div>
-                <h4 className="font-semibold flex items-center gap-2 mb-3">
-                  <DollarSign className="w-4 h-4 text-green-600" />
-                  입원/외래 매출 관리
-                </h4>
-                <div className="space-y-3">
-                  <div className="bg-blue-50 border-l-4 border-blue-500 p-3 mb-3">
-                    <p className="text-sm">
-                      <strong>📋 엑셀 파일 준비:</strong> 닥터스 프로그램 → 매출통계 → 환자명으로 검색 → 엑셀 다운로드
-                    </p>
-                  </div>
-                  <ol className="space-y-2 ml-4">
-                    <li className="flex gap-2">
-                      <span className="font-bold text-primary">1.</span>
-                      <div>
-                        <strong>닥터스 프로그램에서 엑셀 파일 다운로드:</strong>
-                        <ul className="text-sm text-muted-foreground space-y-1 ml-4 mt-1">
-                          <li>• 닥터스 프로그램 실행</li>
-                          <li>• 매출통계 메뉴 선택</li>
-                          <li>• 환자명으로 검색</li>
-                          <li>• 해당 환자의 입원 또는 외래 매출 데이터를 엑셀로 다운로드</li>
-                        </ul>
-                      </div>
-                    </li>
-                    <li className="flex gap-2">
-                      <span className="font-bold text-primary">2.</span>
-                      <div>
-                        환자 상세 팝업에서 <Badge>입원 매출</Badge> 또는 <Badge>외래 매출</Badge> 섹션 확인
-                      </div>
-                    </li>
-                    <li className="flex gap-2">
-                      <span className="font-bold text-primary">3.</span>
-                      <div>
-                        <Badge variant="outline">엑셀 업로드</Badge> 버튼 클릭
-                      </div>
-                    </li>
-                    <li className="flex gap-2">
-                      <span className="font-bold text-primary">4.</span>
-                      <div>
-                        닥터스에서 다운받은 엑셀 파일 선택 후 업로드
-                        <div className="mt-2 ml-4">
-                          <p className="text-sm font-medium">엑셀 파일 형식 요구사항:</p>
-                          <ul className="text-sm text-muted-foreground space-y-1 ml-4 mt-1">
-                            <li>• <strong>수납일자</strong> 컬럼 필수</li>
-                            <li>• <strong>금액</strong> 컬럼 필수</li>
-                            <li>• <strong>비고</strong> 컬럼 선택사항</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </li>
-                    <li className="flex gap-2">
-                      <span className="font-bold text-primary">5.</span>
-                      <div>
-                        업로드된 데이터는 자동으로 수납금액에 합산됩니다
-                      </div>
-                    </li>
-                  </ol>
-                  <div className="bg-green-50 border-l-4 border-green-500 p-3">
-                    <p className="text-xs">
-                      <strong>✨ 자동 계산:</strong> 입원/외래 매출은 수납일자 기준으로 
-                      당월 매출 및 누적 매출에 자동 집계됩니다.
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               <Separator />
 
@@ -705,13 +640,13 @@ export default function UserManual() {
                   <div className="border rounded-lg p-3">
                     <div className="font-medium mb-1">누적 매출</div>
                     <p className="text-sm text-muted-foreground">
-                      전체 기간 예치금 + 입원/외래 매출
+                      전체 기간 예치금 입금 합계
                     </p>
                   </div>
                   <div className="border rounded-lg p-3">
                     <div className="font-medium mb-1">당월 매출</div>
                     <p className="text-sm text-muted-foreground">
-                      선택한 월의 예치금 + 입원/외래 매출
+                      선택한 월의 예치금 입금 합계
                     </p>
                   </div>
                   <div className="border rounded-lg p-3">
@@ -799,81 +734,5 @@ export default function UserManual() {
                       예치금 입금, 예치금 사용, 리워드 적립/사용, 횟수권 등록/사용
                     </p>
                   </div>
-                  <div className="border rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-medium">2. 입원/외래 매출</div>
-                      <ExcelGuideModal />
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      입원 및 외래 환자의 수납일자별 매출 금액
-                    </p>
-                    <div className="bg-blue-50 border-l-4 border-blue-500 p-3 mt-2">
-                      <p className="text-sm font-medium mb-1">📋 엑셀 파일 준비 방법:</p>
-                      <ol className="text-sm space-y-1 ml-4">
-                        <li>1. 닥터스 통계마감</li>
-                        <li>2. 수입금 통계(환자별)</li>
-                        <li>3. 환자별 수납일자 조회</li>
-                      </ol>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        자세한 단계별 스크린샷은 위의 "엑셀 준비 방법 보기" 버튼을 클릭하세요.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div>
-                <h4 className="font-semibold mb-3">📋 업로드 절차</h4>
-                <ol className="space-y-2 ml-4">
-                  <li>1. 각 섹션의 <Badge variant="outline">엑셀 업로드</Badge> 버튼 클릭</li>
-                  <li>2. 병원 시스템에서 다운로드한 엑셀 파일 선택</li>
-                  <li>3. 자동으로 데이터 매칭 및 저장</li>
-                  <li>4. 업로드 결과 확인 (성공/실패 건수)</li>
-                </ol>
-              </div>
-
-              <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4">
-                <p className="text-sm">
-                  <strong>⚠️ 주의:</strong> 엑셀 파일의 차트번호가 시스템에 등록된 환자와 일치해야 
-                  정상적으로 연동됩니다. 차트번호가 없는 환자는 먼저 초진관리에서 등록해주세요.
-                </p>
-              </div>
-
-              <Separator />
-
-              <div>
-                <h4 className="font-semibold mb-3">💰 수납금액 계산</h4>
-                <div className="bg-primary/5 border-l-4 border-primary p-4">
-                  <p className="text-sm">
-                    <strong>수납금액 = 예치금 입금 + 입원 매출 + 외래 매출</strong>
-                  </p>
-                  <p className="text-sm mt-2 text-muted-foreground">
-                    • 환자 리스트의 수납금액은 이 세 가지를 합산하여 자동 계산됩니다<br/>
-                    • 각 거래 내역은 환자 상세 팝업에서 확인할 수 있습니다<br/>
-                    • 대시보드와 통계 관리의 매출도 이 데이터를 기준으로 집계됩니다
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 문의 안내 */}
-        <Card className="bg-primary/5 border-primary">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-2">
-              <AlertTriangle className="w-8 h-8 text-primary mx-auto" />
-              <h3 className="font-bold text-lg">추가 문의 사항</h3>
-              <p className="text-sm text-muted-foreground">
-                사용 중 문제가 발생하거나 추가 기능이 필요한 경우<br/>
-                시스템 관리자(마스터)에게 문의해주세요.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
   );
 }
