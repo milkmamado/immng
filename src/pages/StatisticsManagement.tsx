@@ -398,10 +398,11 @@ export default function StatisticsManagement() {
         p => p.management_status === '아웃'
       ).length || 0;
 
-      // 2. 유입률 (해당 월 유입일 기준, inflow_status가 '유입'인 환자)
+      // 2. 유입률 (해당 월 기준, inflow_status가 '유입'인 환자)
+      // 초진관리와 동일: inflow_date가 없으면 created_at 사용
       let inflowQuery = supabase
         .from('patients')
-        .select('id, inflow_date')
+        .select('id, inflow_date, created_at')
         .eq('inflow_status', '유입');
       
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
@@ -412,16 +413,16 @@ export default function StatisticsManagement() {
       
       const { data: inflowPatients } = await inflowQuery;
       const newPatientsCount = inflowPatients?.filter(p => {
-        if (!p.inflow_date) return false;
-        const inflowDate = new Date(p.inflow_date);
-        const inflowYearMonth = `${inflowDate.getFullYear()}-${String(inflowDate.getMonth() + 1).padStart(2, '0')}`;
-        return inflowYearMonth === selectedMonth;
+        const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
+        const refYearMonth = `${refDate.getFullYear()}-${String(refDate.getMonth() + 1).padStart(2, '0')}`;
+        return refYearMonth === selectedMonth;
       }).length || 0;
 
-      // 전화상담 환자 수 (해당 월 유입일 기준, inflow_status가 '전화상담'인 환자)
+      // 전화상담 환자 수 (해당 월 기준, inflow_status가 '전화상담'인 환자)
+      // 초진관리와 동일: inflow_date가 없으면 created_at 사용
       let phoneConsultQuery = supabase
         .from('patients')
-        .select('id, inflow_date')
+        .select('id, inflow_date, created_at')
         .eq('inflow_status', '전화상담');
       
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
@@ -432,16 +433,16 @@ export default function StatisticsManagement() {
       
       const { data: phoneConsultPatients } = await phoneConsultQuery;
       const phoneConsultCount = phoneConsultPatients?.filter(p => {
-        if (!p.inflow_date) return false;
-        const inflowDate = new Date(p.inflow_date);
-        const inflowYearMonth = `${inflowDate.getFullYear()}-${String(inflowDate.getMonth() + 1).padStart(2, '0')}`;
-        return inflowYearMonth === selectedMonth;
+        const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
+        const refYearMonth = `${refDate.getFullYear()}-${String(refDate.getMonth() + 1).padStart(2, '0')}`;
+        return refYearMonth === selectedMonth;
       }).length || 0;
 
-      // 방문상담 환자 수 (해당 월 유입일 기준, inflow_status가 '방문상담'인 환자)
+      // 방문상담 환자 수 (해당 월 기준, inflow_status가 '방문상담'인 환자)
+      // 초진관리와 동일: inflow_date가 없으면 created_at 사용
       let visitConsultQuery = supabase
         .from('patients')
-        .select('id, inflow_date')
+        .select('id, inflow_date, created_at')
         .eq('inflow_status', '방문상담');
       
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
@@ -452,16 +453,16 @@ export default function StatisticsManagement() {
       
       const { data: visitConsultPatients } = await visitConsultQuery;
       const visitConsultCount = visitConsultPatients?.filter(p => {
-        if (!p.inflow_date) return false;
-        const inflowDate = new Date(p.inflow_date);
-        const inflowYearMonth = `${inflowDate.getFullYear()}-${String(inflowDate.getMonth() + 1).padStart(2, '0')}`;
-        return inflowYearMonth === selectedMonth;
+        const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
+        const refYearMonth = `${refDate.getFullYear()}-${String(refDate.getMonth() + 1).padStart(2, '0')}`;
+        return refYearMonth === selectedMonth;
       }).length || 0;
 
-      // 실패 환자 수 (해당 월 유입일 기준, inflow_status가 '실패'인 환자)
+      // 실패 환자 수 (해당 월 기준, inflow_status가 '실패'인 환자)
+      // 초진관리와 동일: inflow_date가 없으면 created_at 사용
       let failedQuery = supabase
         .from('patients')
-        .select('id, inflow_date')
+        .select('id, inflow_date, created_at')
         .eq('inflow_status', '실패');
       
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
@@ -472,10 +473,9 @@ export default function StatisticsManagement() {
       
       const { data: failedPatients } = await failedQuery;
       const failedCount = failedPatients?.filter(p => {
-        if (!p.inflow_date) return false;
-        const inflowDate = new Date(p.inflow_date);
-        const inflowYearMonth = `${inflowDate.getFullYear()}-${String(inflowDate.getMonth() + 1).padStart(2, '0')}`;
-        return inflowYearMonth === selectedMonth;
+        const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
+        const refYearMonth = `${refDate.getFullYear()}-${String(refDate.getMonth() + 1).padStart(2, '0')}`;
+        return refYearMonth === selectedMonth;
       }).length || 0;
 
       // 3. 재진관리비율 계산
@@ -676,45 +676,41 @@ export default function StatisticsManagement() {
           break;
         
         case 'inflow':
-          // 유입률 - 해당 월 유입일 기준, inflow_status가 '유입'
+          // 유입률 - 초진관리와 동일: inflow_date가 없으면 created_at 사용
           filteredPatients = patients?.filter(p => {
             if (p.inflow_status !== '유입') return false;
-            if (!p.inflow_date) return false;
-            const inflowDate = new Date(p.inflow_date);
-            return inflowDate >= startOfMonth && inflowDate <= endOfMonth;
+            const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
+            return refDate >= startOfMonth && refDate <= endOfMonth;
           }) || [];
           title = `유입률 - ${month}월`;
           break;
         
         case 'phone':
-          // 전화상담 비율 - 해당 월 유입일 기준, inflow_status가 '전화상담'
+          // 전화상담 비율 - 초진관리와 동일: inflow_date가 없으면 created_at 사용
           filteredPatients = patients?.filter(p => {
             if (p.inflow_status !== '전화상담') return false;
-            if (!p.inflow_date) return false;
-            const inflowDate = new Date(p.inflow_date);
-            return inflowDate >= startOfMonth && inflowDate <= endOfMonth;
+            const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
+            return refDate >= startOfMonth && refDate <= endOfMonth;
           }) || [];
           title = `전화상담 비율 - ${month}월`;
           break;
         
         case 'visit':
-          // 방문상담 비율 - 해당 월 유입일 기준, inflow_status가 '방문상담'
+          // 방문상담 비율 - 초진관리와 동일: inflow_date가 없으면 created_at 사용
           filteredPatients = patients?.filter(p => {
             if (p.inflow_status !== '방문상담') return false;
-            if (!p.inflow_date) return false;
-            const inflowDate = new Date(p.inflow_date);
-            return inflowDate >= startOfMonth && inflowDate <= endOfMonth;
+            const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
+            return refDate >= startOfMonth && refDate <= endOfMonth;
           }) || [];
           title = `방문상담 비율 - ${month}월`;
           break;
         
         case 'failed':
-          // 실패율 - 해당 월 유입일 기준, inflow_status가 '실패'
+          // 실패율 - 초진관리와 동일: inflow_date가 없으면 created_at 사용
           filteredPatients = patients?.filter(p => {
             if (p.inflow_status !== '실패') return false;
-            if (!p.inflow_date) return false;
-            const inflowDate = new Date(p.inflow_date);
-            return inflowDate >= startOfMonth && inflowDate <= endOfMonth;
+            const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
+            return refDate >= startOfMonth && refDate <= endOfMonth;
           }) || [];
           title = `실패율 - ${month}월`;
           break;
