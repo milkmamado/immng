@@ -30,8 +30,6 @@ export default function StatisticsManagement() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
   const [selectedManager, setSelectedManager] = useState<string>('all');
-  const [startDate, setStartDate] = useState<Date | undefined>();
-  const [endDate, setEndDate] = useState<Date | undefined>();
   const [managers, setManagers] = useState<{ id: string; name: string }[]>([]);
   const [isMasterOrAdmin, setIsMasterOrAdmin] = useState(false);
   const [managerStats, setManagerStats] = useState<ManagerStats[]>([]);
@@ -206,19 +204,18 @@ export default function StatisticsManagement() {
   const fetchStatistics = async () => {
     setLoading(true);
     try {
-      // 날짜 범위 설정: 사용자가 직접 선택한 날짜가 있으면 사용, 없으면 월 전체
-      let queryStartDate: string;
-      let queryEndDate: string;
+      // 선택한 월의 1일부터 오늘까지 (또는 선택한 월이 지난 달이면 그 달의 마지막 날까지)
+      const [year, month] = selectedMonth.split('-').map(Number);
+      const today = new Date();
+      const selectedMonthStart = new Date(year, month - 1, 1);
+      const selectedMonthEnd = new Date(year, month, 0); // 해당 월의 마지막 날
       
-      if (startDate && endDate) {
-        queryStartDate = startDate.toISOString().split('T')[0];
-        queryEndDate = endDate.toISOString().split('T')[0];
-      } else {
-        const [year, month] = selectedMonth.split('-');
-        queryStartDate = `${year}-${month}-01`;
-        const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
-        queryEndDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
-      }
+      // 오늘이 선택한 월에 속하면 오늘까지, 아니면 선택한 월의 마지막 날까지
+      const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month - 1;
+      const endDate = isCurrentMonth ? today : selectedMonthEnd;
+      
+      const queryStartDate = selectedMonthStart.toISOString().split('T')[0];
+      const queryEndDate = endDate.toISOString().split('T')[0];
 
       // 유입 환자 목록 가져오기 (역할에 따라 필터링, payment_amount 포함)
       let query = supabase
@@ -423,12 +420,13 @@ export default function StatisticsManagement() {
       inflowQuery = applyBranchFilter(inflowQuery);
       
       const { data: inflowPatients } = await inflowQuery;
-      const startOfPeriod = startDate || new Date(queryStartDate);
-      const endOfPeriod = endDate || new Date(queryEndDate);
       
+      // 이미 위에서 계산한 날짜 범위 사용
       const newPatientsCount = inflowPatients?.filter(p => {
         const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
-        return refDate >= startOfPeriod && refDate <= endOfPeriod;
+        const refStartDate = selectedMonthStart;
+        const refEndDate = endDate;
+        return refDate >= refStartDate && refDate <= refEndDate;
       }).length || 0;
 
       // 전화상담 환자 수 (해당 월 기준, inflow_status가 '전화상담'인 환자)
@@ -447,7 +445,7 @@ export default function StatisticsManagement() {
       const { data: phoneConsultPatients } = await phoneConsultQuery;
       const phoneConsultCount = phoneConsultPatients?.filter(p => {
         const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
-        return refDate >= startOfPeriod && refDate <= endOfPeriod;
+        return refDate >= selectedMonthStart && refDate <= endDate;
       }).length || 0;
 
       // 방문상담 환자 수 (해당 월 기준, inflow_status가 '방문상담'인 환자)
@@ -466,7 +464,7 @@ export default function StatisticsManagement() {
       const { data: visitConsultPatients } = await visitConsultQuery;
       const visitConsultCount = visitConsultPatients?.filter(p => {
         const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
-        return refDate >= startOfPeriod && refDate <= endOfPeriod;
+        return refDate >= selectedMonthStart && refDate <= endDate;
       }).length || 0;
 
       // 실패 환자 수 (해당 월 기준, inflow_status가 '실패'인 환자)
@@ -485,7 +483,7 @@ export default function StatisticsManagement() {
       const { data: failedPatients } = await failedQuery;
       const failedCount = failedPatients?.filter(p => {
         const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
-        return refDate >= startOfPeriod && refDate <= endOfPeriod;
+        return refDate >= selectedMonthStart && refDate <= endDate;
       }).length || 0;
 
       // 3. 재진관리비율 계산
@@ -660,16 +658,12 @@ export default function StatisticsManagement() {
   // 통계 카드 클릭 핸들러
   const handleStatsCardClick = async (type: 'out' | 'inflow' | 'phone' | 'visit' | 'failed' | 'retention') => {
     try {
-      // 날짜 범위: 사용자가 선택한 날짜 또는 월 전체
-      const startOfPeriod = startDate || (() => {
-        const [year, month] = selectedMonth.split('-').map(Number);
-        return new Date(year, month - 1, 1);
-      })();
-      
-      const endOfPeriod = endDate || (() => {
-        const [year, month] = selectedMonth.split('-').map(Number);
-        return new Date(year, month, 0);
-      })();
+      // 선택한 월의 1일부터 오늘까지 (또는 해당 월 마지막까지)
+      const [year2, month2] = selectedMonth.split('-').map(Number);
+      const today2 = new Date();
+      const isCurrentMonth2 = today2.getFullYear() === year2 && today2.getMonth() === month2 - 1;
+      const startOfPeriod = new Date(year2, month2 - 1, 1);
+      const endOfPeriod = isCurrentMonth2 ? today2 : new Date(year2, month2, 0);
 
       let query = applyBranchFilter(supabase.from('patients').select('*'));
       
@@ -699,10 +693,7 @@ export default function StatisticsManagement() {
             const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
             return refDate >= startOfPeriod && refDate <= endOfPeriod;
           }) || [];
-          const periodLabel = startDate && endDate 
-            ? `${startDate.toLocaleDateString('ko-KR')} ~ ${endDate.toLocaleDateString('ko-KR')}`
-            : `${selectedMonth.split('-')[1]}월`;
-          title = `유입률 - ${periodLabel}`;
+          title = `유입률 - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
           break;
         
         case 'phone':
@@ -712,7 +703,7 @@ export default function StatisticsManagement() {
             const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
             return refDate >= startOfPeriod && refDate <= endOfPeriod;
           }) || [];
-          title = `전화상담 비율 - ${periodLabel}`;
+          title = `전화상담 비율 - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
           break;
         
         case 'visit':
@@ -722,7 +713,7 @@ export default function StatisticsManagement() {
             const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
             return refDate >= startOfPeriod && refDate <= endOfPeriod;
           }) || [];
-          title = `방문상담 비율 - ${periodLabel}`;
+          title = `방문상담 비율 - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
           break;
         
         case 'failed':
@@ -732,7 +723,7 @@ export default function StatisticsManagement() {
             const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
             return refDate >= startOfPeriod && refDate <= endOfPeriod;
           }) || [];
-          title = `실패율 - ${periodLabel}`;
+          title = `실패율 - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
           break;
         
         case 'retention':
@@ -776,7 +767,7 @@ export default function StatisticsManagement() {
             {isMasterOrAdmin ? '매출 분석 (전체)' : '내 매출 분석'}
           </p>
         </div>
-        <div className="flex gap-4 items-end">
+        <div className="flex gap-4">
           {isMasterOrAdmin && (
             <Select value={selectedManager} onValueChange={setSelectedManager}>
               <SelectTrigger className="w-48">
@@ -792,11 +783,7 @@ export default function StatisticsManagement() {
               </SelectContent>
             </Select>
           )}
-          <Select value={selectedMonth} onValueChange={(value) => {
-            setSelectedMonth(value);
-            setStartDate(undefined);
-            setEndDate(undefined);
-          }}>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
             <SelectTrigger className="w-48">
               <SelectValue />
             </SelectTrigger>
@@ -808,25 +795,6 @@ export default function StatisticsManagement() {
               ))}
             </SelectContent>
           </Select>
-          
-          {/* 날짜 범위 필터 추가 */}
-          <div className="flex gap-2 items-center">
-            <input
-              type="date"
-              value={startDate?.toISOString().split('T')[0] || ''}
-              onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)}
-              className="px-3 py-2 border rounded-md text-sm"
-              placeholder="시작일"
-            />
-            <span className="text-sm text-muted-foreground">~</span>
-            <input
-              type="date"
-              value={endDate?.toISOString().split('T')[0] || ''}
-              onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : undefined)}
-              className="px-3 py-2 border rounded-md text-sm"
-              placeholder="종료일"
-            />
-          </div>
         </div>
       </div>
 
