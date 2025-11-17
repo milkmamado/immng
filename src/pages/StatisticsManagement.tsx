@@ -65,6 +65,19 @@ export default function StatisticsManagement() {
     patients: []
   });
 
+  // 통계 카드 클릭 환자 리스트 다이얼로그 state
+  const [statsDialog, setStatsDialog] = useState<{
+    open: boolean;
+    type: 'out' | 'inflow' | 'phone' | 'visit' | 'failed' | 'retention' | null;
+    title: string;
+    patients: any[];
+  }>({
+    open: false,
+    type: null,
+    title: '',
+    patients: []
+  });
+
   useEffect(() => {
     if (user) {
       checkUserRole();
@@ -624,6 +637,114 @@ export default function StatisticsManagement() {
     return '6개월 이상 관리 환자';
   };
 
+  // 통계 카드 클릭 핸들러
+  const handleStatsCardClick = async (type: 'out' | 'inflow' | 'phone' | 'visit' | 'failed' | 'retention') => {
+    try {
+      const [year, month] = selectedMonth.split('-').map(Number);
+      const startOfMonth = new Date(year, month - 1, 1);
+      const endOfMonth = new Date(year, month, 0);
+
+      let query = applyBranchFilter(supabase.from('patients').select('*'));
+      
+      // 매니저 필터 적용
+      if (selectedManager !== 'all') {
+        query = query.eq('assigned_manager', selectedManager);
+      }
+
+      const { data: patients, error } = await query;
+
+      if (error) throw error;
+
+      let filteredPatients: any[] = [];
+      let title = '';
+
+      switch(type) {
+        case 'out':
+          // 아웃 환자
+          filteredPatients = patients?.filter(p => p.management_status === '아웃') || [];
+          title = '아웃 환자';
+          break;
+        
+        case 'inflow':
+          // 유입률 (초진상담) - 해당 월에 유입된 환자
+          filteredPatients = patients?.filter(p => {
+            if (!p.inflow_date) return false;
+            const inflowDate = new Date(p.inflow_date);
+            return inflowDate >= startOfMonth && inflowDate <= endOfMonth;
+          }) || [];
+          title = `유입률 (초진상담) - ${month}월`;
+          break;
+        
+        case 'phone':
+          // 전화상담 - 해당 월에 전화FU 기록이 있는 환자
+          const { data: phoneStatuses } = await applyBranchFilter(
+            supabase
+              .from('daily_patient_status')
+              .select('patient_id, status_type')
+              .eq('status_type', '전화FU')
+              .gte('status_date', startOfMonth.toISOString().split('T')[0])
+              .lte('status_date', endOfMonth.toISOString().split('T')[0])
+          );
+          
+          const phonePatientIds = new Set(phoneStatuses?.map(s => s.patient_id) || []);
+          filteredPatients = patients?.filter(p => phonePatientIds.has(p.id)) || [];
+          title = `전화상담 비율 - ${month}월`;
+          break;
+        
+        case 'visit':
+          // 방문상담 - 해당 월에 외래 기록이 있는 환자
+          const { data: visitStatuses } = await applyBranchFilter(
+            supabase
+              .from('daily_patient_status')
+              .select('patient_id, status_type')
+              .eq('status_type', '외래')
+              .gte('status_date', startOfMonth.toISOString().split('T')[0])
+              .lte('status_date', endOfMonth.toISOString().split('T')[0])
+          );
+          
+          const visitPatientIds = new Set(visitStatuses?.map(s => s.patient_id) || []);
+          filteredPatients = patients?.filter(p => visitPatientIds.has(p.id)) || [];
+          title = `방문상담 비율 - ${month}월`;
+          break;
+        
+        case 'failed':
+          // 실패 - 해당 월에 실패로 변경된 환자
+          filteredPatients = patients?.filter(p => {
+            if (p.inflow_status !== '실패') return false;
+            if (!p.updated_at) return false;
+            const updatedDate = new Date(p.updated_at);
+            return updatedDate >= startOfMonth && updatedDate <= endOfMonth;
+          }) || [];
+          title = `실패율 - ${month}월`;
+          break;
+        
+        case 'retention':
+          // 재진관리 - 관리 중인 환자
+          filteredPatients = patients?.filter(p => 
+            p.management_status === '관리 중' || 
+            p.management_status === '입원' || 
+            p.management_status === '낮병동'
+          ) || [];
+          title = '재진관리 환자';
+          break;
+      }
+
+      setStatsDialog({
+        open: true,
+        type,
+        title,
+        patients: filteredPatients
+      });
+    } catch (error) {
+      console.error('Error fetching stats patients:', error);
+      toast({
+        title: '오류',
+        description: '환자 목록을 불러오는 중 오류가 발생했습니다.',
+        variant: 'destructive'
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -719,7 +840,7 @@ export default function StatisticsManagement() {
 
       {/* 새로운 통계 카드 섹션 */}
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-        <Card>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('out')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">아웃 환자</CardTitle>
             <Users className="h-4 w-4 text-red-500" />
@@ -728,7 +849,7 @@ export default function StatisticsManagement() {
             <div className="text-2xl font-bold text-red-600">{additionalStats.outPatients}명</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('inflow')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">유입률 (초진상담)</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-500" />
@@ -738,7 +859,7 @@ export default function StatisticsManagement() {
             <p className="text-xs text-muted-foreground mt-1">선택한 월 신규 유입</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('phone')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">전화상담 비율</CardTitle>
             <TrendingUp className="h-4 w-4 text-purple-500" />
@@ -748,7 +869,7 @@ export default function StatisticsManagement() {
             <p className="text-xs text-muted-foreground mt-1">선택한 월 전화상담</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('visit')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">방문상담 비율</CardTitle>
             <TrendingUp className="h-4 w-4 text-orange-500" />
@@ -758,7 +879,7 @@ export default function StatisticsManagement() {
             <p className="text-xs text-muted-foreground mt-1">선택한 월 방문상담</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('failed')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">실패율</CardTitle>
             <TrendingUp className="h-4 w-4 text-gray-500" />
@@ -768,14 +889,14 @@ export default function StatisticsManagement() {
             <p className="text-xs text-muted-foreground mt-1">선택한 월 실패</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('retention')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">재진관리비율</CardTitle>
             <Activity className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">{additionalStats.retentionRate}%</div>
-            <p className="text-xs text-muted-foreground mt-1">전월 초진 → 당월 활동</p>
+            <p className="text-xs text-muted-foreground mt-1">관리 중인 환자 비율</p>
           </CardContent>
         </Card>
       </div>
@@ -920,6 +1041,51 @@ export default function StatisticsManagement() {
                     </div>
                     <div className="text-sm">
                       {patient.manager_name || '-'}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {patient.inflow_date || patient.consultation_date 
+                        ? new Date(patient.inflow_date || patient.consultation_date).toLocaleDateString('ko-KR')
+                        : '-'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 통계 카드 클릭 환자 리스트 다이얼로그 */}
+      <Dialog open={statsDialog.open} onOpenChange={(open) => setStatsDialog({ open, type: null, title: '', patients: [] })}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{statsDialog.title}</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {statsDialog.patients.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                해당하는 환자가 없습니다.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="grid grid-cols-5 gap-4 pb-2 border-b font-semibold text-sm">
+                  <div>환자명</div>
+                  <div>질환</div>
+                  <div>담당 매니저</div>
+                  <div>관리 상태</div>
+                  <div>유입일</div>
+                </div>
+                {statsDialog.patients.map((patient) => (
+                  <div key={patient.id} className="grid grid-cols-5 gap-4 py-3 border-b hover:bg-muted/50">
+                    <div className="font-medium">{patient.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {patient.diagnosis_category || patient.diagnosis_detail || '-'}
+                    </div>
+                    <div className="text-sm">
+                      {patient.manager_name || '-'}
+                    </div>
+                    <div className="text-sm">
+                      {patient.management_status || '-'}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {patient.inflow_date || patient.consultation_date 
