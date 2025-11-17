@@ -660,73 +660,38 @@ export default function StatisticsManagement() {
 
       switch(type) {
         case 'out':
-          // 아웃 환자
+          // 아웃 환자 - management_status가 '아웃'
           filteredPatients = patients?.filter(p => p.management_status === '아웃') || [];
           title = '아웃 환자';
           break;
         
         case 'inflow':
-          // 유입률 (초진상담) - 해당 월에 유입된 환자
-          filteredPatients = patients?.filter(p => {
-            if (!p.inflow_date) return false;
-            const inflowDate = new Date(p.inflow_date);
-            return inflowDate >= startOfMonth && inflowDate <= endOfMonth;
-          }) || [];
-          title = `유입률 (초진상담) - ${month}월`;
+          // 유입률 - inflow_status가 '유입'
+          filteredPatients = patients?.filter(p => p.inflow_status === '유입') || [];
+          title = '유입률 (초진상담)';
           break;
         
         case 'phone':
-          // 전화상담 - 해당 월에 전화FU 기록이 있는 환자
-          const { data: phoneStatuses } = await applyBranchFilter(
-            supabase
-              .from('daily_patient_status')
-              .select('patient_id, status_type')
-              .eq('status_type', '전화FU')
-              .gte('status_date', startOfMonth.toISOString().split('T')[0])
-              .lte('status_date', endOfMonth.toISOString().split('T')[0])
-          );
-          
-          const phonePatientIds = new Set(phoneStatuses?.map(s => s.patient_id) || []);
-          filteredPatients = patients?.filter(p => phonePatientIds.has(p.id)) || [];
-          title = `전화상담 비율 - ${month}월`;
+          // 전화상담 비율 - inflow_status가 '전화상담'
+          filteredPatients = patients?.filter(p => p.inflow_status === '전화상담') || [];
+          title = '전화상담 비율';
           break;
         
         case 'visit':
-          // 방문상담 - 해당 월에 외래 기록이 있는 환자
-          const { data: visitStatuses } = await applyBranchFilter(
-            supabase
-              .from('daily_patient_status')
-              .select('patient_id, status_type')
-              .eq('status_type', '외래')
-              .gte('status_date', startOfMonth.toISOString().split('T')[0])
-              .lte('status_date', endOfMonth.toISOString().split('T')[0])
-          );
-          
-          const visitPatientIds = new Set(visitStatuses?.map(s => s.patient_id) || []);
-          filteredPatients = patients?.filter(p => visitPatientIds.has(p.id)) || [];
-          title = `방문상담 비율 - ${month}월`;
+          // 방문상담 비율 - inflow_status가 '방문상담'
+          filteredPatients = patients?.filter(p => p.inflow_status === '방문상담') || [];
+          title = '방문상담 비율';
           break;
         
         case 'failed':
-          // 실패 - 해당 월에 실패로 변경된 환자
-          filteredPatients = patients?.filter(p => {
-            if (p.inflow_status !== '실패') return false;
-            if (!p.updated_at) return false;
-            const updatedDate = new Date(p.updated_at);
-            return updatedDate >= startOfMonth && updatedDate <= endOfMonth;
-          }) || [];
-          title = `실패율 - ${month}월`;
+          // 실패율 - inflow_status가 '실패'
+          filteredPatients = patients?.filter(p => p.inflow_status === '실패') || [];
+          title = '실패율';
           break;
         
         case 'retention':
-          // 재진관리 - 관리 중인 환자
-          filteredPatients = patients?.filter(p => 
-            p.management_status === '관리 중' || 
-            p.management_status === '입원' || 
-            p.management_status === '낮병동'
-          ) || [];
-          title = '재진관리 환자';
-          break;
+          // 재진관리는 클릭해도 아무것도 안 함
+          return;
       }
 
       setStatsDialog({
@@ -889,7 +854,7 @@ export default function StatisticsManagement() {
             <p className="text-xs text-muted-foreground mt-1">선택한 월 실패</p>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('retention')}>
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">재진관리비율</CardTitle>
             <Activity className="h-4 w-4 text-blue-500" />
