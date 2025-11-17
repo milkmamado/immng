@@ -519,21 +519,21 @@ export default function StatisticsManagement() {
       ) || [];
 
       const patients1MonthPlus = activePatients.filter(p => {
-        if (!p.inflow_date) return false;
-        const inflowDate = new Date(p.inflow_date);
-        return inflowDate <= oneMonthAgo;
+        // 초진관리와 동일: inflow_date가 없으면 created_at 사용
+        const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
+        return refDate <= oneMonthAgo;
       }).length;
 
       const patients3MonthPlus = activePatients.filter(p => {
-        if (!p.inflow_date) return false;
-        const inflowDate = new Date(p.inflow_date);
-        return inflowDate <= threeMonthsAgo;
+        // 초진관리와 동일: inflow_date가 없으면 created_at 사용
+        const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
+        return refDate <= threeMonthsAgo;
       }).length;
 
       const patients6MonthPlus = activePatients.filter(p => {
-        if (!p.inflow_date) return false;
-        const inflowDate = new Date(p.inflow_date);
-        return inflowDate <= sixMonthsAgo;
+        // 초진관리와 동일: inflow_date가 없으면 created_at 사용
+        const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
+        return refDate <= sixMonthsAgo;
       }).length;
 
       setAdditionalStats({
@@ -605,7 +605,8 @@ export default function StatisticsManagement() {
           assigned_manager,
           manager_name,
           inflow_date,
-          consultation_date
+          consultation_date,
+          created_at
         `)
         .in('management_status', ['관리 중', '아웃위기']);
 
@@ -624,13 +625,10 @@ export default function StatisticsManagement() {
 
       if (error) throw error;
 
-      // 클라이언트 측에서 날짜 필터링
+      // 클라이언트 측에서 날짜 필터링 - 초진관리와 동일: inflow_date가 없으면 created_at 사용
       const filteredPatients = (allPatients || []).filter(patient => {
-        const referenceDate = patient.inflow_date || patient.consultation_date;
-        if (!referenceDate) return false;
-        
-        const patientDate = new Date(referenceDate);
-        return patientDate <= cutoffDate;
+        const referenceDate = patient.inflow_date ? new Date(patient.inflow_date) : new Date(patient.created_at);
+        return referenceDate <= cutoffDate;
       });
 
       setSelectedPeriodDialog({
