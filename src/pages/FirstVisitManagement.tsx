@@ -523,7 +523,7 @@ export default function FirstVisitManagement() {
                         <span className="whitespace-nowrap">
                           {patient.inflow_date 
                             ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
-                            : new Date(patient.created_at).toLocaleDateString('ko-KR')}
+                            : '-'}
                         </span>
                       </div>
                     </TableCell>
