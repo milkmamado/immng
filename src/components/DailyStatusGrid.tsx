@@ -1587,7 +1587,7 @@ export function DailyStatusGrid({
                     const patient = patients.find(p => p.id === selectedCell?.patientId);
                     const isShortTerm = patient ? isShortTermTreatmentPatient(patient.diagnosis_category || '') : false;
                     const availableStatuses = isShortTerm 
-                      ? ['입원', '외래', '퇴원']
+                      ? ['입원', '외래', '퇴원', '기타']
                       : statusTypes;
                     
                     return availableStatuses.map(type => (
