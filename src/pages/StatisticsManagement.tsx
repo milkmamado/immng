@@ -379,6 +379,9 @@ export default function StatisticsManagement() {
         const managerPatientIds = managerPatients?.map(p => p.id) || [];
         if (managerPatientIds.length > 0) {
           monthlyTransactionsQuery = monthlyTransactionsQuery.in('patient_id', managerPatientIds);
+        } else {
+          // 매니저의 환자가 없으면 빈 결과 반환
+          monthlyTransactionsQuery = monthlyTransactionsQuery.in('patient_id', []);
         }
       }
 
