@@ -23,7 +23,7 @@ import { DiagnosisFilter } from "@/components/TableFilters/DiagnosisFilter";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { isShortTermTreatmentPatient } from "@/utils/patientStatusUtils";
+import { isShortTermTreatmentPatient, calculateDaysSinceLastCheck, calculateAutoManagementStatus, shouldAutoUpdateStatus } from "@/utils/patientStatusUtils";
 
 interface Patient {
   id: string;
@@ -313,40 +313,23 @@ export default function PatientListManagement() {
 
           // management_status 자동 업데이트 로직
           const lastCheckDate = lastCheckMap.get(patient.id);
-          let daysSinceCheck = 0;
+          
+          // 마지막 체크로부터 경과 일수 계산 (우선순위: last_visit_date > inflow_date > created_at)
+          const daysSinceCheck = calculateDaysSinceLastCheck(lastCheckDate, patient.created_at, patient.inflow_date);
 
-          if (!lastCheckDate) {
-            const createdDate = new Date(patient.created_at);
-            daysSinceCheck = Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-          } else {
-            const lastDate = new Date(lastCheckDate);
-            daysSinceCheck = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-          }
-
-          // 최종 상태는 자동 업데이트하지 않음
-          const finalStatuses = ['사망', '상태악화', '치료종료', '아웃'];
           let newManagementStatus = patient.management_status || "관리 중";
           
-          if (!finalStatuses.includes(patient.management_status)) {
-            // "관리 중" 상태는 자동 업데이트하지 않음 (사용자가 수동으로 복귀시킨 경우 보호)
-            // "아웃위기" 상태만 자동 업데이트 대상
-            if (patient.management_status !== "관리 중") {
-              // 자동 상태 업데이트 로직
-              if (daysSinceCheck >= 21) {
-                newManagementStatus = "아웃";
-              } else if (daysSinceCheck >= 14) {
-                newManagementStatus = "아웃위기";
-              } else {
-                newManagementStatus = "관리 중";
-              }
+          // 자동 업데이트 가능 여부 확인 (최종 상태 제외, excludeManuallySet = false)
+          if (shouldAutoUpdateStatus(patient.management_status, false)) {
+            // 경과 일수에 따른 새 상태 계산
+            newManagementStatus = calculateAutoManagementStatus(daysSinceCheck);
 
-              // management_status가 변경되었으면 업데이트
-              if (patient.management_status !== newManagementStatus) {
-                await supabase
-                  .from("patients")
-                  .update({ management_status: newManagementStatus })
-                  .eq("id", patient.id);
-              }
+            // management_status가 변경되었으면 업데이트
+            if (patient.management_status !== newManagementStatus) {
+              await supabase
+                .from("patients")
+                .update({ management_status: newManagementStatus })
+                .eq("id", patient.id);
             }
           }
 
