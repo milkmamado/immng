@@ -895,7 +895,7 @@ export default function StatisticsManagement() {
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">{totalStats.monthPatients}명</div>
             <CardDescription className="text-xs mt-1">
-              해당 월에 유입된 환자
+              해당 월에 등록된 전체 환자
             </CardDescription>
           </CardContent>
         </Card>
