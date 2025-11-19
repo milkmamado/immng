@@ -252,7 +252,7 @@ export default function StatisticsManagement() {
         return inflowDate >= selectedMonthStart && inflowDate <= endDate;
       });
 
-      // 2. 총 관리 환자: 전체 기간 동안 management_status가 '관리 중'인 환자 (매출 및 통계 기준 환자 집합)
+      // 2. 총 관리 환자: 전체 기간 동안 management_status가 '관리 중'인 환자 (카드/통계용)
       let totalPatientsQuery = supabase
         .from('patients')
         .select('id, assigned_manager, manager_name')
@@ -267,6 +267,18 @@ export default function StatisticsManagement() {
       
       const { data: totalPatientsData } = await totalPatientsQuery;
       const totalPatientsCount = totalPatientsData?.length || 0;
+
+      // 매출 집계용: 관리 상태와 무관하게 해당 매니저의 모든 환자
+      let managerAllPatientsQuery = supabase
+        .from('patients')
+        .select('id, assigned_manager, manager_name');
+
+      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
+        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
+        managerAllPatientsQuery = managerAllPatientsQuery.eq('assigned_manager', targetManager);
+      }
+      managerAllPatientsQuery = applyBranchFilter(managerAllPatientsQuery);
+      const { data: managerAllPatients } = await managerAllPatientsQuery;
 
       // 해당 기간의 실제 결제 데이터 가져오기
       const { data: payments, error: paymentsError } = await supabase
@@ -387,9 +399,9 @@ export default function StatisticsManagement() {
 
       const { data: monthlyTransactions } = await monthlyTransactionsQuery;
 
-      // 환자 ID별 매니저 정보 매핑 (전체 관리 환자 기준)
+      // 환자 ID별 매니저 정보 매핑 (매출은 관리 상태와 무관하게 전체 환자 기준)
       const patientManagerMap = new Map<string, string>();
-      totalPatientsData?.forEach(p => {
+      managerAllPatients?.forEach(p => {
         patientManagerMap.set(p.id, p.assigned_manager);
       });
 
