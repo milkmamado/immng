@@ -521,9 +521,9 @@ export default function StatisticsManagement() {
       const prevMonthDate = new Date(prevYear, prevMonth - 2, 1);
       const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
       
-      // 이전 달 초진 환자
+      // 이전 달 유입 환자 (inflow_date 기준, 없으면 created_at)
       const prevMonthPatients = allPatientsWithStatus?.filter(p => {
-        const inflowDate = new Date(p.first_visit_date || p.created_at);
+        const inflowDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
         const inflowYearMonth = `${inflowDate.getFullYear()}-${String(inflowDate.getMonth() + 1).padStart(2, '0')}`;
         return inflowYearMonth === prevMonthStr;
       }) || [];
@@ -531,7 +531,7 @@ export default function StatisticsManagement() {
       // 현재 달에 활동한 환자 ID 목록
       const activePatientIds = new Set(dailyStatuses?.map(s => s.patient_id) || []);
       
-      // 이전 달 초진 중 현재 달에 활동한 환자
+      // 이전 달 유입 중 현재 달에 활동한 환자
       const retainedPatients = prevMonthPatients.filter(p => activePatientIds.has(p.id)).length;
       const retentionRate = prevMonthPatients.length > 0 
         ? Math.round((retainedPatients / prevMonthPatients.length) * 100) 
