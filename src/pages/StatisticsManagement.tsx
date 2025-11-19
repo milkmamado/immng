@@ -756,9 +756,9 @@ export default function StatisticsManagement() {
 
   const getPeriodTitle = (period: '1month' | '2month' | '3month' | '6month' | null) => {
     if (!period) return '';
-    if (period === '1month') return '1개월 이상 관리 환자';
-    if (period === '2month') return '2개월 이상 관리 환자';
-    if (period === '3month') return '3개월 이상 관리 환자';
+    if (period === '1month') return '1~2개월 관리 환자';
+    if (period === '2month') return '2~3개월 관리 환자';
+    if (period === '3month') return '3~6개월 관리 환자';
     return '6개월 이상 관리 환자';
   };
 
@@ -1105,9 +1105,9 @@ export default function StatisticsManagement() {
               className="p-4 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
               onClick={() => handlePeriodCardClick('1month')}
             >
-              <div className="text-xs text-gray-500 mb-1">전월 이전 유입 (누적)</div>
+              <div className="text-xs text-gray-500 mb-1">1~2개월 관리 환자</div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">1개월 이상</span>
+                <span className="text-sm font-medium text-gray-700">1개월대</span>
                 <span className="text-2xl font-bold text-blue-600">{additionalStats.patients1MonthPlus}명</span>
               </div>
             </div>
@@ -1115,9 +1115,9 @@ export default function StatisticsManagement() {
               className="p-4 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
               onClick={() => handlePeriodCardClick('2month')}
             >
-              <div className="text-xs text-gray-500 mb-1">2개월 전 이전 유입 (누적)</div>
+              <div className="text-xs text-gray-500 mb-1">2~3개월 관리 환자</div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">2개월 이상</span>
+                <span className="text-sm font-medium text-gray-700">2개월대</span>
                 <span className="text-2xl font-bold text-green-600">{additionalStats.patients2MonthPlus}명</span>
               </div>
             </div>
@@ -1125,9 +1125,9 @@ export default function StatisticsManagement() {
               className="p-4 bg-purple-50 rounded-lg cursor-pointer hover:bg-purple-100 transition-colors"
               onClick={() => handlePeriodCardClick('3month')}
             >
-              <div className="text-xs text-gray-500 mb-1">3개월 전 이전 유입 (누적)</div>
+              <div className="text-xs text-gray-500 mb-1">3~6개월 관리 환자</div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">3개월 이상</span>
+                <span className="text-sm font-medium text-gray-700">3개월대</span>
                 <span className="text-2xl font-bold text-purple-600">{additionalStats.patients3MonthPlus}명</span>
               </div>
             </div>
@@ -1135,7 +1135,7 @@ export default function StatisticsManagement() {
               className="p-4 bg-pink-50 rounded-lg cursor-pointer hover:bg-pink-100 transition-colors"
               onClick={() => handlePeriodCardClick('6month')}
             >
-              <div className="text-xs text-gray-500 mb-1">6개월 전 이전 유입 (누적)</div>
+              <div className="text-xs text-gray-500 mb-1">6개월 이상 관리 환자</div>
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-gray-700">6개월 이상</span>
                 <span className="text-2xl font-bold text-pink-600">{additionalStats.patients6MonthPlus}명</span>
