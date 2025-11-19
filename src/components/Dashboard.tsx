@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, DollarSign, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { calculateDaysSinceLastCheck, shouldAutoUpdateStatus } from "@/utils/patientStatusUtils";
+import { calculateDaysSinceLastCheck, calculateAutoManagementStatus, shouldAutoUpdateStatus } from "@/utils/patientStatusUtils";
 
 interface DashboardStats {
   totalPatients: number;
@@ -150,22 +150,35 @@ export function Dashboard() {
 
       const totalRevenue = totalTransactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
 
-      // 이탈 리스크 환자 계산 (patientStatusUtils.ts와 동일한 로직 사용)
+      // 일별 상태 데이터 가져오기 (이탈 리스크 계산용)
+      const { data: statusData } = await supabase
+        .from("daily_patient_status")
+        .select("patient_id, status_date")
+        .order("status_date", { ascending: false });
+
+      const lastCheckMap = new Map<string, string>();
+      statusData?.forEach(status => {
+        if (!lastCheckMap.has(status.patient_id)) {
+          lastCheckMap.set(status.patient_id, status.status_date);
+        }
+      });
+
+      // 이탈 리스크 환자 계산 (RiskManagement와 동일한 로직)
       const riskPatients = patients?.filter(patient => {
-        // 최종 상태 환자는 제외
-        if (!shouldAutoUpdateStatus(patient.management_status, false)) {
+        const lastCheckDate = lastCheckMap.get(patient.id);
+        const daysSinceCheck = calculateDaysSinceLastCheck(lastCheckDate, patient.created_at, patient.inflow_date);
+        
+        // 자동 업데이트 가능 여부 확인
+        const autoUpdateAllowed = shouldAutoUpdateStatus(patient.management_status, true);
+        if (!autoUpdateAllowed) {
           return false;
         }
 
-        // 경과 일수 계산 (우선순위: last_visit_date > inflow_date > created_at)
-        const daysSinceCheck = calculateDaysSinceLastCheck(
-          patient.last_visit_date,
-          patient.created_at,
-          patient.inflow_date
-        );
-
-        // 21일 이상인 환자만 리스크 환자로 판단 (아웃위기 + 아웃)
-        return daysSinceCheck >= 21;
+        // 자동 상태 계산
+        const newManagementStatus = calculateAutoManagementStatus(daysSinceCheck);
+        
+        // 아웃 또는 아웃위기인 환자만 리스크 환자로 판단
+        return newManagementStatus === "아웃" || newManagementStatus === "아웃위기";
       }).slice(0, 10) || [];
 
       setStats({
