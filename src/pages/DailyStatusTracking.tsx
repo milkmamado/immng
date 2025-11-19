@@ -182,8 +182,8 @@ export default function DailyStatusTracking() {
         .order('display_order', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false });
 
-      // 최종 상태(사망, 상태악화, 치료종료) 및 "아웃", "아웃위기" 환자 제외
-      patientsQuery = patientsQuery.not('management_status', 'in', '("사망","상태악화","치료종료","아웃","아웃위기")');
+      // 최종 상태(사망, 상태악화, 치료종료) 및 "아웃", "아웃위기", "면책기간" 환자 제외
+      patientsQuery = patientsQuery.not('management_status', 'in', '("사망","상태악화","치료종료","아웃","아웃위기","면책기간")');
       
       // 지점 필터 적용
       patientsQuery = applyBranchFilter(patientsQuery);
