@@ -300,10 +300,11 @@ export default function StatisticsManagement() {
 
       if (statusError) throw statusError;
 
-      // 실장별로 그룹핑: "전체 관리 환자" 기준으로 매니저별 집계용 베이스 생성
+      // 실장별로 그룹핑
       const managerMap = new Map<string, ManagerStats>();
-
-      totalPatientsData?.forEach(patient => {
+      
+      // 먼저 당월 신규 유입 환자 기준으로 매니저별 환자 수 집계
+      monthNewPatients?.forEach(patient => {
         const managerId = patient.assigned_manager;
         const managerName = patient.manager_name || '미지정';
 
@@ -327,7 +328,7 @@ export default function StatisticsManagement() {
         }
 
         const stats = managerMap.get(managerId)!;
-        stats.total_patients += 1;
+        stats.total_patients += 1; // 당월 신규 유입 환자 수
       });
 
       // 실제 결제 데이터로 매출 계산 (치료 계획)
