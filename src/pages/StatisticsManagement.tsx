@@ -597,9 +597,9 @@ export default function StatisticsManagement() {
         return refDate < sixMonthsAgo;
       }).length;
 
-      // 치료동의율 계산 (신규등록 / 유입 환자 * 100)
-      const treatmentAgreementRate = newPatientsCount > 0 
-        ? Math.round((totalStats.monthPatients / newPatientsCount) * 100) 
+      // 치료동의율 계산 (유입 환자 / 신규등록 * 100)
+      const treatmentAgreementRate = totalStats.monthPatients > 0 
+        ? Math.round((newPatientsCount / totalStats.monthPatients) * 100) 
         : 0;
 
       setAdditionalStats({
