@@ -446,7 +446,8 @@ export default function StatisticsManagement() {
       let inflowQuery = supabase
         .from('patients')
         .select('id, inflow_date, created_at')
-        .eq('inflow_status', '유입');
+        .eq('inflow_status', '유입')
+        .eq('management_status', '관리 중');
       
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
         const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
@@ -469,7 +470,8 @@ export default function StatisticsManagement() {
       let phoneConsultQuery = supabase
         .from('patients')
         .select('id, inflow_date, created_at')
-        .eq('inflow_status', '전화상담');
+        .eq('inflow_status', '전화상담')
+        .eq('management_status', '관리 중');
       
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
         const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
@@ -488,7 +490,8 @@ export default function StatisticsManagement() {
       let visitConsultQuery = supabase
         .from('patients')
         .select('id, inflow_date, created_at')
-        .eq('inflow_status', '방문상담');
+        .eq('inflow_status', '방문상담')
+        .eq('management_status', '관리 중');
       
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
         const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
@@ -507,7 +510,8 @@ export default function StatisticsManagement() {
       let failedQuery = supabase
         .from('patients')
         .select('id, inflow_date, created_at')
-        .eq('inflow_status', '실패');
+        .eq('inflow_status', '실패')
+        .eq('management_status', '관리 중');
       
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
         const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
