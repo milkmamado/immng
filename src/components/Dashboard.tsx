@@ -179,21 +179,20 @@ export function Dashboard() {
         }
       });
 
-      // 이탈 리스크 환자 계산 (RiskManagement와 동일한 로직)
+      // 이탈 리스크 환자 계산 (RiskManagement와 최대한 동일하게)
       const riskPatients = patients?.filter(patient => {
         const lastCheckDate = lastCheckMap.get(patient.id);
         const daysSinceCheck = calculateDaysSinceLastCheck(lastCheckDate, patient.created_at, patient.inflow_date);
         
         // 자동 업데이트 가능 여부 확인
         const autoUpdateAllowed = shouldAutoUpdateStatus(patient.management_status, true);
-        if (!autoUpdateAllowed) {
-          return false;
+
+        // RiskManagement처럼: 자동 업데이트 불가한 상태는 기존 상태를 유지해서 판정
+        let newManagementStatus = patient.management_status || "관리 중";
+        if (autoUpdateAllowed) {
+          newManagementStatus = calculateAutoManagementStatus(daysSinceCheck);
         }
 
-        // 자동 상태 계산
-        const newManagementStatus = calculateAutoManagementStatus(daysSinceCheck);
-        
-        // 아웃 또는 아웃위기인 환자만 리스크 환자로 판단
         const isRisk = newManagementStatus === "아웃" || newManagementStatus === "아웃위기";
         
         if (isRisk) {
