@@ -894,8 +894,8 @@ export default function StatisticsManagement() {
         </div>
       </div>
 
-      {/* 전체 통계 요약 */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      {/* 첫 번째 줄: 총 관리 환자 / 누적 매출 / 당월 매출 / 평균 객단가 */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">총 관리 환자</CardTitle>
@@ -905,20 +905,6 @@ export default function StatisticsManagement() {
             <div className="text-2xl font-bold">{totalStats.totalPatients}명</div>
             <CardDescription className="text-xs mt-1">
               관리 중 상태 전체 환자
-            </CardDescription>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {selectedMonth.split('-')[1]}월 신규 등록
-            </CardTitle>
-            <Users className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{totalStats.monthPatients}명</div>
-            <CardDescription className="text-xs mt-1">
-              해당 월에 초진관리에 등록된 전체 환자
             </CardDescription>
           </CardContent>
         </Card>
@@ -953,17 +939,19 @@ export default function StatisticsManagement() {
         </Card>
       </div>
 
-      {/* 새로운 통계 카드 섹션 */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('out')}>
+      {/* 두 번째 줄: 11월 신규 등록 / 11월 유입 환자 / 11월 치료동의율 / 11월 재진관리 비율 */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">아웃 환자</CardTitle>
-            <Users className="h-4 w-4 text-red-500" />
+            <CardTitle className="text-sm font-medium">
+              {selectedMonth.split('-')[1]}월 신규 등록
+            </CardTitle>
+            <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{additionalStats.outPatients}명</div>
+            <div className="text-2xl font-bold text-blue-600">{totalStats.monthPatients}명</div>
             <CardDescription className="text-xs mt-1">
-              전체 기간 아웃/아웃위기 환자
+              해당 월에 초진관리에 등록된 전체 환자
             </CardDescription>
           </CardContent>
         </Card>
@@ -991,6 +979,22 @@ export default function StatisticsManagement() {
             </CardDescription>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{selectedMonth.split('-')[1]}월 재진관리비율</CardTitle>
+            <Activity className="h-4 w-4 text-indigo-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-indigo-600">{additionalStats.retentionRate}%</div>
+            <CardDescription className="text-xs mt-1">
+              전월 유입 중 당월 활동 비율
+            </CardDescription>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 세 번째 줄: 11월 전화상담 / 11월 방문상담 / 11월 실패 / 아웃 환자 */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('phone')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{selectedMonth.split('-')[1]}월 전화상담</CardTitle>
@@ -1027,15 +1031,15 @@ export default function StatisticsManagement() {
             </CardDescription>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('out')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{selectedMonth.split('-')[1]}월 재진관리비율</CardTitle>
-            <Activity className="h-4 w-4 text-blue-500" />
+            <CardTitle className="text-sm font-medium">아웃 환자</CardTitle>
+            <Users className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{additionalStats.retentionRate}%</div>
+            <div className="text-2xl font-bold text-red-600">{additionalStats.outPatients}명</div>
             <CardDescription className="text-xs mt-1">
-              전월 유입 중 당월 활동 비율
+              전체 기간 아웃/아웃위기 환자
             </CardDescription>
           </CardContent>
         </Card>
