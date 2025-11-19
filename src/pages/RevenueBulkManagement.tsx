@@ -71,7 +71,7 @@ export default function RevenueBulkManagement() {
           defval: '' 
         });
         
-        if (testData.length > 0 && testData[0]['수납일자'] && testData[0]['입금총액'] !== undefined) {
+        if (testData.length > 0 && testData[0]['수납일자'] && testData[0]['총진료비'] !== undefined) {
           console.log(`✅ Range ${rangeIndex + 1}번째 행에서 헤더 발견!`);
           jsonData = testData;
           break;
@@ -90,7 +90,7 @@ export default function RevenueBulkManagement() {
 
       console.log('📊 엑셀 전체 데이터:', jsonData.length, '행');
 
-      // 차트번호, 환자성명, 수납일자, 수납시간, 입금총액 추출
+      // 차트번호, 환자성명, 수납일자, 수납시간, 총진료비 추출
       const extractedData: Array<{
         chartNumber: string;
         patientName: string;
@@ -112,7 +112,7 @@ export default function RevenueBulkManagement() {
         const patientName = String(row['환자성명']).trim();
         const dateStr = row['수납일자'];
         const timeStr = row['수납시간'] || '';
-        const amountStr = row['입금총액'];
+        const amountStr = row['총진료비'];
 
         // 날짜 파싱
         let date: Date;
