@@ -223,8 +223,8 @@ export default function StatisticsManagement() {
       const queryStartDate = selectedMonthStart.toISOString().split('T')[0];
       const queryEndDate = endDate.toISOString().split('T')[0];
 
-      // 1. 해당 월 관리 환자: management_status가 '관리 중'이고 선택한 월에 유입일이 있는 환자
-      let monthPatientsQuery = supabase
+      // 1. 해당 월 신규 유입 환자: management_status가 '관리 중'이고 선택한 월에 유입일이 있는 환자
+      let monthInflowPatientsQuery = supabase
         .from('patients')
         .select('id, assigned_manager, manager_name, payment_amount, inflow_date, created_at')
         .eq('management_status', '관리 중');
@@ -232,18 +232,18 @@ export default function StatisticsManagement() {
       // 일반 매니저는 본인 환자만, 마스터/관리자가 특정 매니저 선택 시 해당 매니저만
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
         const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
-        monthPatientsQuery = monthPatientsQuery.eq('assigned_manager', targetManager);
+        monthInflowPatientsQuery = monthInflowPatientsQuery.eq('assigned_manager', targetManager);
       }
       
       // 지점 필터 적용
-      monthPatientsQuery = applyBranchFilter(monthPatientsQuery);
+      monthInflowPatientsQuery = applyBranchFilter(monthInflowPatientsQuery);
 
-      const { data: allMonthPatients, error: monthPatientsError } = await monthPatientsQuery;
+      const { data: allMonthInflowPatients, error: monthInflowPatientsError } = await monthInflowPatientsQuery;
 
-      if (monthPatientsError) throw monthPatientsError;
+      if (monthInflowPatientsError) throw monthInflowPatientsError;
 
-      // 선택한 월에 유입일이 있는 환자만 필터링
-      const patients = allMonthPatients?.filter(p => {
+      // 선택한 월에 유입일이 있는 환자만 필터링 (월별 신규 유입)
+      const monthNewPatients = allMonthInflowPatients?.filter(p => {
         const inflowDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
         return inflowDate >= selectedMonthStart && inflowDate <= endDate;
       });
@@ -287,7 +287,7 @@ export default function StatisticsManagement() {
       // 실장별로 그룹핑
       const managerMap = new Map<string, ManagerStats>();
 
-      patients?.forEach(patient => {
+      monthNewPatients?.forEach(patient => {
         const managerId = patient.assigned_manager;
         const managerName = patient.manager_name || '미지정';
 
@@ -313,7 +313,7 @@ export default function StatisticsManagement() {
 
       // 실제 결제 데이터로 매출 계산 (치료 계획)
       payments?.forEach(payment => {
-        const patient = patients?.find(p => p.id === payment.patient_id);
+        const patient = monthNewPatients?.find(p => p.id === payment.patient_id);
         if (!patient) return;
 
         const stats = managerMap.get(patient.assigned_manager);
@@ -323,7 +323,7 @@ export default function StatisticsManagement() {
       });
 
       // 당월 거래 매출 추가 (예치금 입금 + 입원/외래 매출)
-      const patientIds = patients?.map(p => p.id) || [];
+      const patientIds = monthNewPatients?.map(p => p.id) || [];
       
       let monthlyTransactionsQuery = supabase
         .from('package_transactions')
@@ -342,7 +342,7 @@ export default function StatisticsManagement() {
       const { data: monthlyTransactions } = await monthlyTransactionsQuery;
 
       monthlyTransactions?.forEach(transaction => {
-        const patient = patients?.find(p => p.id === transaction.patient_id);
+        const patient = monthNewPatients?.find(p => p.id === transaction.patient_id);
         if (!patient) return;
 
         const stats = managerMap.get(patient.assigned_manager);
@@ -353,7 +353,7 @@ export default function StatisticsManagement() {
 
       // 상태별 일수 집계 (입원/재원, 외래, 낮병동, 전화F/U 각각의 총 일수)
       dailyStatuses?.forEach(status => {
-        const patient = patients?.find(p => p.id === status.patient_id);
+        const patient = monthNewPatients?.find(p => p.id === status.patient_id);
         if (!patient) return;
 
         const stats = managerMap.get(patient.assigned_manager);
