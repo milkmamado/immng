@@ -66,7 +66,7 @@ export const shouldAutoUpdateStatus = (
   currentStatus: string | undefined,
   excludeManuallySet: boolean = false
 ): boolean => {
-  const finalStatuses = ['사망', '상태악화', '치료종료'];
+  const finalStatuses = ['사망', '상태악화', '치료종료', '면책기간'];
   
   // 최종 상태는 자동 업데이트하지 않음
   if (finalStatuses.includes(currentStatus || '')) {
