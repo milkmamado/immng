@@ -209,8 +209,11 @@ export default function DailyStatusTracking() {
       for (const patient of patientsData || []) {
         const lastCheckDate = lastCheckMap.get(patient.id);
         
+        const autoUpdateAllowed = shouldAutoUpdateStatus(patient.management_status, false);
+        
         // 자동 업데이트 가능 여부 확인 (최종 상태 제외)
-        if (!shouldAutoUpdateStatus(patient.management_status, false)) {
+        if (!autoUpdateAllowed) {
+          console.log(`[DailyStatusTracking] "${patient.name}" (${patient.management_status}) 자동 업데이트 건너뜀`);
           continue;
         }
 
@@ -222,6 +225,7 @@ export default function DailyStatusTracking() {
 
         // management_status가 변경되었으면 업데이트
         if (patient.management_status !== newManagementStatus) {
+          console.log(`[DailyStatusTracking] 자동 상태 변경: ${patient.name} ${patient.management_status} → ${newManagementStatus}`);
           await supabase
             .from("patients")
             .update({ management_status: newManagementStatus })
