@@ -601,9 +601,9 @@ export default function StatisticsManagement() {
         return inflowDate < sixMonthsAgoPeriod;
       }).length;
 
-      // 치료동의율 계산 (유입 환자 / 신규등록 * 100)
-      const treatmentAgreementRate = totalStats.monthPatients > 0 
-        ? Math.round((newPatientsCount / totalStats.monthPatients) * 100) 
+      // 치료동의율 계산 (신규등록 / 유입 환자 * 100)
+      const treatmentAgreementRate = newPatientsCount > 0 
+        ? Math.round((totalStats.monthPatients / newPatientsCount) * 100) 
         : 0;
 
       // 유입상태='유입'인데 유입일(inflow_date) 미등록 환자
