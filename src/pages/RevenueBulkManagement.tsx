@@ -12,7 +12,7 @@ interface UploadResult {
   success: number;
   failed: number;
   duplicates: number;
-  notFound: Array<{ chartNumber: string; patientName: string; date: string; time: string; amount: number }>;
+  notFound: Array<{ chartNumber: string; patientName: string; date: string; time: string; amount: number; nonCoveredAmount: number }>;
 }
 
 export default function RevenueBulkManagement() {
@@ -90,13 +90,14 @@ export default function RevenueBulkManagement() {
 
       console.log('📊 엑셀 전체 데이터:', jsonData.length, '행');
 
-      // 차트번호, 환자성명, 수납일자, 수납시간, 총진료비 추출
+      // 차트번호, 환자성명, 수납일자, 수납시간, 총진료비, 비급여액 추출
       const extractedData: Array<{
         chartNumber: string;
         patientName: string;
         date: string;
         time: string;
         amount: number;
+        nonCoveredAmount: number;
       }> = [];
 
       let skippedCount = 0;
@@ -113,6 +114,7 @@ export default function RevenueBulkManagement() {
         const dateStr = row['수납일자'];
         const timeStr = row['수납시간'] || '';
         const amountStr = row['총진료비'];
+        const nonCoveredAmountStr = row['비급여액'];
 
         // 날짜 파싱
         let date: Date;
@@ -136,6 +138,17 @@ export default function RevenueBulkManagement() {
           amount = isNaN(parsed) ? 0 : parsed;
         }
 
+        // 비급여액 파싱
+        let nonCoveredAmount = 0;
+        if (nonCoveredAmountStr !== '' && nonCoveredAmountStr !== undefined && nonCoveredAmountStr !== null) {
+          if (typeof nonCoveredAmountStr === 'number') {
+            nonCoveredAmount = nonCoveredAmountStr;
+          } else if (typeof nonCoveredAmountStr === 'string') {
+            const parsed = parseFloat(nonCoveredAmountStr.replace(/,/g, ''));
+            nonCoveredAmount = isNaN(parsed) ? 0 : parsed;
+          }
+        }
+
         // 금액이 0원인 데이터는 제외
         if (!isNaN(date.getTime()) && chartNumber && patientName && amount > 0) {
           extractedData.push({
@@ -143,7 +156,8 @@ export default function RevenueBulkManagement() {
             patientName,
             date: date.toISOString().split('T')[0],
             time: String(timeStr).trim(),
-            amount
+            amount,
+            nonCoveredAmount
           });
         }
       });
@@ -210,13 +224,14 @@ export default function RevenueBulkManagement() {
           continue;
         }
 
-        // 삽입 준비 (수납시간 포함)
+        // 삽입 준비 (수납시간, 비급여액 포함)
         transactionsToInsert.push({
           patient_id: patient.id,
           customer_number: patient.customer_number,
           transaction_date: item.date,
           transaction_type: transactionType,
           amount: item.amount,
+          non_covered_amount: item.nonCoveredAmount,
           count: 0,
           branch: currentBranch,
           note: `${revenueType === 'inpatient' ? '입원' : '외래'} 매출 (${item.time})`
