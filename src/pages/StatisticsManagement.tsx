@@ -880,19 +880,23 @@ export default function StatisticsManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalStats.totalPatients}명</div>
-            <p className="text-xs text-muted-foreground">전체 기간 관리 중</p>
+            <CardDescription className="text-xs mt-1">
+              관리 중 상태 전체 환자
+            </CardDescription>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {selectedMonth.split('-')[1]}월 관리 환자
+              {selectedMonth.split('-')[1]}월 신규 유입
             </CardTitle>
             <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">{totalStats.monthPatients}명</div>
-            <p className="text-xs text-muted-foreground">선택한 월 유입</p>
+            <CardDescription className="text-xs mt-1">
+              해당 월에 유입된 환자
+            </CardDescription>
           </CardContent>
         </Card>
         <Card>
@@ -935,7 +939,9 @@ export default function StatisticsManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{additionalStats.outPatients}명</div>
-            <p className="text-xs text-muted-foreground">{selectedMonth.split('-')[1]}월 유입 중</p>
+            <CardDescription className="text-xs mt-1">
+              {selectedMonth.split('-')[1]}월 유입 중 아웃 상태
+            </CardDescription>
           </CardContent>
         </Card>
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('inflow')}>
@@ -945,37 +951,45 @@ export default function StatisticsManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{additionalStats.newPatientsThisMonth}명</div>
-            <p className="text-xs text-muted-foreground mt-1">{selectedMonth.split('-')[1]}월 신규 유입</p>
+            <CardDescription className="text-xs mt-1">
+              유입상태='유입' 환자
+            </CardDescription>
           </CardContent>
         </Card>
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('phone')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">전화상담 비율</CardTitle>
+            <CardTitle className="text-sm font-medium">전화상담</CardTitle>
             <TrendingUp className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">{additionalStats.phoneConsultPatientsThisMonth}명</div>
-            <p className="text-xs text-muted-foreground mt-1">{selectedMonth.split('-')[1]}월 전화상담</p>
+            <CardDescription className="text-xs mt-1">
+              유입상태='전화상담' 환자
+            </CardDescription>
           </CardContent>
         </Card>
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('visit')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">방문상담 비율</CardTitle>
+            <CardTitle className="text-sm font-medium">방문상담</CardTitle>
             <TrendingUp className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">{additionalStats.visitConsultPatientsThisMonth}명</div>
-            <p className="text-xs text-muted-foreground mt-1">{selectedMonth.split('-')[1]}월 방문상담</p>
+            <CardDescription className="text-xs mt-1">
+              유입상태='방문상담' 환자
+            </CardDescription>
           </CardContent>
         </Card>
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('failed')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">실패율</CardTitle>
+            <CardTitle className="text-sm font-medium">실패</CardTitle>
             <TrendingUp className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-600">{additionalStats.failedPatientsThisMonth}명</div>
-            <p className="text-xs text-muted-foreground mt-1">{selectedMonth.split('-')[1]}월 실패</p>
+            <CardDescription className="text-xs mt-1">
+              유입상태='실패' 환자
+            </CardDescription>
           </CardContent>
         </Card>
         <Card>
@@ -985,7 +999,9 @@ export default function StatisticsManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">{additionalStats.retentionRate}%</div>
-            <p className="text-xs text-muted-foreground mt-1">관리 중인 환자 비율</p>
+            <CardDescription className="text-xs mt-1">
+              전월 유입 중 당월 활동 비율
+            </CardDescription>
           </CardContent>
         </Card>
       </div>
@@ -1006,8 +1022,9 @@ export default function StatisticsManagement() {
               className="p-4 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
               onClick={() => handlePeriodCardClick('1month')}
             >
+              <div className="text-xs text-gray-500 mb-1">전월 이전 유입 (누적)</div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">1개월 이상 관리</span>
+                <span className="text-sm font-medium text-gray-700">1개월 이상</span>
                 <span className="text-2xl font-bold text-blue-600">{additionalStats.patients1MonthPlus}명</span>
               </div>
             </div>
@@ -1015,8 +1032,9 @@ export default function StatisticsManagement() {
               className="p-4 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
               onClick={() => handlePeriodCardClick('2month')}
             >
+              <div className="text-xs text-gray-500 mb-1">2개월 전 이전 유입 (누적)</div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">2개월 이상 관리</span>
+                <span className="text-sm font-medium text-gray-700">2개월 이상</span>
                 <span className="text-2xl font-bold text-green-600">{additionalStats.patients2MonthPlus}명</span>
               </div>
             </div>
@@ -1024,8 +1042,9 @@ export default function StatisticsManagement() {
               className="p-4 bg-purple-50 rounded-lg cursor-pointer hover:bg-purple-100 transition-colors"
               onClick={() => handlePeriodCardClick('3month')}
             >
+              <div className="text-xs text-gray-500 mb-1">3개월 전 이전 유입 (누적)</div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">3개월 이상 관리</span>
+                <span className="text-sm font-medium text-gray-700">3개월 이상</span>
                 <span className="text-2xl font-bold text-purple-600">{additionalStats.patients3MonthPlus}명</span>
               </div>
             </div>
@@ -1033,8 +1052,9 @@ export default function StatisticsManagement() {
               className="p-4 bg-pink-50 rounded-lg cursor-pointer hover:bg-pink-100 transition-colors"
               onClick={() => handlePeriodCardClick('6month')}
             >
+              <div className="text-xs text-gray-500 mb-1">6개월 전 이전 유입 (누적)</div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">6개월 이상 관리</span>
+                <span className="text-sm font-medium text-gray-700">6개월 이상</span>
                 <span className="text-2xl font-bold text-pink-600">{additionalStats.patients6MonthPlus}명</span>
               </div>
             </div>
