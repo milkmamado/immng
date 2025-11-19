@@ -51,6 +51,7 @@ export default function StatisticsManagement() {
     failedPatientsThisMonth: 0,
     retentionRate: 0,
     patients1MonthPlus: 0,
+    patients2MonthPlus: 0,
     patients3MonthPlus: 0,
     patients6MonthPlus: 0
   });
@@ -59,7 +60,7 @@ export default function StatisticsManagement() {
   // 관리 기간별 환자 리스트 다이얼로그 state
   const [selectedPeriodDialog, setSelectedPeriodDialog] = useState<{
     open: boolean;
-    period: '1month' | '3month' | '6month' | null;
+    period: '1month' | '2month' | '3month' | '6month' | null;
     patients: any[];
   }>({
     open: false,
@@ -545,6 +546,7 @@ export default function StatisticsManagement() {
       const [selectedYear, selectedMonthNum] = selectedMonth.split('-').map(Number);
       const referenceDate = new Date(selectedYear, selectedMonthNum, 0); // 해당 월의 마지막 날
       const oneMonthAgo = new Date(selectedYear, selectedMonthNum - 2, referenceDate.getDate());
+      const twoMonthsAgo = new Date(selectedYear, selectedMonthNum - 3, referenceDate.getDate());
       const threeMonthsAgo = new Date(selectedYear, selectedMonthNum - 4, referenceDate.getDate());
       const sixMonthsAgo = new Date(selectedYear, selectedMonthNum - 7, referenceDate.getDate());
 
@@ -557,6 +559,11 @@ export default function StatisticsManagement() {
         // 초진관리와 동일: inflow_date가 없으면 created_at 사용
         const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
         return refDate <= oneMonthAgo;
+      }).length;
+
+      const patients2MonthPlus = activePatients.filter(p => {
+        const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
+        return refDate <= twoMonthsAgo;
       }).length;
 
       const patients3MonthPlus = activePatients.filter(p => {
@@ -579,6 +586,7 @@ export default function StatisticsManagement() {
         failedPatientsThisMonth: failedCount,
         retentionRate,
         patients1MonthPlus,
+        patients2MonthPlus,
         patients3MonthPlus,
         patients6MonthPlus
       });
@@ -616,7 +624,7 @@ export default function StatisticsManagement() {
     return options;
   };
 
-  const handlePeriodCardClick = async (period: '1month' | '3month' | '6month') => {
+  const handlePeriodCardClick = async (period: '1month' | '2month' | '3month' | '6month') => {
     if (!user) return;
 
     try {
@@ -624,6 +632,7 @@ export default function StatisticsManagement() {
       let monthsAgo: number;
       
       if (period === '1month') monthsAgo = 1;
+      else if (period === '2month') monthsAgo = 2;
       else if (period === '3month') monthsAgo = 3;
       else monthsAgo = 6;
 
@@ -681,9 +690,10 @@ export default function StatisticsManagement() {
     }
   };
 
-  const getPeriodTitle = (period: '1month' | '3month' | '6month' | null) => {
+  const getPeriodTitle = (period: '1month' | '2month' | '3month' | '6month' | null) => {
     if (!period) return '';
     if (period === '1month') return '1개월 이상 관리 환자';
+    if (period === '2month') return '2개월 이상 관리 환자';
     if (period === '3month') return '3개월 이상 관리 환자';
     return '6개월 이상 관리 환자';
   };
@@ -976,7 +986,7 @@ export default function StatisticsManagement() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div 
               className="p-4 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
               onClick={() => handlePeriodCardClick('1month')}
@@ -984,6 +994,15 @@ export default function StatisticsManagement() {
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-gray-700">1개월 이상 관리</span>
                 <span className="text-2xl font-bold text-blue-600">{additionalStats.patients1MonthPlus}명</span>
+              </div>
+            </div>
+            <div 
+              className="p-4 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
+              onClick={() => handlePeriodCardClick('2month')}
+            >
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700">2개월 이상 관리</span>
+                <span className="text-2xl font-bold text-green-600">{additionalStats.patients2MonthPlus}명</span>
               </div>
             </div>
             <div 
@@ -1285,6 +1304,15 @@ export default function StatisticsManagement() {
                   • 계산식: 유입일(또는 등록일)이 선택한 월의 마지막 날 기준 1개월 이전 이하이고, 관리 상태가 '관리 중'인 환자 수<br/>
                   • 예시: 11월 선택 시, 10/31 이전에 유입된 관리 중 환자<br/>
                   • 설명: 최소 1개월 이상 관리되고 있는 환자 수
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm text-foreground">2개월 이상 관리</h4>
+                <p className="text-sm text-muted-foreground pl-4">
+                  • 계산식: 유입일(또는 등록일)이 선택한 월의 마지막 날 기준 2개월 이전 이하이고, 관리 상태가 '관리 중'인 환자 수<br/>
+                  • 예시: 11월 선택 시, 9/30 이전에 유입된 관리 중 환자<br/>
+                  • 설명: 최소 2개월 이상 관리되고 있는 환자 수
                 </p>
               </div>
 
