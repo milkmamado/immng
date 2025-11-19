@@ -497,12 +497,9 @@ export default function StatisticsManagement() {
       });
 
       totals.totalPatients = totalPatientsCount; // 전체 기간 관리 중 환자
-      // 당월 매출 = 급여만 (총진료비 - 비급여)
-      const monthlyInsuranceCoveredRevenue = monthlyRevenue - monthlyNonCoveredRevenue;
-      totals.monthlyRevenue = monthlyInsuranceCoveredRevenue;
-      // 평균 객단가 = 당월 매출 / 당월 환자 수
+      totals.monthlyRevenue = monthlyRevenue; // 당월 매출 (입원+외래 총진료비)
       totals.avgRevenuePerPatient = totals.monthPatients > 0 
-        ? Math.round(monthlyInsuranceCoveredRevenue / totals.monthPatients) 
+        ? Math.round(totals.monthlyRevenue / totals.monthPatients) 
         : 0;
 
       setManagerStats(statsArray);
