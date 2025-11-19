@@ -81,7 +81,25 @@ export function Dashboard() {
       const isAdmin = roleData?.role === 'master' || roleData?.role === 'admin';
       console.log('[Dashboard] User role:', roleData?.role, 'isAdmin:', isAdmin);
 
-      // 환자 통계 - 역할에 따라 필터링
+      // 1. 총 관리 환자 수 (management_status = '관리 중')
+      let managedPatientsQuery = supabase
+        .from('patients')
+        .select('id')
+        .eq('management_status', '관리 중')
+        .eq('inflow_status', '유입');
+
+      if (currentBranch) {
+        managedPatientsQuery = managedPatientsQuery.eq('branch', currentBranch);
+      }
+
+      if (!isAdmin) {
+        managedPatientsQuery = managedPatientsQuery.eq('assigned_manager', user.id);
+      }
+
+      const { data: managedPatients } = await managedPatientsQuery;
+      const totalManagedPatients = managedPatients?.length || 0;
+
+      // 2. 매출 계산용: 유입 상태 전체 환자 (관리 상태 무관, 아웃 포함)
       let patientsQuery = supabase
         .from('patients')
         .select('id, name, customer_number, assigned_manager, manager_name, last_visit_date, inflow_date, management_status, payment_amount, created_at')
@@ -100,7 +118,8 @@ export function Dashboard() {
 
       if (patientsError) throw patientsError;
       
-      console.log('[Dashboard] Total patients fetched:', patients?.length);
+      console.log('[Dashboard] Total managed patients (관리 중):', totalManagedPatients);
+      console.log('[Dashboard] Total patients for revenue calc (유입, 전체):', patients?.length);
 
       // 당월 매출 계산 (입원/외래 매출만, 예치금 제외)
       const now = new Date();
@@ -205,7 +224,7 @@ export function Dashboard() {
       console.log('[Dashboard] Total risk patients:', riskPatients.length);
 
       setStats({
-        totalPatients: patients?.length || 0,
+        totalPatients: totalManagedPatients,  // 관리 중 환자 수
         monthlyRevenue,
         totalRevenue,
         riskPatients
@@ -314,13 +333,13 @@ export function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">전체 환자</CardTitle>
+            <CardTitle className="text-sm font-medium">총 관리 환자</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalPatients}</div>
+            <div className="text-2xl font-bold">{stats.totalPatients}명</div>
             <p className="text-xs text-muted-foreground">
-              유입 환자 총 수
+              관리 중 환자 수
             </p>
           </CardContent>
         </Card>
