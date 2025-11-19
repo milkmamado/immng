@@ -1512,8 +1512,8 @@ export function DailyStatusGrid({
                         } className="text-[9px] px-1 py-0">
                           {patient.management_status || '관리 중'}
                         </Badge>
-                        <div className="flex items-center gap-1">
-                          <div className="flex flex-col gap-0.5">
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex gap-0.5">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -1534,6 +1534,8 @@ export function DailyStatusGrid({
                             >
                               <ChevronUp className="h-3 w-3" />
                             </Button>
+                          </div>
+                          <div className="flex gap-0.5">
                             <Button
                               variant="ghost"
                               size="icon"
