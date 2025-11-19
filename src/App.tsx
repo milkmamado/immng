@@ -15,6 +15,7 @@ import PatientListManagement from "./pages/PatientListManagement";
 import DailyStatusTracking from "./pages/DailyStatusTracking";
 import ChurnedPatientSchedule from "./pages/ChurnedPatientSchedule";
 import RiskManagement from "./pages/RiskManagement";
+import ExemptPatientManagement from "./pages/ExemptPatientManagement";
 import StatisticsManagement from "./pages/StatisticsManagement";
 
 import RevenueBulkManagement from "./pages/RevenueBulkManagement";
@@ -105,7 +106,15 @@ function AppRoutes() {
           } 
         />
         <Route 
-          path="statistics" 
+          path="exempt-management" 
+          element={
+            <ProtectedRoute>
+              <ExemptPatientManagement />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="statistics"
           element={
             <ProtectedRoute>
               <StatisticsManagement />
