@@ -888,7 +888,7 @@ export default function StatisticsManagement() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {selectedMonth.split('-')[1]}월 신규 유입
+              {selectedMonth.split('-')[1]}월 신규 등록
             </CardTitle>
             <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
