@@ -1512,18 +1512,8 @@ export function DailyStatusGrid({
                         } className="text-[9px] px-1 py-0">
                           {patient.management_status || '관리 중'}
                         </Badge>
-                        <div className="flex flex-col gap-0.5">
-                          <div className="flex gap-0.5">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-3 w-3 p-0"
-                              onClick={() => handleMoveToTop(index)}
-                              disabled={index === 0}
-                              title="맨 위로"
-                            >
-                              <ChevronsUp className="h-3 w-3" />
-                            </Button>
+                        <div className="flex gap-0.5">
+                          <div className="flex flex-col gap-0.5">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -1534,8 +1524,6 @@ export function DailyStatusGrid({
                             >
                               <ChevronUp className="h-3 w-3" />
                             </Button>
-                          </div>
-                          <div className="flex gap-0.5">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -1545,6 +1533,18 @@ export function DailyStatusGrid({
                               title="아래로"
                             >
                               <ChevronDown className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-3 w-3 p-0"
+                              onClick={() => handleMoveToTop(index)}
+                              disabled={index === 0}
+                              title="맨 위로"
+                            >
+                              <ChevronsUp className="h-3 w-3" />
                             </Button>
                             <Button
                               variant="ghost"
