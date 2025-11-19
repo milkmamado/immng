@@ -899,7 +899,7 @@ export default function StatisticsManagement() {
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">{totalStats.monthPatients}명</div>
             <CardDescription className="text-xs mt-1">
-              해당 월에 등록된 전체 환자
+              해당 월에 초진관리에 등록된 전체 환자
             </CardDescription>
           </CardContent>
         </Card>
@@ -950,13 +950,13 @@ export default function StatisticsManagement() {
         </Card>
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('inflow')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{selectedMonth.split('-')[1]}월 유입률 (초진상담)</CardTitle>
+            <CardTitle className="text-sm font-medium">{selectedMonth.split('-')[1]}월 유입 환자</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{additionalStats.newPatientsThisMonth}명</div>
             <CardDescription className="text-xs mt-1">
-              유입상태='유입' 환자
+              치료동의, 결제완료
             </CardDescription>
           </CardContent>
         </Card>
