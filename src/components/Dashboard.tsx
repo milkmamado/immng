@@ -79,6 +79,7 @@ export function Dashboard() {
         .single();
 
       const isAdmin = roleData?.role === 'master' || roleData?.role === 'admin';
+      console.log('[Dashboard] User role:', roleData?.role, 'isAdmin:', isAdmin);
 
       // 환자 통계 - 역할에 따라 필터링
       let patientsQuery = supabase
@@ -98,6 +99,8 @@ export function Dashboard() {
       const { data: patients, error: patientsError } = await patientsQuery;
 
       if (patientsError) throw patientsError;
+      
+      console.log('[Dashboard] Total patients fetched:', patients?.length);
 
       // 당월 매출 계산 (입원/외래 매출만, 예치금 제외)
       const now = new Date();
@@ -151,10 +154,23 @@ export function Dashboard() {
       const totalRevenue = totalTransactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
 
       // 일별 상태 데이터 가져오기 (이탈 리스크 계산용)
-      const { data: statusData } = await supabase
+      let statusQuery = supabase
         .from("daily_patient_status")
         .select("patient_id, status_date")
         .order("status_date", { ascending: false });
+
+      // 지점 필터 추가
+      if (currentBranch) {
+        statusQuery = statusQuery.eq('branch', currentBranch);
+      }
+
+      // 환자 ID 필터 추가 (성능 향상)
+      if (patientIds.length > 0) {
+        statusQuery = statusQuery.in('patient_id', patientIds);
+      }
+
+      const { data: statusData } = await statusQuery;
+      console.log('[Dashboard] Status data fetched:', statusData?.length);
 
       const lastCheckMap = new Map<string, string>();
       statusData?.forEach(status => {
@@ -178,8 +194,16 @@ export function Dashboard() {
         const newManagementStatus = calculateAutoManagementStatus(daysSinceCheck);
         
         // 아웃 또는 아웃위기인 환자만 리스크 환자로 판단
-        return newManagementStatus === "아웃" || newManagementStatus === "아웃위기";
+        const isRisk = newManagementStatus === "아웃" || newManagementStatus === "아웃위기";
+        
+        if (isRisk) {
+          console.log('[Dashboard] Risk patient:', patient.name, 'days:', daysSinceCheck, 'status:', newManagementStatus);
+        }
+        
+        return isRisk;
       }).slice(0, 10) || [];
+
+      console.log('[Dashboard] Total risk patients:', riskPatients.length);
 
       setStats({
         totalPatients: patients?.length || 0,
