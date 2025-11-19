@@ -227,11 +227,10 @@ export default function StatisticsManagement() {
       const queryStartDate = selectedMonthStart.toISOString().split('T')[0];
       const queryEndDate = endDate.toISOString().split('T')[0];
 
-      // 1. 해당 월 신규 유입 환자: management_status가 '관리 중'이고 선택한 월에 유입일이 있는 환자
+      // 1. 해당 월 신규 유입 환자: inflow_date가 선택한 월에 있는 환자 (관리 상태 무관)
       let monthInflowPatientsQuery = supabase
         .from('patients')
-        .select('id, assigned_manager, manager_name, payment_amount, inflow_date, created_at')
-        .eq('management_status', '관리 중');
+        .select('id, assigned_manager, manager_name, payment_amount, inflow_date, created_at');
 
       // 일반 매니저는 본인 환자만, 마스터/관리자가 특정 매니저 선택 시 해당 매니저만
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
