@@ -823,7 +823,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
             />
           </div>
 
-          {/* 유입/실패 */}
+          {/* 유입상태 */}
           <div>
             <Label htmlFor="inflow_status">유입상태 *</Label>
             <Select name="inflow_status" value={formData.inflow_status} onValueChange={(value) => handleSelectChange('inflow_status', value)}>
