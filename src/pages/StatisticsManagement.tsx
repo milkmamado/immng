@@ -1181,7 +1181,7 @@ export default function StatisticsManagement() {
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-foreground">총 관리 환자</h4>
                 <p className="text-sm text-muted-foreground pl-4">
-                  • 계산식: 전체 기간 동안 <code className="bg-muted px-1 rounded">management_status = '관리 중'</code>인 모든 환자<br/>
+                  • 계산식: 전체 기간 동안 관리 상태가 '관리 중'인 모든 환자<br/>
                   • 설명: 시스템에 등록된 모든 관리 중 환자의 총합
                 </p>
               </div>
@@ -1189,7 +1189,7 @@ export default function StatisticsManagement() {
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-foreground">{selectedMonth.split('-')[1]}월 관리 환자</h4>
                 <p className="text-sm text-muted-foreground pl-4">
-                  • 계산식: 선택한 월에 <code className="bg-muted px-1 rounded">inflow_date</code> (없으면 <code className="bg-muted px-1 rounded">created_at</code>)가 있고, <code className="bg-muted px-1 rounded">management_status = '관리 중'</code>인 환자<br/>
+                  • 계산식: 선택한 월에 유입일(또는 등록일)이 있고, 관리 상태가 '관리 중'인 환자<br/>
                   • 설명: 해당 월에 유입되어 현재 관리 중인 환자 수
                 </p>
               </div>
@@ -1197,7 +1197,7 @@ export default function StatisticsManagement() {
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-foreground">누적 매출</h4>
                 <p className="text-sm text-muted-foreground pl-4">
-                  • 계산식: 전체 기간의 <code className="bg-muted px-1 rounded">treatment_plans.treatment_amount</code> + <code className="bg-muted px-1 rounded">package_transactions.amount</code> 합계<br/>
+                  • 계산식: 전체 기간의 진료계획 금액 + 패키지 거래 금액 합계<br/>
                   • 설명: 시스템에 등록된 모든 매출의 총합
                 </p>
               </div>
@@ -1205,7 +1205,7 @@ export default function StatisticsManagement() {
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-foreground">당월 매출</h4>
                 <p className="text-sm text-muted-foreground pl-4">
-                  • 계산식: 선택한 월의 <code className="bg-muted px-1 rounded">treatment_plans.payment_date</code> 또는 <code className="bg-muted px-1 rounded">package_transactions.transaction_date</code>가 해당하는 금액의 합계<br/>
+                  • 계산식: 선택한 월의 진료계획 결제일 또는 패키지 거래일에 해당하는 금액의 합계<br/>
                   • 설명: 해당 월에 발생한 매출
                 </p>
               </div>
@@ -1213,7 +1213,7 @@ export default function StatisticsManagement() {
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-foreground">평균 객단가</h4>
                 <p className="text-sm text-muted-foreground pl-4">
-                  • 계산식: <code className="bg-muted px-1 rounded">당월 매출 ÷ {selectedMonth.split('-')[1]}월 관리 환자 수</code><br/>
+                  • 계산식: 당월 매출 ÷ {selectedMonth.split('-')[1]}월 관리 환자 수<br/>
                   • 설명: 해당 월 유입 환자 1명당 평균 매출액
                 </p>
               </div>
@@ -1226,7 +1226,7 @@ export default function StatisticsManagement() {
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-foreground">아웃 환자</h4>
                 <p className="text-sm text-muted-foreground pl-4">
-                  • 계산식: 선택한 월에 유입(<code className="bg-muted px-1 rounded">inflow_date</code>)되었고, <code className="bg-muted px-1 rounded">management_status = '아웃'</code>인 환자 수<br/>
+                  • 계산식: 선택한 월에 유입되었고, 관리 상태가 '아웃'인 환자 수<br/>
                   • 설명: 해당 월에 유입되었으나 현재 아웃 상태인 환자
                 </p>
               </div>
@@ -1234,7 +1234,7 @@ export default function StatisticsManagement() {
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-foreground">유입률 (초진상담)</h4>
                 <p className="text-sm text-muted-foreground pl-4">
-                  • 계산식: 선택한 월에 <code className="bg-muted px-1 rounded">inflow_date</code> (없으면 <code className="bg-muted px-1 rounded">created_at</code>)가 있고, <code className="bg-muted px-1 rounded">inflow_status = '유입'</code>인 환자 수<br/>
+                  • 계산식: 선택한 월에 유입일(또는 등록일)이 있고, 유입 상태가 '유입'인 환자 수<br/>
                   • 설명: 해당 월에 초진으로 유입된 환자 수
                 </p>
               </div>
@@ -1242,7 +1242,7 @@ export default function StatisticsManagement() {
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-foreground">전화상담 비율</h4>
                 <p className="text-sm text-muted-foreground pl-4">
-                  • 계산식: 선택한 월에 유입되었고, <code className="bg-muted px-1 rounded">inflow_status = '전화상담'</code>인 환자 수<br/>
+                  • 계산식: 선택한 월에 유입되었고, 유입 상태가 '전화상담'인 환자 수<br/>
                   • 설명: 해당 월에 전화상담으로 분류된 환자 수
                 </p>
               </div>
@@ -1250,7 +1250,7 @@ export default function StatisticsManagement() {
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-foreground">방문상담 비율</h4>
                 <p className="text-sm text-muted-foreground pl-4">
-                  • 계산식: 선택한 월에 유입되었고, <code className="bg-muted px-1 rounded">inflow_status = '방문상담'</code>인 환자 수<br/>
+                  • 계산식: 선택한 월에 유입되었고, 유입 상태가 '방문상담'인 환자 수<br/>
                   • 설명: 해당 월에 방문상담으로 분류된 환자 수
                 </p>
               </div>
@@ -1258,7 +1258,7 @@ export default function StatisticsManagement() {
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-foreground">실패율</h4>
                 <p className="text-sm text-muted-foreground pl-4">
-                  • 계산식: 선택한 월에 유입되었고, <code className="bg-muted px-1 rounded">inflow_status = '실패'</code>인 환자 수<br/>
+                  • 계산식: 선택한 월에 유입되었고, 유입 상태가 '실패'인 환자 수<br/>
                   • 설명: 해당 월에 유입 시도했으나 실패로 분류된 환자 수
                 </p>
               </div>
@@ -1266,7 +1266,7 @@ export default function StatisticsManagement() {
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-foreground">재진관리비율</h4>
                 <p className="text-sm text-muted-foreground pl-4">
-                  • 계산식: <code className="bg-muted px-1 rounded">(이전 달 유입 환자 중 당월에 daily_patient_status 기록이 있는 환자 수 ÷ 이전 달 유입 환자 수) × 100</code><br/>
+                  • 계산식: (이전 달 유입 환자 중 당월에 일일 환자 기록이 있는 환자 수 ÷ 이전 달 유입 환자 수) × 100<br/>
                   • 설명: 이전 달에 유입된 환자 중 이번 달에도 관리 활동이 있는 환자의 비율
                 </p>
               </div>
@@ -1276,13 +1276,13 @@ export default function StatisticsManagement() {
             <div className="space-y-3">
               <h3 className="text-lg font-semibold text-foreground border-b pb-2">관리 기간별 환자 현황</h3>
               <p className="text-sm text-muted-foreground">
-                * 모든 관리 기간별 통계는 선택한 월의 마지막 날을 기준으로 계산되며, <code className="bg-muted px-1 rounded">management_status = '관리 중'</code>인 환자만 집계됩니다.
+                * 모든 관리 기간별 통계는 선택한 월의 마지막 날을 기준으로 계산되며, 관리 상태가 '관리 중'인 환자만 집계됩니다.
               </p>
               
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-foreground">1개월 이상 관리</h4>
                 <p className="text-sm text-muted-foreground pl-4">
-                  • 계산식: <code className="bg-muted px-1 rounded">inflow_date</code> (없으면 <code className="bg-muted px-1 rounded">created_at</code>)가 선택한 월의 마지막 날 기준 1개월 이전 이하이고, <code className="bg-muted px-1 rounded">management_status = '관리 중'</code>인 환자 수<br/>
+                  • 계산식: 유입일(또는 등록일)이 선택한 월의 마지막 날 기준 1개월 이전 이하이고, 관리 상태가 '관리 중'인 환자 수<br/>
                   • 예시: 11월 선택 시, 10/31 이전에 유입된 관리 중 환자<br/>
                   • 설명: 최소 1개월 이상 관리되고 있는 환자 수
                 </p>
@@ -1291,7 +1291,7 @@ export default function StatisticsManagement() {
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-foreground">3개월 이상 관리</h4>
                 <p className="text-sm text-muted-foreground pl-4">
-                  • 계산식: <code className="bg-muted px-1 rounded">inflow_date</code> (없으면 <code className="bg-muted px-1 rounded">created_at</code>)가 선택한 월의 마지막 날 기준 3개월 이전 이하이고, <code className="bg-muted px-1 rounded">management_status = '관리 중'</code>인 환자 수<br/>
+                  • 계산식: 유입일(또는 등록일)이 선택한 월의 마지막 날 기준 3개월 이전 이하이고, 관리 상태가 '관리 중'인 환자 수<br/>
                   • 예시: 11월 선택 시, 8/31 이전에 유입된 관리 중 환자<br/>
                   • 설명: 최소 3개월 이상 관리되고 있는 환자 수
                 </p>
@@ -1300,7 +1300,7 @@ export default function StatisticsManagement() {
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-foreground">6개월 이상 관리</h4>
                 <p className="text-sm text-muted-foreground pl-4">
-                  • 계산식: <code className="bg-muted px-1 rounded">inflow_date</code> (없으면 <code className="bg-muted px-1 rounded">created_at</code>)가 선택한 월의 마지막 날 기준 6개월 이전 이하이고, <code className="bg-muted px-1 rounded">management_status = '관리 중'</code>인 환자 수<br/>
+                  • 계산식: 유입일(또는 등록일)이 선택한 월의 마지막 날 기준 6개월 이전 이하이고, 관리 상태가 '관리 중'인 환자 수<br/>
                   • 예시: 11월 선택 시, 5/31 이전에 유입된 관리 중 환자<br/>
                   • 설명: 최소 6개월 이상 관리되고 있는 환자 수
                 </p>
@@ -1311,7 +1311,7 @@ export default function StatisticsManagement() {
             <div className="space-y-3 bg-muted/50 p-4 rounded-lg">
               <h3 className="text-sm font-semibold text-foreground">📌 중요 안내</h3>
               <ul className="text-sm text-muted-foreground space-y-1 pl-4">
-                <li>• <strong>유입일 기준</strong>: 모든 통계는 <code className="bg-muted px-1 rounded">inflow_date</code>를 우선 사용하며, 없을 경우 <code className="bg-muted px-1 rounded">created_at</code>을 사용합니다.</li>
+                <li>• <strong>유입일 기준</strong>: 모든 통계는 환자 정보의 '유입일'을 우선 사용하며, 없을 경우 '등록일'을 사용합니다.</li>
                 <li>• <strong>월별 통계</strong>: 선택한 월에 유입된 환자만 집계됩니다 (아웃 환자, 유입률, 전화/방문상담, 실패율 등).</li>
                 <li>• <strong>관리 기간별 통계</strong>: 전체 기간 중 관리 중인 환자를 대상으로, 선택한 월 말일 기준으로 관리 기간을 계산합니다.</li>
                 <li>• <strong>담당자 필터</strong>: 마스터/관리자가 특정 담당자를 선택하면 해당 담당자의 환자만 집계됩니다.</li>
