@@ -14,6 +14,9 @@ interface ManagerStats {
   manager_name: string;
   total_patients: number;
   total_revenue: number;
+  inpatient_revenue: number;
+  outpatient_revenue: number;
+  non_covered_revenue: number;
   avg_revenue_per_patient: number;
   status_breakdown: {
     입원: number;
@@ -40,6 +43,7 @@ export default function StatisticsManagement() {
     monthPatients: 0,
     totalRevenue: 0,
     monthlyRevenue: 0,
+    monthlyNonCoveredRevenue: 0,
     avgRevenuePerPatient: 0
   });
   // 새로운 통계 state 추가
@@ -297,6 +301,9 @@ export default function StatisticsManagement() {
             manager_name: managerName,
             total_patients: 0,
             total_revenue: 0,
+            inpatient_revenue: 0,
+            outpatient_revenue: 0,
+            non_covered_revenue: 0,
             avg_revenue_per_patient: 0,
             status_breakdown: {
               입원: 0,
@@ -327,7 +334,7 @@ export default function StatisticsManagement() {
       
       let monthlyTransactionsQuery = supabase
         .from('package_transactions')
-        .select('amount, transaction_type, patient_id')
+        .select('amount, non_covered_amount, transaction_type, patient_id')
         .in('transaction_type', ['deposit_in', 'inpatient_revenue', 'outpatient_revenue'])
         .gte('transaction_date', queryStartDate)
         .lte('transaction_date', queryEndDate);
@@ -349,6 +356,16 @@ export default function StatisticsManagement() {
         if (!stats) return;
 
         stats.total_revenue += transaction.amount || 0;
+        
+        // 매출 타입별 집계
+        if (transaction.transaction_type === 'inpatient_revenue') {
+          stats.inpatient_revenue += transaction.amount || 0;
+        } else if (transaction.transaction_type === 'outpatient_revenue') {
+          stats.outpatient_revenue += transaction.amount || 0;
+        }
+        
+        // 비급여 매출 집계
+        stats.non_covered_revenue += transaction.non_covered_amount || 0;
       });
 
       // 상태별 일수 집계 (입원/재원, 외래, 낮병동, 전화F/U 각각의 총 일수)
@@ -401,8 +418,9 @@ export default function StatisticsManagement() {
         monthPatients: acc.monthPatients + stats.total_patients,
         totalRevenue: acc.totalRevenue + stats.total_revenue,
         monthlyRevenue: 0,
+        monthlyNonCoveredRevenue: acc.monthlyNonCoveredRevenue + stats.non_covered_revenue,
         avgRevenuePerPatient: 0
-      }), { totalPatients: 0, monthPatients: 0, totalRevenue: 0, monthlyRevenue: 0, avgRevenuePerPatient: 0 });
+      }), { totalPatients: 0, monthPatients: 0, totalRevenue: 0, monthlyRevenue: 0, monthlyNonCoveredRevenue: 0, avgRevenuePerPatient: 0 });
 
       totals.totalPatients = totalPatientsCount; // 전체 기간 관리 중 환자
       totals.monthlyRevenue = totals.totalRevenue; // 당월 매출은 이미 계산됨
@@ -911,8 +929,8 @@ export default function StatisticsManagement() {
         </div>
       </div>
 
-      {/* 첫 번째 줄: 총 관리 환자 / 누적 매출 / 당월 매출 / 평균 객단가 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* 첫 번째 줄: 총 관리 환자 / 누적 매출 / 당월 매출 / 당월 비급여 매출 / 평균 객단가 */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">총 관리 환자</CardTitle>
@@ -942,6 +960,16 @@ export default function StatisticsManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(totalStats.monthlyRevenue)}</div>
+            <p className="text-xs text-muted-foreground">선택한 월</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">당월 비급여 매출</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(totalStats.monthlyNonCoveredRevenue)}</div>
             <p className="text-xs text-muted-foreground">선택한 월</p>
           </CardContent>
         </Card>
@@ -1151,6 +1179,24 @@ export default function StatisticsManagement() {
                     <span className="text-sm font-medium text-gray-600">총 매출</span>
                     <span className="text-lg font-bold text-primary">
                       {formatCurrency(stats.total_revenue)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pl-4">
+                    <span className="text-xs text-gray-500">입원 매출</span>
+                    <span className="text-sm font-semibold text-blue-600">
+                      {formatCurrency(stats.inpatient_revenue)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pl-4">
+                    <span className="text-xs text-gray-500">외래 매출</span>
+                    <span className="text-sm font-semibold text-green-600">
+                      {formatCurrency(stats.outpatient_revenue)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pl-4">
+                    <span className="text-xs text-gray-500">비급여 매출</span>
+                    <span className="text-sm font-semibold text-orange-600">
+                      {formatCurrency(stats.non_covered_revenue)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">

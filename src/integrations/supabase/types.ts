@@ -335,6 +335,7 @@ export type Database = {
           date_from: string | null
           date_to: string | null
           id: string
+          non_covered_amount: number | null
           note: string | null
           patient_id: string
           transaction_date: string
@@ -350,6 +351,7 @@ export type Database = {
           date_from?: string | null
           date_to?: string | null
           id?: string
+          non_covered_amount?: number | null
           note?: string | null
           patient_id: string
           transaction_date: string
@@ -365,6 +367,7 @@ export type Database = {
           date_from?: string | null
           date_to?: string | null
           id?: string
+          non_covered_amount?: number | null
           note?: string | null
           patient_id?: string
           transaction_date?: string
