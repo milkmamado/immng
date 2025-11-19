@@ -85,8 +85,7 @@ export function Dashboard() {
       let managedPatientsQuery = supabase
         .from('patients')
         .select('id')
-        .eq('management_status', '관리 중')
-        .eq('inflow_status', '유입');
+        .eq('management_status', '관리 중');
 
       if (currentBranch) {
         managedPatientsQuery = managedPatientsQuery.eq('branch', currentBranch);
@@ -99,7 +98,28 @@ export function Dashboard() {
       const { data: managedPatients } = await managedPatientsQuery;
       const totalManagedPatients = managedPatients?.length || 0;
 
-      // 2. 매출 계산용: 유입 상태 전체 환자 (관리 상태 무관, 아웃 포함)
+      // 2. 매출 계산용 환자 목록 (관리 상태/유입 상태 무관, 지점/권한 기준)
+      let revenuePatientsQuery = supabase
+        .from('patients')
+        .select('id');
+
+      if (currentBranch) {
+        revenuePatientsQuery = revenuePatientsQuery.eq('branch', currentBranch);
+      }
+
+      if (!isAdmin) {
+        revenuePatientsQuery = revenuePatientsQuery.eq('assigned_manager', user.id);
+      }
+
+      const { data: revenuePatients, error: revenuePatientsError } = await revenuePatientsQuery;
+      if (revenuePatientsError) throw revenuePatientsError;
+
+      const revenuePatientIds = revenuePatients?.map(p => p.id) || [];
+
+      console.log('[Dashboard] Total managed patients (관리 중):', totalManagedPatients);
+      console.log('[Dashboard] Total patients for revenue calc (전체 환자):', revenuePatientIds.length);
+
+      // 3. 리스크 및 기타 통계용: 유입 상태 환자 (관리 상태 무관, 아웃 포함)
       let patientsQuery = supabase
         .from('patients')
         .select('id, name, customer_number, assigned_manager, manager_name, last_visit_date, inflow_date, management_status, payment_amount, created_at')
@@ -118,18 +138,14 @@ export function Dashboard() {
 
       if (patientsError) throw patientsError;
       
-      console.log('[Dashboard] Total managed patients (관리 중):', totalManagedPatients);
-      console.log('[Dashboard] Total patients for revenue calc (유입, 전체):', patients?.length);
-
       // 당월 매출 계산 (입원/외래 매출만, 예치금 제외)
       const now = new Date();
       const year = now.getFullYear();
       const month = now.getMonth() + 1;
       const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-      const lastDay = new Date(year, month, 0).getDate();
-      const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      const endDate = `${year}-${String(month).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-      // 환자 ID 목록 (유입 환자 기준)
+      // 환자 ID 목록 (유입 환자 기준 - 리스크 계산용)
       const patientIds = patients?.map(p => p.id) || [];
 
       // 당월 거래 데이터 가져오기 (입원/외래만)
@@ -139,14 +155,14 @@ export function Dashboard() {
         .in('transaction_type', ['inpatient_revenue', 'outpatient_revenue'])
         .gte('transaction_date', startDate)
         .lte('transaction_date', endDate);
-
+ 
       // 지점 필터 추가
       if (currentBranch) {
         monthlyTransactionsQuery = monthlyTransactionsQuery.eq('branch', currentBranch);
       }
-
-      if (patientIds.length > 0) {
-        monthlyTransactionsQuery = monthlyTransactionsQuery.in('patient_id', patientIds);
+ 
+      if (revenuePatientIds.length > 0) {
+        monthlyTransactionsQuery = monthlyTransactionsQuery.in('patient_id', revenuePatientIds);
       }
 
       const { data: monthlyTransactions } = await monthlyTransactionsQuery;
@@ -158,16 +174,16 @@ export function Dashboard() {
         .from('package_transactions')
         .select('amount, transaction_type')
         .in('transaction_type', ['inpatient_revenue', 'outpatient_revenue']);
-
+ 
       // 지점 필터 추가
       if (currentBranch) {
         totalTransactionsQuery = totalTransactionsQuery.eq('branch', currentBranch);
       }
-
-      if (patientIds.length > 0) {
-        totalTransactionsQuery = totalTransactionsQuery.in('patient_id', patientIds);
+ 
+      if (revenuePatientIds.length > 0) {
+        totalTransactionsQuery = totalTransactionsQuery.in('patient_id', revenuePatientIds);
       }
-
+ 
       const { data: totalTransactions } = await totalTransactionsQuery;
 
       const totalRevenue = totalTransactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
