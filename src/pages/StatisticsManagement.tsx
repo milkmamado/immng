@@ -51,6 +51,7 @@ export default function StatisticsManagement() {
     failedPatientsThisMonth: 0,
     retentionRate: 0,
     treatmentAgreementRate: 0,
+    missingInflowDatePatients: 0,
     patients1MonthPlus: 0,
     patients2MonthPlus: 0,
     patients3MonthPlus: 0,
@@ -72,7 +73,7 @@ export default function StatisticsManagement() {
   // 통계 카드 클릭 환자 리스트 다이얼로그 state
   const [statsDialog, setStatsDialog] = useState<{
     open: boolean;
-    type: 'out' | 'inflow' | 'phone' | 'visit' | 'failed' | 'retention' | null;
+    type: 'out' | 'inflow' | 'phone' | 'visit' | 'failed' | 'retention' | 'missingInflow' | null;
     title: string;
     patients: any[];
   }>({
@@ -605,6 +606,22 @@ export default function StatisticsManagement() {
         ? Math.round((newPatientsCount / totalStats.monthPatients) * 100) 
         : 0;
 
+      // 유입상태='유입'인데 유입일(inflow_date) 미등록 환자
+      let missingInflowQuery = supabase
+        .from('patients')
+        .select('id')
+        .eq('inflow_status', '유입')
+        .is('inflow_date', null);
+      
+      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
+        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
+        missingInflowQuery = missingInflowQuery.eq('assigned_manager', targetManager);
+      }
+      missingInflowQuery = applyBranchFilter(missingInflowQuery);
+      
+      const { data: missingInflowPatients } = await missingInflowQuery;
+      const missingInflowDatePatients = missingInflowPatients?.length || 0;
+
       setAdditionalStats({
         outPatients: outPatientsCount,
         newPatientsThisMonth: newPatientsCount,
@@ -613,6 +630,7 @@ export default function StatisticsManagement() {
         failedPatientsThisMonth: failedCount,
         retentionRate,
         treatmentAgreementRate,
+        missingInflowDatePatients,
         patients1MonthPlus,
         patients2MonthPlus,
         patients3MonthPlus,
@@ -745,7 +763,7 @@ export default function StatisticsManagement() {
   };
 
   // 통계 카드 클릭 핸들러
-  const handleStatsCardClick = async (type: 'out' | 'inflow' | 'phone' | 'visit' | 'failed' | 'retention') => {
+  const handleStatsCardClick = async (type: 'out' | 'inflow' | 'phone' | 'visit' | 'failed' | 'retention' | 'missingInflow') => {
     try {
       // 선택한 월의 1일부터 오늘까지 (또는 해당 월 마지막까지)
       const [year2, month2] = selectedMonth.split('-').map(Number);
@@ -820,6 +838,14 @@ export default function StatisticsManagement() {
         case 'retention':
           // 재진관리는 클릭해도 아무것도 안 함
           return;
+        
+        case 'missingInflow':
+          // 유입상태='유입'인데 유입일 미등록 환자
+          filteredPatients = patients?.filter(p => 
+            p.inflow_status === '유입' && !p.inflow_date
+          ) || [];
+          title = '유입상태: 유입 / 유입일 미등록 환자';
+          break;
       }
 
       setStatsDialog({
@@ -1000,7 +1026,7 @@ export default function StatisticsManagement() {
       </div>
 
       {/* 세 번째 줄: 11월 전화상담 / 11월 방문상담 / 11월 실패 / 아웃 환자 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('phone')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{selectedMonth.split('-')[1]}월 전화상담</CardTitle>
@@ -1046,6 +1072,18 @@ export default function StatisticsManagement() {
             <div className="text-2xl font-bold text-red-600">{additionalStats.outPatients}명</div>
             <CardDescription className="text-xs mt-1">
               전체 기간 아웃/아웃위기 환자
+            </CardDescription>
+          </CardContent>
+        </Card>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('missingInflow')}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">유입일 미등록</CardTitle>
+            <Activity className="h-4 w-4 text-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">{additionalStats.missingInflowDatePatients}명</div>
+            <CardDescription className="text-xs mt-1">
+              유입상태='유입' / 유입일 미등록
             </CardDescription>
           </CardContent>
         </Card>
