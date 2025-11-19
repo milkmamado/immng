@@ -628,15 +628,20 @@ export default function StatisticsManagement() {
     if (!user) return;
 
     try {
-      const now = new Date();
-      let monthsAgo: number;
+      // 선택한 월의 마지막 날을 기준으로 계산 (통계 계산과 동일)
+      const [selectedYear, selectedMonthNum] = selectedMonth.split('-').map(Number);
+      const referenceDate = new Date(selectedYear, selectedMonthNum, 0); // 해당 월의 마지막 날
       
-      if (period === '1month') monthsAgo = 1;
-      else if (period === '2month') monthsAgo = 2;
-      else if (period === '3month') monthsAgo = 3;
-      else monthsAgo = 6;
-
-      const cutoffDate = new Date(now.getFullYear(), now.getMonth() - monthsAgo, now.getDate());
+      let cutoffDate: Date;
+      if (period === '1month') {
+        cutoffDate = new Date(selectedYear, selectedMonthNum - 2, referenceDate.getDate());
+      } else if (period === '2month') {
+        cutoffDate = new Date(selectedYear, selectedMonthNum - 3, referenceDate.getDate());
+      } else if (period === '3month') {
+        cutoffDate = new Date(selectedYear, selectedMonthNum - 4, referenceDate.getDate());
+      } else {
+        cutoffDate = new Date(selectedYear, selectedMonthNum - 7, referenceDate.getDate());
+      }
       
       // 환자 데이터 조회 - 권한별로 필터링
       let query = supabase
@@ -652,7 +657,7 @@ export default function StatisticsManagement() {
           consultation_date,
           created_at
         `)
-        .in('management_status', ['관리 중', '아웃위기']);
+        .eq('management_status', '관리 중'); // 통계 계산과 동일: 관리 중만
 
       // 권한별 필터링
       if (!isMasterOrAdmin) {
