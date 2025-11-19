@@ -415,31 +415,23 @@ export default function StatisticsManagement() {
       setTotalStats(totals);
 
       // 새로운 통계 계산 로직 추가
-      // 1. 아웃 환자 수 - 선택한 월에 유입된 환자 중 아웃 상태
-      let statusQuery = supabase
+      // 1. 아웃 환자 수 - 전체 기간 아웃 + 아웃위기 환자
+      let outStatusQuery = supabase
         .from('patients')
-        .select('id, management_status, created_at, first_visit_date, assigned_manager, inflow_date');
+        .select('id')
+        .in('management_status', ['아웃', '아웃위기']);
       
       // 담당자 필터 적용 (일반 매니저 또는 특정 매니저 선택 시)
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
         const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
-        statusQuery = statusQuery.eq('assigned_manager', targetManager);
+        outStatusQuery = outStatusQuery.eq('assigned_manager', targetManager);
       }
       
       // 지점 필터 적용
-      statusQuery = applyBranchFilter(statusQuery);
+      outStatusQuery = applyBranchFilter(outStatusQuery);
       
-      const { data: allPatientsWithStatus } = await statusQuery;
-
-      // 선택한 월에 유입된 환자만 필터링
-      const monthInflowPatients = allPatientsWithStatus?.filter(p => {
-        const inflowDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
-        return inflowDate >= selectedMonthStart && inflowDate <= endDate;
-      }) || [];
-
-      const outPatientsCount = monthInflowPatients.filter(
-        p => p.management_status === '아웃'
-      ).length;
+      const { data: outPatients } = await outStatusQuery;
+      const outPatientsCount = outPatients?.length || 0;
 
       // 2. 유입률 (해당 월 기준, inflow_status가 '유입'인 환자)
       // 초진관리와 동일: inflow_date가 없으면 created_at 사용
@@ -530,8 +522,21 @@ export default function StatisticsManagement() {
       const prevMonthDate = new Date(prevYear, prevMonth - 2, 1);
       const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
       
+      // 이전 달 유입 환자를 위한 별도 쿼리
+      let prevMonthQuery = supabase
+        .from('patients')
+        .select('id, inflow_date, created_at, management_status');
+      
+      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
+        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
+        prevMonthQuery = prevMonthQuery.eq('assigned_manager', targetManager);
+      }
+      prevMonthQuery = applyBranchFilter(prevMonthQuery);
+      
+      const { data: prevMonthPatientsData } = await prevMonthQuery;
+      
       // 이전 달 유입 환자 (inflow_date 기준, 없으면 created_at)
-      const prevMonthPatients = allPatientsWithStatus?.filter(p => {
+      const prevMonthPatients = prevMonthPatientsData?.filter(p => {
         const inflowDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
         const inflowYearMonth = `${inflowDate.getFullYear()}-${String(inflowDate.getMonth() + 1).padStart(2, '0')}`;
         return inflowYearMonth === prevMonthStr;
@@ -553,13 +558,22 @@ export default function StatisticsManagement() {
       const threeMonthsAgo = new Date(year, month - 4, 1); // 3개월 전
       const sixMonthsAgo = new Date(year, month - 7, 1); // 6개월 전
 
-      // 관리 중 환자만 (면책기간, 아웃, 아웃위기, 상태악화, 사망, 치료종료 제외)
-      const activePatients = allPatientsWithStatus?.filter(
-        p => p.management_status === '관리 중'
-      ) || [];
+      // 관리 중 환자만 조회
+      let managedPatientsQuery = supabase
+        .from('patients')
+        .select('id, inflow_date, created_at')
+        .eq('management_status', '관리 중');
+      
+      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
+        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
+        managedPatientsQuery = managedPatientsQuery.eq('assigned_manager', targetManager);
+      }
+      managedPatientsQuery = applyBranchFilter(managedPatientsQuery);
+      
+      const { data: activePatients } = await managedPatientsQuery;
 
       // 1개월 이상: 유입일 < 선택한 월 1일 (누적)
-      const patients1MonthPlus = activePatients.filter(p => {
+      const patients1MonthPlus = (activePatients || []).filter(p => {
         const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
         return refDate < selectedMonthStart;
       }).length;
@@ -743,13 +757,11 @@ export default function StatisticsManagement() {
 
       switch(type) {
         case 'out':
-          // 아웃 환자 - 선택한 월 유입 + management_status가 '아웃'
-          filteredPatients = patients?.filter(p => {
-            if (p.management_status !== '아웃') return false;
-            const inflowDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
-            return inflowDate >= startOfPeriod && inflowDate <= endOfPeriod;
-          }) || [];
-          title = `아웃 환자 - ${month2}월 유입`;
+          // 아웃 환자 - 전체 기간 아웃 + 아웃위기 환자
+          filteredPatients = patients?.filter(p => 
+            p.management_status === '아웃' || p.management_status === '아웃위기'
+          ) || [];
+          title = '전체 기간 아웃/아웃위기 환자';
           break;
         
         case 'inflow':
@@ -944,7 +956,7 @@ export default function StatisticsManagement() {
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{additionalStats.outPatients}명</div>
             <CardDescription className="text-xs mt-1">
-              {selectedMonth.split('-')[1]}월 유입 중 아웃 상태
+              전체 기간 아웃/아웃위기 환자
             </CardDescription>
           </CardContent>
         </Card>
