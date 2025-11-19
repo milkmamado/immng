@@ -1018,6 +1018,19 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
               </PopoverContent>
             </Popover>
           </div>
+
+          {/* 등록일 (읽기 전용) */}
+          <div>
+            <Label htmlFor="created_at">등록일</Label>
+            <div className="w-full h-10 px-3 py-2 border border-input bg-muted rounded-md flex items-center text-sm text-muted-foreground">
+              {patient?.created_at 
+                ? format(new Date(patient.created_at), "PPP", { locale: ko })
+                : initialData?.created_at
+                  ? format(new Date(initialData.created_at), "PPP", { locale: ko })
+                  : '-'
+              }
+            </div>
+          </div>
         </div>
       </div>
 

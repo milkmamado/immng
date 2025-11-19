@@ -2111,6 +2111,17 @@ export function DailyStatusGrid({
                       </PopoverContent>
                     </Popover>
                   </div>
+
+                  {/* 등록일 (읽기 전용) */}
+                  <div>
+                    <Label htmlFor="created_at">등록일</Label>
+                    <div className="w-full h-10 px-3 py-2 border border-input bg-muted rounded-md flex items-center text-sm text-muted-foreground">
+                      {selectedPatientDetail?.created_at 
+                        ? format(new Date(selectedPatientDetail.created_at), "PPP", { locale: ko })
+                        : '-'
+                      }
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -2258,9 +2269,19 @@ export function DailyStatusGrid({
                       <span className="text-sm">
                         {selectedPatientDetail?.inflow_date 
                           ? new Date(selectedPatientDetail.inflow_date).toLocaleDateString('ko-KR')
-                          : selectedPatientDetail?.created_at 
-                            ? new Date(selectedPatientDetail.created_at).toLocaleDateString('ko-KR') 
-                            : '-'
+                          : '-'
+                        }
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>등록일</Label>
+                    <div className="p-2 bg-muted rounded-md h-10 flex items-center">
+                      <span className="text-sm">
+                        {selectedPatientDetail?.created_at 
+                          ? new Date(selectedPatientDetail.created_at).toLocaleDateString('ko-KR')
+                          : '-'
                         }
                       </span>
                     </div>
