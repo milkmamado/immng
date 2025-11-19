@@ -181,21 +181,22 @@ export default function RiskManagement() {
 
       const riskyPatients: Patient[] = [];
       const manuallySetStatuses = ['아웃', '아웃위기'];
+      
+      // 업데이트가 필요한 환자들을 수집
+      const lastVisitUpdates: { id: string; last_visit_date: string }[] = [];
+      const statusUpdates: { id: string; management_status: string }[] = [];
 
-      // 각 환자의 last_visit_date를 daily_patient_status와 동기화하고 management_status를 자동 업데이트
+      // 각 환자 처리
       for (const patient of patientsData || []) {
         const lastCheckDate = lastCheckMap.get(patient.id);
         
-        // last_visit_date가 없거나 daily_patient_status의 최근 날짜와 다르면 동기화
+        // last_visit_date 동기화가 필요한 경우 수집
         if (lastCheckDate && patient.last_visit_date !== lastCheckDate) {
-          await supabase
-            .from("patients")
-            .update({ last_visit_date: lastCheckDate })
-            .eq("id", patient.id);
+          lastVisitUpdates.push({ id: patient.id, last_visit_date: lastCheckDate });
           patient.last_visit_date = lastCheckDate; // 로컬 데이터도 업데이트
         }
         
-        // 마지막 체크로부터 경과 일수 계산 (우선순위: last_visit_date > inflow_date > created_at)
+        // 마지막 체크로부터 경과 일수 계산
         const daysSinceCheck = calculateDaysSinceLastCheck(lastCheckDate, patient.created_at, patient.inflow_date);
         
         let newManagementStatus = patient.management_status || "관리 중";
@@ -203,21 +204,16 @@ export default function RiskManagement() {
         const autoUpdateAllowed = shouldAutoUpdateStatus(patient.management_status, true);
         console.log(`[RiskManagement] 환자: ${patient.name}, DB상태: ${patient.management_status}, 경과일: ${daysSinceCheck}, 자동업데이트허용: ${autoUpdateAllowed}`);
 
-        // 자동 업데이트 가능 여부 확인 (최종 상태 + 수동 설정 아웃/아웃위기 제외)
+        // 자동 업데이트 가능 여부 확인
         if (autoUpdateAllowed) {
-          // 경과 일수에 따른 새 상태 계산
           newManagementStatus = calculateAutoManagementStatus(daysSinceCheck);
 
-          // management_status가 변경되었으면 업데이트
+          // management_status 업데이트가 필요한 경우 수집
           if (patient.management_status !== newManagementStatus) {
             console.log(`[RiskManagement] 자동 상태 변경: ${patient.management_status} → ${newManagementStatus}`);
-            await supabase
-              .from("patients")
-              .update({ management_status: newManagementStatus })
-              .eq("id", patient.id);
+            statusUpdates.push({ id: patient.id, management_status: newManagementStatus });
           }
         } else {
-          // 수동 설정된 상태 유지
           console.log(`[RiskManagement] "${patient.management_status}" 상태는 자동 업데이트 제외됨`);
         }
 
@@ -233,6 +229,29 @@ export default function RiskManagement() {
             risk_level: newManagementStatus === "아웃" ? "아웃" : "아웃위기"
           });
         }
+      }
+      
+      // 배치 업데이트 실행 (비동기, 백그라운드에서 실행)
+      if (lastVisitUpdates.length > 0) {
+        Promise.all(
+          lastVisitUpdates.map(update =>
+            supabase
+              .from("patients")
+              .update({ last_visit_date: update.last_visit_date })
+              .eq("id", update.id)
+          )
+        ).catch(error => console.error('Last visit date batch update error:', error));
+      }
+      
+      if (statusUpdates.length > 0) {
+        Promise.all(
+          statusUpdates.map(update =>
+            supabase
+              .from("patients")
+              .update({ management_status: update.management_status })
+              .eq("id", update.id)
+          )
+        ).catch(error => console.error('Management status batch update error:', error));
       }
 
       riskyPatients.sort((a, b) => {
