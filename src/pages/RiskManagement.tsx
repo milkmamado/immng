@@ -200,10 +200,11 @@ export default function RiskManagement() {
         
         let newManagementStatus = patient.management_status || "관리 중";
 
-        console.log(`[RiskManagement] 환자: ${patient.name}, DB상태: ${patient.management_status}, 경과일: ${daysSinceCheck}`);
+        const autoUpdateAllowed = shouldAutoUpdateStatus(patient.management_status, true);
+        console.log(`[RiskManagement] 환자: ${patient.name}, DB상태: ${patient.management_status}, 경과일: ${daysSinceCheck}, 자동업데이트허용: ${autoUpdateAllowed}`);
 
         // 자동 업데이트 가능 여부 확인 (최종 상태 + 수동 설정 아웃/아웃위기 제외)
-        if (shouldAutoUpdateStatus(patient.management_status, true)) {
+        if (autoUpdateAllowed) {
           // 경과 일수에 따른 새 상태 계산
           newManagementStatus = calculateAutoManagementStatus(daysSinceCheck);
 
@@ -217,8 +218,7 @@ export default function RiskManagement() {
           }
         } else {
           // 수동 설정된 상태 유지
-          newManagementStatus = patient.management_status;
-          console.log(`[RiskManagement] 수동 상태 유지: ${newManagementStatus}`);
+          console.log(`[RiskManagement] "${patient.management_status}" 상태는 자동 업데이트 제외됨`);
         }
 
         console.log(`[RiskManagement] 최종 상태: ${newManagementStatus}, 리스크 추가: ${newManagementStatus === "아웃" || newManagementStatus === "아웃위기"}`);
