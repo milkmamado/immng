@@ -946,7 +946,7 @@ export default function StatisticsManagement() {
         </Card>
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('inflow')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">유입률 (초진상담)</CardTitle>
+            <CardTitle className="text-sm font-medium">{selectedMonth.split('-')[1]}월 유입률 (초진상담)</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -958,7 +958,7 @@ export default function StatisticsManagement() {
         </Card>
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('phone')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">전화상담</CardTitle>
+            <CardTitle className="text-sm font-medium">{selectedMonth.split('-')[1]}월 전화상담</CardTitle>
             <TrendingUp className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
@@ -970,7 +970,7 @@ export default function StatisticsManagement() {
         </Card>
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('visit')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">방문상담</CardTitle>
+            <CardTitle className="text-sm font-medium">{selectedMonth.split('-')[1]}월 방문상담</CardTitle>
             <TrendingUp className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
@@ -982,7 +982,7 @@ export default function StatisticsManagement() {
         </Card>
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('failed')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">실패</CardTitle>
+            <CardTitle className="text-sm font-medium">{selectedMonth.split('-')[1]}월 실패</CardTitle>
             <TrendingUp className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
@@ -994,7 +994,7 @@ export default function StatisticsManagement() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">재진관리비율</CardTitle>
+            <CardTitle className="text-sm font-medium">{selectedMonth.split('-')[1]}월 재진관리비율</CardTitle>
             <Activity className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
