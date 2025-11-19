@@ -604,7 +604,7 @@ export default function StatisticsManagement() {
       // 치료동의율 계산
       // 치료 동의 대상 = 신규등록 - 전화상담 - 방문상담
       // 치료동의율 = (치료 동의 대상 - 실패) / 치료 동의 대상 × 100
-      const treatmentDecisionTarget = totalStats.monthPatients - phoneConsultCount - visitConsultCount;
+      const treatmentDecisionTarget = totals.monthPatients - phoneConsultCount - visitConsultCount;
       const treatmentAgreementRate = treatmentDecisionTarget > 0 
         ? Math.round(((treatmentDecisionTarget - failedCount) / treatmentDecisionTarget) * 100) 
         : 0;
