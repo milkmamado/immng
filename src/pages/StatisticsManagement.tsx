@@ -498,8 +498,10 @@ export default function StatisticsManagement() {
 
       totals.totalPatients = totalPatientsCount; // 전체 기간 관리 중 환자
       totals.monthlyRevenue = monthlyRevenue; // 당월 매출 (입원+외래 총진료비)
+      // 평균 객단가 = (당월 총진료비 - 당월 비급여) / 당월 환자 수
+      const monthlyInsuranceCoveredRevenue = monthlyRevenue - monthlyNonCoveredRevenue;
       totals.avgRevenuePerPatient = totals.monthPatients > 0 
-        ? Math.round(totals.monthlyRevenue / totals.monthPatients) 
+        ? Math.round(monthlyInsuranceCoveredRevenue / totals.monthPatients) 
         : 0;
 
       setManagerStats(statsArray);
