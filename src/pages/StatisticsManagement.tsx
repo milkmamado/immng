@@ -36,6 +36,7 @@ export default function StatisticsManagement() {
   const [loading, setLoading] = useState(true);
   const [totalStats, setTotalStats] = useState({
     totalPatients: 0,
+    monthPatients: 0,
     totalRevenue: 0,
     monthlyRevenue: 0,
     avgRevenuePerPatient: 0
@@ -217,8 +218,8 @@ export default function StatisticsManagement() {
       const queryStartDate = selectedMonthStart.toISOString().split('T')[0];
       const queryEndDate = endDate.toISOString().split('T')[0];
 
-      // 총 관리 환자: management_status가 '관리 중'이고 선택한 월에 유입일이 있는 환자
-      let query = supabase
+      // 1. 해당 월 관리 환자: management_status가 '관리 중'이고 선택한 월에 유입일이 있는 환자
+      let monthPatientsQuery = supabase
         .from('patients')
         .select('id, assigned_manager, manager_name, payment_amount, inflow_date, created_at')
         .eq('management_status', '관리 중');
@@ -226,21 +227,37 @@ export default function StatisticsManagement() {
       // 일반 매니저는 본인 환자만, 마스터/관리자가 특정 매니저 선택 시 해당 매니저만
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
         const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
-        query = query.eq('assigned_manager', targetManager);
+        monthPatientsQuery = monthPatientsQuery.eq('assigned_manager', targetManager);
       }
       
       // 지점 필터 적용
-      query = applyBranchFilter(query);
+      monthPatientsQuery = applyBranchFilter(monthPatientsQuery);
 
-      const { data: allPatients, error: patientsError } = await query;
+      const { data: allMonthPatients, error: monthPatientsError } = await monthPatientsQuery;
 
-      if (patientsError) throw patientsError;
+      if (monthPatientsError) throw monthPatientsError;
 
       // 선택한 월에 유입일이 있는 환자만 필터링
-      const patients = allPatients?.filter(p => {
+      const patients = allMonthPatients?.filter(p => {
         const inflowDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
         return inflowDate >= selectedMonthStart && inflowDate <= endDate;
       });
+
+      // 2. 총 관리 환자: 전체 기간 동안 management_status가 '관리 중'인 환자
+      let totalPatientsQuery = supabase
+        .from('patients')
+        .select('id')
+        .eq('management_status', '관리 중');
+
+      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
+        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
+        totalPatientsQuery = totalPatientsQuery.eq('assigned_manager', targetManager);
+      }
+      
+      totalPatientsQuery = applyBranchFilter(totalPatientsQuery);
+      
+      const { data: totalPatientsData } = await totalPatientsQuery;
+      const totalPatientsCount = totalPatientsData?.length || 0;
 
       // 해당 기간의 실제 결제 데이터 가져오기
       const { data: payments, error: paymentsError } = await supabase
@@ -375,16 +392,18 @@ export default function StatisticsManagement() {
 
       // 전체 통계 계산
       const totals = statsArray.reduce((acc, stats) => ({
-        totalPatients: acc.totalPatients + stats.total_patients,
+        totalPatients: 0, // 별도 계산
+        monthPatients: acc.monthPatients + stats.total_patients,
         totalRevenue: acc.totalRevenue + stats.total_revenue,
         monthlyRevenue: 0,
         avgRevenuePerPatient: 0
-      }), { totalPatients: 0, totalRevenue: 0, monthlyRevenue: 0, avgRevenuePerPatient: 0 });
+      }), { totalPatients: 0, monthPatients: 0, totalRevenue: 0, monthlyRevenue: 0, avgRevenuePerPatient: 0 });
 
+      totals.totalPatients = totalPatientsCount; // 전체 기간 관리 중 환자
       totals.monthlyRevenue = totals.totalRevenue; // 당월 매출은 이미 계산됨
       totals.totalRevenue = cumulativeRevenue; // 누적 매출
-      totals.avgRevenuePerPatient = totals.totalPatients > 0 
-        ? Math.round(totals.monthlyRevenue / totals.totalPatients) 
+      totals.avgRevenuePerPatient = totals.monthPatients > 0 
+        ? Math.round(totals.monthlyRevenue / totals.monthPatients) 
         : 0;
 
       setManagerStats(statsArray);
@@ -809,7 +828,7 @@ export default function StatisticsManagement() {
       </div>
 
       {/* 전체 통계 요약 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">총 관리 환자</CardTitle>
@@ -817,6 +836,19 @@ export default function StatisticsManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalStats.totalPatients}명</div>
+            <p className="text-xs text-muted-foreground">전체 기간 관리 중</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {selectedMonth.split('-')[1]}월 관리 환자
+            </CardTitle>
+            <Users className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{totalStats.monthPatients}명</div>
+            <p className="text-xs text-muted-foreground">선택한 월 유입</p>
           </CardContent>
         </Card>
         <Card>
@@ -859,6 +891,7 @@ export default function StatisticsManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{additionalStats.outPatients}명</div>
+            <p className="text-xs text-muted-foreground">{selectedMonth.split('-')[1]}월 유입 중</p>
           </CardContent>
         </Card>
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('inflow')}>
@@ -868,7 +901,7 @@ export default function StatisticsManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{additionalStats.newPatientsThisMonth}명</div>
-            <p className="text-xs text-muted-foreground mt-1">선택한 월 신규 유입</p>
+            <p className="text-xs text-muted-foreground mt-1">{selectedMonth.split('-')[1]}월 신규 유입</p>
           </CardContent>
         </Card>
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('phone')}>
@@ -878,7 +911,7 @@ export default function StatisticsManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">{additionalStats.phoneConsultPatientsThisMonth}명</div>
-            <p className="text-xs text-muted-foreground mt-1">선택한 월 전화상담</p>
+            <p className="text-xs text-muted-foreground mt-1">{selectedMonth.split('-')[1]}월 전화상담</p>
           </CardContent>
         </Card>
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('visit')}>
@@ -888,7 +921,7 @@ export default function StatisticsManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">{additionalStats.visitConsultPatientsThisMonth}명</div>
-            <p className="text-xs text-muted-foreground mt-1">선택한 월 방문상담</p>
+            <p className="text-xs text-muted-foreground mt-1">{selectedMonth.split('-')[1]}월 방문상담</p>
           </CardContent>
         </Card>
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('failed')}>
@@ -898,7 +931,7 @@ export default function StatisticsManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-600">{additionalStats.failedPatientsThisMonth}명</div>
-            <p className="text-xs text-muted-foreground mt-1">선택한 월 실패</p>
+            <p className="text-xs text-muted-foreground mt-1">{selectedMonth.split('-')[1]}월 실패</p>
           </CardContent>
         </Card>
         <Card>
