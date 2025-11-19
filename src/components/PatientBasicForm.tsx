@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { DatePickerWithInput } from "@/components/ui/date-picker-with-input";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
@@ -964,8 +964,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
+                <DatePickerWithInput
                   selected={formData.consultation_date ? new Date(formData.consultation_date) : undefined}
                   onSelect={(date) => {
                     if (date) {
@@ -1003,8 +1002,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
+                <DatePickerWithInput
                   selected={formData.inflow_date ? new Date(formData.inflow_date) : undefined}
                   onSelect={(date) => {
                     if (date) {
