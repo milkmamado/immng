@@ -486,21 +486,47 @@ export default function StatisticsManagement() {
         }
       });
 
-      // 평균 계산 - 당월 매출 기준으로 통일
+      // 매니저별 평균 객단가 계산을 위해 각 매니저의 11월 유입환자 수 계산
+      const managerInflowCountMap = new Map<string, number>();
+      
+      for (const [managerId, stats] of managerMap.entries()) {
+        // 해당 매니저의 11월 유입환자 수 계산 (inflow_status='유입', management_status='관리 중')
+        let managerInflowQuery = supabase
+          .from('patients')
+          .select('id, inflow_date, created_at')
+          .eq('inflow_status', '유입')
+          .eq('management_status', '관리 중')
+          .eq('assigned_manager', managerId);
+        
+        managerInflowQuery = applyBranchFilter(managerInflowQuery);
+        
+        const { data: managerInflowPatients } = await managerInflowQuery;
+        
+        const managerNewPatientsCount = managerInflowPatients?.filter(p => {
+          const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
+          return refDate >= selectedMonthStart && refDate <= endDate;
+        }).length || 0;
+        
+        managerInflowCountMap.set(managerId, managerNewPatientsCount);
+      }
+
+      // 평균 계산 - 당월 매출 / 11월 유입환자 수
       const statsArray = Array.from(managerMap.values()).map(stats => {
-        // 당월 입원/외래 매출 합계 계산
         const monthlyTotal = stats.inpatient_revenue + stats.outpatient_revenue;
+        const inflowCount = managerInflowCountMap.get(stats.manager_id) || 0;
+        
         console.log('[Statistics] Manager:', stats.manager_name, {
-          total_patients: stats.total_patients,
           inpatient_revenue: stats.inpatient_revenue,
           outpatient_revenue: stats.outpatient_revenue,
           monthlyTotal,
-          avg: stats.total_patients > 0 ? Math.round(monthlyTotal / stats.total_patients) : 0
+          inflowCount,
+          avg: inflowCount > 0 ? Math.round(monthlyTotal / inflowCount) : 0
         });
+        
         return {
           ...stats,
-          avg_revenue_per_patient: stats.total_patients > 0 
-            ? Math.round(monthlyTotal / stats.total_patients) 
+          avg_revenue_per_patient: inflowCount > 0 
+            ? Math.round(monthlyTotal / inflowCount) 
             : 0
         };
       });
@@ -524,11 +550,12 @@ export default function StatisticsManagement() {
 
       totals.totalPatients = totalPatientsCount; // 전체 기간 관리 중 환자
       totals.monthlyRevenue = monthlyRevenue; // 당월 매출 (입원+외래 총진료비)
-      totals.avgRevenuePerPatient = totals.monthPatients > 0 
-        ? Math.round(totals.monthlyRevenue / totals.monthPatients) 
-        : 0;
+      
+      // 객단가 계산은 아래에서 newPatientsCount(11월 유입환자 카드 기준)로 계산
+      // 일단 여기서는 0으로 설정
+      totals.avgRevenuePerPatient = 0;
 
-      console.log('[Statistics] Totals:', {
+      console.log('[Statistics] Totals (before newPatientsCount):', {
         monthPatients: totals.monthPatients,
         monthlyRevenue: totals.monthlyRevenue,
         avgRevenuePerPatient: totals.avgRevenuePerPatient
@@ -579,6 +606,17 @@ export default function StatisticsManagement() {
         const refEndDate = endDate;
         return refDate >= refStartDate && refDate <= refEndDate;
       }).length || 0;
+
+      // 객단가를 newPatientsCount(11월 유입환자) 기준으로 계산
+      totals.avgRevenuePerPatient = newPatientsCount > 0
+        ? Math.round(totals.monthlyRevenue / newPatientsCount)
+        : 0;
+
+      console.log('[Statistics] avgRevenuePerPatient updated:', {
+        monthlyRevenue: totals.monthlyRevenue,
+        newPatientsCount,
+        avgRevenuePerPatient: totals.avgRevenuePerPatient
+      });
 
       // 전화상담 환자 수 (해당 월 기준, inflow_status가 '전화상담'인 환자)
       // 초진관리와 동일: inflow_date가 없으면 created_at 사용
