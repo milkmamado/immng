@@ -491,6 +491,13 @@ export default function StatisticsManagement() {
       const statsArray = Array.from(managerMap.values()).map(stats => {
         // 당월 입원/외래 매출 합계 계산
         const monthlyTotal = stats.inpatient_revenue + stats.outpatient_revenue;
+        console.log('[Statistics] Manager:', stats.manager_name, {
+          total_patients: stats.total_patients,
+          inpatient_revenue: stats.inpatient_revenue,
+          outpatient_revenue: stats.outpatient_revenue,
+          monthlyTotal,
+          avg: stats.total_patients > 0 ? Math.round(monthlyTotal / stats.total_patients) : 0
+        });
         return {
           ...stats,
           avg_revenue_per_patient: stats.total_patients > 0 
@@ -521,6 +528,12 @@ export default function StatisticsManagement() {
       totals.avgRevenuePerPatient = totals.monthPatients > 0 
         ? Math.round(totals.monthlyRevenue / totals.monthPatients) 
         : 0;
+
+      console.log('[Statistics] Totals:', {
+        monthPatients: totals.monthPatients,
+        monthlyRevenue: totals.monthlyRevenue,
+        avgRevenuePerPatient: totals.avgRevenuePerPatient
+      });
 
       setManagerStats(statsArray);
       setTotalStats(totals);
