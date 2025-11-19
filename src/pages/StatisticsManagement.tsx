@@ -710,9 +710,13 @@ export default function StatisticsManagement() {
 
       switch(type) {
         case 'out':
-          // 아웃 환자 - management_status가 '아웃'
-          filteredPatients = patients?.filter(p => p.management_status === '아웃') || [];
-          title = '아웃 환자';
+          // 아웃 환자 - 선택한 월 유입 + management_status가 '아웃'
+          filteredPatients = patients?.filter(p => {
+            if (p.management_status !== '아웃') return false;
+            const inflowDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
+            return inflowDate >= startOfPeriod && inflowDate <= endOfPeriod;
+          }) || [];
+          title = `아웃 환자 - ${month2}월 유입`;
           break;
         
         case 'inflow':
