@@ -487,13 +487,17 @@ export default function StatisticsManagement() {
         }
       });
 
-      // 평균 계산
-      const statsArray = Array.from(managerMap.values()).map(stats => ({
-        ...stats,
-        avg_revenue_per_patient: stats.total_patients > 0 
-          ? Math.round(stats.total_revenue / stats.total_patients) 
-          : 0
-      }));
+      // 평균 계산 - 당월 매출 기준으로 통일
+      const statsArray = Array.from(managerMap.values()).map(stats => {
+        // 당월 입원/외래 매출 합계 계산
+        const monthlyTotal = stats.inpatient_revenue + stats.outpatient_revenue;
+        return {
+          ...stats,
+          avg_revenue_per_patient: stats.total_patients > 0 
+            ? Math.round(monthlyTotal / stats.total_patients) 
+            : 0
+        };
+      });
 
       // 전체 통계 계산
       const totals = statsArray.reduce((acc, stats) => ({
