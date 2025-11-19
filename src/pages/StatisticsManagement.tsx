@@ -329,43 +329,127 @@ export default function StatisticsManagement() {
         stats.total_revenue += payment.treatment_amount || 0;
       });
 
-      // 당월 거래 매출 추가 (예치금 입금 + 입원/외래 매출)
-      const patientIds = monthNewPatients?.map(p => p.id) || [];
-      
+      // 전체 기간의 모든 거래 가져오기 (누적 매출 계산용)
+      let allTransactionsQuery = supabase
+        .from('package_transactions')
+        .select('amount, non_covered_amount, transaction_type, patient_id')
+        .in('transaction_type', ['inpatient_revenue', 'outpatient_revenue']);
+
+      // 지점 필터 적용
+      allTransactionsQuery = applyBranchFilter(allTransactionsQuery);
+
+      // 매니저 필터 적용
+      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
+        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
+        // 해당 매니저의 환자 ID들 가져오기
+        let managerPatientsQuery = supabase
+          .from('patients')
+          .select('id')
+          .eq('assigned_manager', targetManager);
+        managerPatientsQuery = applyBranchFilter(managerPatientsQuery);
+        const { data: managerPatients } = await managerPatientsQuery;
+        const managerPatientIds = managerPatients?.map(p => p.id) || [];
+        if (managerPatientIds.length > 0) {
+          allTransactionsQuery = allTransactionsQuery.in('patient_id', managerPatientIds);
+        }
+      }
+
+      const { data: allTransactions } = await allTransactionsQuery;
+
+      // 당월 거래 가져오기
       let monthlyTransactionsQuery = supabase
         .from('package_transactions')
         .select('amount, non_covered_amount, transaction_type, patient_id')
-        .in('transaction_type', ['deposit_in', 'inpatient_revenue', 'outpatient_revenue'])
+        .in('transaction_type', ['inpatient_revenue', 'outpatient_revenue'])
         .gte('transaction_date', queryStartDate)
         .lte('transaction_date', queryEndDate);
 
       // 지점 필터 적용
       monthlyTransactionsQuery = applyBranchFilter(monthlyTransactionsQuery);
 
-      if (patientIds.length > 0) {
-        monthlyTransactionsQuery = monthlyTransactionsQuery.in('patient_id', patientIds);
+      // 매니저 필터 적용
+      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
+        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
+        let managerPatientsQuery = supabase
+          .from('patients')
+          .select('id')
+          .eq('assigned_manager', targetManager);
+        managerPatientsQuery = applyBranchFilter(managerPatientsQuery);
+        const { data: managerPatients } = await managerPatientsQuery;
+        const managerPatientIds = managerPatients?.map(p => p.id) || [];
+        if (managerPatientIds.length > 0) {
+          monthlyTransactionsQuery = monthlyTransactionsQuery.in('patient_id', managerPatientIds);
+        }
       }
 
       const { data: monthlyTransactions } = await monthlyTransactionsQuery;
 
-      monthlyTransactions?.forEach(transaction => {
-        const patient = monthNewPatients?.find(p => p.id === transaction.patient_id);
-        if (!patient) return;
+      // 환자 ID별 매니저 정보 매핑
+      const patientManagerMap = new Map<string, string>();
+      allMonthInflowPatients?.forEach(p => {
+        patientManagerMap.set(p.id, p.assigned_manager);
+      });
 
-        const stats = managerMap.get(patient.assigned_manager);
+      // 누적 매출 계산 (전체 기간)
+      allTransactions?.forEach(transaction => {
+        const managerId = patientManagerMap.get(transaction.patient_id);
+        if (!managerId) return;
+
+        let stats = managerMap.get(managerId);
+        if (!stats) {
+          // 매니저 정보가 없으면 새로 생성
+          const patient = allMonthInflowPatients?.find(p => p.assigned_manager === managerId);
+          stats = {
+            manager_id: managerId,
+            manager_name: patient?.manager_name || '미지정',
+            total_patients: 0,
+            total_revenue: 0,
+            inpatient_revenue: 0,
+            outpatient_revenue: 0,
+            non_covered_revenue: 0,
+            avg_revenue_per_patient: 0,
+            status_breakdown: {
+              입원: 0,
+              외래: 0,
+              낮병동: 0,
+              전화FU: 0
+            }
+          };
+          managerMap.set(managerId, stats);
+        }
+
+        // 누적 매출 = 전체 입원/외래 총진료비 합
+        stats.total_revenue += transaction.amount || 0;
+      });
+
+      // 당월 매출 및 비급여 매출 계산
+      let monthlyRevenue = 0;
+      let monthlyNonCoveredRevenue = 0;
+      let monthlyInpatientRevenue = 0;
+      let monthlyOutpatientRevenue = 0;
+
+      monthlyTransactions?.forEach(transaction => {
+        const managerId = patientManagerMap.get(transaction.patient_id);
+        if (!managerId) return;
+
+        const stats = managerMap.get(managerId);
         if (!stats) return;
 
-        stats.total_revenue += transaction.amount || 0;
+        // 당월 입원/외래 총진료비 합산
+        monthlyRevenue += transaction.amount || 0;
         
         // 매출 타입별 집계
         if (transaction.transaction_type === 'inpatient_revenue') {
           stats.inpatient_revenue += transaction.amount || 0;
+          monthlyInpatientRevenue += transaction.amount || 0;
         } else if (transaction.transaction_type === 'outpatient_revenue') {
           stats.outpatient_revenue += transaction.amount || 0;
+          monthlyOutpatientRevenue += transaction.amount || 0;
         }
         
-        // 비급여 매출 집계
+        // 당월 비급여 매출 = 입원/외래 비급여액 합산
         stats.non_covered_revenue += transaction.non_covered_amount || 0;
+        monthlyNonCoveredRevenue += transaction.non_covered_amount || 0;
       });
 
       // 상태별 일수 집계 (입원/재원, 외래, 낮병동, 전화F/U 각각의 총 일수)
@@ -395,36 +479,25 @@ export default function StatisticsManagement() {
           : 0
       }));
 
-      // 누적 매출 계산 (전체 기간)
-      let totalTransactionsQuery = supabase
-        .from('package_transactions')
-        .select('amount, transaction_type, patient_id')
-        .in('transaction_type', ['deposit_in', 'inpatient_revenue', 'outpatient_revenue']);
-
-      // 지점 필터 적용
-      totalTransactionsQuery = applyBranchFilter(totalTransactionsQuery);
-
-      if (patientIds.length > 0) {
-        totalTransactionsQuery = totalTransactionsQuery.in('patient_id', patientIds);
-      }
-
-      const { data: totalTransactions } = await totalTransactionsQuery;
-
-      const cumulativeRevenue = totalTransactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
-
       // 전체 통계 계산
       const totals = statsArray.reduce((acc, stats) => ({
-        totalPatients: 0, // 별도 계산
+        totalPatients: 0, // 별도 계산됨
         monthPatients: acc.monthPatients + stats.total_patients,
-        totalRevenue: acc.totalRevenue + stats.total_revenue,
-        monthlyRevenue: 0,
-        monthlyNonCoveredRevenue: acc.monthlyNonCoveredRevenue + stats.non_covered_revenue,
+        totalRevenue: acc.totalRevenue + stats.total_revenue, // 누적 매출 합계
+        monthlyRevenue: 0, // 아래에서 계산
+        monthlyNonCoveredRevenue: acc.monthlyNonCoveredRevenue + stats.non_covered_revenue, // 당월 비급여 합계
         avgRevenuePerPatient: 0
-      }), { totalPatients: 0, monthPatients: 0, totalRevenue: 0, monthlyRevenue: 0, monthlyNonCoveredRevenue: 0, avgRevenuePerPatient: 0 });
+      }), { 
+        totalPatients: 0, 
+        monthPatients: 0, 
+        totalRevenue: 0, 
+        monthlyRevenue: 0, 
+        monthlyNonCoveredRevenue: 0, 
+        avgRevenuePerPatient: 0 
+      });
 
       totals.totalPatients = totalPatientsCount; // 전체 기간 관리 중 환자
-      totals.monthlyRevenue = totals.totalRevenue; // 당월 매출은 이미 계산됨
-      totals.totalRevenue = cumulativeRevenue; // 누적 매출
+      totals.monthlyRevenue = monthlyRevenue; // 당월 매출 (입원+외래 총진료비)
       totals.avgRevenuePerPatient = totals.monthPatients > 0 
         ? Math.round(totals.monthlyRevenue / totals.monthPatients) 
         : 0;

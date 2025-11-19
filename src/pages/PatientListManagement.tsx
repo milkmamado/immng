@@ -1815,7 +1815,7 @@ export default function PatientListManagement() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>수납일자</TableHead>
-                      <TableHead className="text-right">입금총액</TableHead>
+                      <TableHead className="text-right">총진료비</TableHead>
                       <TableHead className="w-20"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -1900,7 +1900,7 @@ export default function PatientListManagement() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>수납일자</TableHead>
-                      <TableHead className="text-right">입금총액</TableHead>
+                      <TableHead className="text-right">총진료비</TableHead>
                       <TableHead className="w-20"></TableHead>
                     </TableRow>
                   </TableHeader>
