@@ -1476,11 +1476,13 @@ export default function PatientListManagement() {
         return 'bg-orange-100 dark:bg-orange-950/30';
       case '아웃':
         return 'bg-red-100 dark:bg-red-950/30';
+      case '면책기간':
+        return 'bg-purple-100 dark:bg-purple-950/30';
       default:
-        // 다른 exclude_from_daily_tracking 상태들 (사망, 치료종료 등)
+        // 다른 exclude_from_daily_tracking 상태들 (사망, 치료종료, 상태악화)
         const statusOption = patientStatusOptions.find(opt => opt.name === managementStatus);
         if (statusOption?.exclude_from_daily_tracking) {
-          return 'bg-pink-100 dark:bg-pink-950/30';
+          return 'bg-gray-100 dark:bg-gray-950/30';
         }
         return '';
     }
