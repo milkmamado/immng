@@ -555,25 +555,25 @@ export default function StatisticsManagement() {
         p => p.management_status === '관리 중'
       ) || [];
 
-      // 1-2개월 미만: 1개월 전 <= 유입일 < 2개월 전
+      // 1개월 이상: 유입일 <= 1개월 전 (누적)
       const patients1MonthPlus = activePatients.filter(p => {
         const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
-        return refDate <= oneMonthAgo && refDate > twoMonthsAgo;
+        return refDate <= oneMonthAgo;
       }).length;
 
-      // 2-3개월 미만: 2개월 전 <= 유입일 < 3개월 전
+      // 2개월 이상: 유입일 <= 2개월 전 (누적)
       const patients2MonthPlus = activePatients.filter(p => {
         const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
-        return refDate <= twoMonthsAgo && refDate > threeMonthsAgo;
+        return refDate <= twoMonthsAgo;
       }).length;
 
-      // 3-6개월 미만: 3개월 전 <= 유입일 < 6개월 전
+      // 3개월 이상: 유입일 <= 3개월 전 (누적)
       const patients3MonthPlus = activePatients.filter(p => {
         const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
-        return refDate <= threeMonthsAgo && refDate > sixMonthsAgo;
+        return refDate <= threeMonthsAgo;
       }).length;
 
-      // 6개월 이상: 유입일 <= 6개월 전
+      // 6개월 이상: 유입일 <= 6개월 전 (누적)
       const patients6MonthPlus = activePatients.filter(p => {
         const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
         return refDate <= sixMonthsAgo;
@@ -638,25 +638,20 @@ export default function StatisticsManagement() {
       const threeMonthsAgo = new Date(selectedYear, selectedMonthNum - 4, referenceDate.getDate());
       const sixMonthsAgo = new Date(selectedYear, selectedMonthNum - 7, referenceDate.getDate());
       
-      let startCutoff: Date;
-      let endCutoff: Date | null;
+      let cutoffDate: Date;
       
       if (period === '1month') {
-        // 1-2개월 미만
-        startCutoff = twoMonthsAgo;
-        endCutoff = oneMonthAgo;
+        // 1개월 이상: 유입일 <= 1개월 전
+        cutoffDate = oneMonthAgo;
       } else if (period === '2month') {
-        // 2-3개월 미만
-        startCutoff = threeMonthsAgo;
-        endCutoff = twoMonthsAgo;
+        // 2개월 이상: 유입일 <= 2개월 전
+        cutoffDate = twoMonthsAgo;
       } else if (period === '3month') {
-        // 3-6개월 미만
-        startCutoff = sixMonthsAgo;
-        endCutoff = threeMonthsAgo;
+        // 3개월 이상: 유입일 <= 3개월 전
+        cutoffDate = threeMonthsAgo;
       } else {
-        // 6개월 이상
-        startCutoff = new Date(1900, 0, 1); // 매우 오래된 날짜
-        endCutoff = sixMonthsAgo;
+        // 6개월 이상: 유입일 <= 6개월 전
+        cutoffDate = sixMonthsAgo;
       }
       
       // 환자 데이터 조회 - 권한별로 필터링
@@ -690,16 +685,10 @@ export default function StatisticsManagement() {
 
       if (error) throw error;
 
-      // 클라이언트 측에서 날짜 필터링 - 기간별 범위에 맞게
+      // 클라이언트 측에서 날짜 필터링 - 누적 방식 (~이상)
       const filteredPatients = (allPatients || []).filter(patient => {
         const inflowDate = patient.inflow_date ? new Date(patient.inflow_date) : new Date(patient.created_at);
-        if (period === '6month') {
-          // 6개월 이상: 유입일 <= 6개월 전
-          return inflowDate <= endCutoff!;
-        } else {
-          // 1-2개월, 2-3개월, 3-6개월: 범위 내
-          return inflowDate > startCutoff && inflowDate <= endCutoff!;
-        }
+        return inflowDate <= cutoffDate;
       });
 
       setSelectedPeriodDialog({
