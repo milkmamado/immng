@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ChevronLeft, ChevronRight, RefreshCw, ChevronUp, ChevronDown, CalendarDays, CalendarIcon, Filter } from "lucide-react";
+import { ChevronLeft, ChevronRight, RefreshCw, ChevronUp, ChevronDown, ChevronsUp, ChevronsDown, CalendarDays, CalendarIcon, Filter } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
@@ -189,6 +189,22 @@ export function DailyStatusGrid({
     if (index === patients.length - 1) return;
     const newOrder = [...patients];
     [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+    onOrderUpdate(newOrder.map(p => p.id));
+  };
+
+  const handleMoveToTop = (index: number) => {
+    if (index === 0) return;
+    const newOrder = [...patients];
+    const [movedPatient] = newOrder.splice(index, 1);
+    newOrder.unshift(movedPatient);
+    onOrderUpdate(newOrder.map(p => p.id));
+  };
+
+  const handleMoveToBottom = (index: number) => {
+    if (index === patients.length - 1) return;
+    const newOrder = [...patients];
+    const [movedPatient] = newOrder.splice(index, 1);
+    newOrder.push(movedPatient);
     onOrderUpdate(newOrder.map(p => p.id));
   };
 
@@ -1496,25 +1512,49 @@ export function DailyStatusGrid({
                         } className="text-[9px] px-1 py-0">
                           {patient.management_status || '관리 중'}
                         </Badge>
-                        <div className="flex flex-col gap-0.5">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-3 w-3 p-0"
-                            onClick={() => handleMoveUp(index)}
-                            disabled={index === 0}
-                          >
-                            <ChevronUp className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-3 w-3 p-0"
-                            onClick={() => handleMoveDown(index)}
-                            disabled={index === patients.length - 1}
-                          >
-                            <ChevronDown className="h-3 w-3" />
-                          </Button>
+                        <div className="flex items-center gap-1">
+                          <div className="flex flex-col gap-0.5">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-3 w-3 p-0"
+                              onClick={() => handleMoveToTop(index)}
+                              disabled={index === 0}
+                              title="맨 위로"
+                            >
+                              <ChevronsUp className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-3 w-3 p-0"
+                              onClick={() => handleMoveUp(index)}
+                              disabled={index === 0}
+                              title="위로"
+                            >
+                              <ChevronUp className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-3 w-3 p-0"
+                              onClick={() => handleMoveDown(index)}
+                              disabled={index === patients.length - 1}
+                              title="아래로"
+                            >
+                              <ChevronDown className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-3 w-3 p-0"
+                              onClick={() => handleMoveToBottom(index)}
+                              disabled={index === patients.length - 1}
+                              title="맨 아래로"
+                            >
+                              <ChevronsDown className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
