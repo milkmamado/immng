@@ -601,9 +601,12 @@ export default function StatisticsManagement() {
         return inflowDate < sixMonthsAgoPeriod;
       }).length;
 
-      // 치료동의율 계산 (신규등록 / 유입 환자 * 100)
-      const treatmentAgreementRate = newPatientsCount > 0 
-        ? Math.round((totalStats.monthPatients / newPatientsCount) * 100) 
+      // 치료동의율 계산
+      // 치료 동의 대상 = 신규등록 - 전화상담 - 방문상담
+      // 치료동의율 = (치료 동의 대상 - 실패) / 치료 동의 대상 × 100
+      const treatmentDecisionTarget = totalStats.monthPatients - phoneConsultCount - visitConsultCount;
+      const treatmentAgreementRate = treatmentDecisionTarget > 0 
+        ? Math.round(((treatmentDecisionTarget - failedCount) / treatmentDecisionTarget) * 100) 
         : 0;
 
       // 유입상태='유입'인데 유입일(inflow_date) 미등록 환자
