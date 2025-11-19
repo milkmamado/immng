@@ -50,6 +50,7 @@ export default function StatisticsManagement() {
     visitConsultPatientsThisMonth: 0,
     failedPatientsThisMonth: 0,
     retentionRate: 0,
+    treatmentAgreementRate: 0,
     patients1MonthPlus: 0,
     patients2MonthPlus: 0,
     patients3MonthPlus: 0,
@@ -596,6 +597,11 @@ export default function StatisticsManagement() {
         return refDate < sixMonthsAgo;
       }).length;
 
+      // 치료동의율 계산 (신규등록 / 유입 환자 * 100)
+      const treatmentAgreementRate = newPatientsCount > 0 
+        ? Math.round((totalStats.monthPatients / newPatientsCount) * 100) 
+        : 0;
+
       setAdditionalStats({
         outPatients: outPatientsCount,
         newPatientsThisMonth: newPatientsCount,
@@ -603,6 +609,7 @@ export default function StatisticsManagement() {
         visitConsultPatientsThisMonth: visitConsultCount,
         failedPatientsThisMonth: failedCount,
         retentionRate,
+        treatmentAgreementRate,
         patients1MonthPlus,
         patients2MonthPlus,
         patients3MonthPlus,
@@ -969,6 +976,18 @@ export default function StatisticsManagement() {
             <div className="text-2xl font-bold text-green-600">{additionalStats.newPatientsThisMonth}명</div>
             <CardDescription className="text-xs mt-1">
               치료동의, 결제완료
+            </CardDescription>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{selectedMonth.split('-')[1]}월 치료동의율</CardTitle>
+            <Activity className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{additionalStats.treatmentAgreementRate}%</div>
+            <CardDescription className="text-xs mt-1">
+              신규등록 / 유입 환자
             </CardDescription>
           </CardContent>
         </Card>
