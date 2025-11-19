@@ -99,7 +99,7 @@ export function Dashboard() {
 
       if (patientsError) throw patientsError;
 
-      // 당월 매출 계산 (예치금 입금 + 입원/외래 매출)
+      // 당월 매출 계산 (입원/외래 매출만, 예치금 제외)
       const now = new Date();
       const year = now.getFullYear();
       const month = now.getMonth() + 1;
@@ -107,14 +107,14 @@ export function Dashboard() {
       const lastDay = new Date(year, month, 0).getDate();
       const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
 
-      // 환자 ID 목록
+      // 환자 ID 목록 (유입 환자 기준)
       const patientIds = patients?.map(p => p.id) || [];
 
-      // 당월 거래 데이터 가져오기
+      // 당월 거래 데이터 가져오기 (입원/외래만)
       let monthlyTransactionsQuery = supabase
         .from('package_transactions')
         .select('amount, transaction_type')
-        .in('transaction_type', ['deposit_in', 'inpatient_revenue', 'outpatient_revenue'])
+        .in('transaction_type', ['inpatient_revenue', 'outpatient_revenue'])
         .gte('transaction_date', startDate)
         .lte('transaction_date', endDate);
 
@@ -131,11 +131,11 @@ export function Dashboard() {
 
       const monthlyRevenue = monthlyTransactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
 
-      // 누적 매출 계산 (전체 기간)
+      // 누적 매출 계산 (전체 기간, 입원/외래만)
       let totalTransactionsQuery = supabase
         .from('package_transactions')
         .select('amount, transaction_type')
-        .in('transaction_type', ['deposit_in', 'inpatient_revenue', 'outpatient_revenue']);
+        .in('transaction_type', ['inpatient_revenue', 'outpatient_revenue']);
 
       // 지점 필터 추가
       if (currentBranch) {
@@ -199,9 +199,10 @@ export function Dashboard() {
 
           const managerStatsData = await Promise.all(
             (profiles || []).map(async (profile) => {
+              // 해당 매니저의 유입 환자 조회
               let managerPatientsQuery = supabase
                 .from('patients')
-                .select('payment_amount')
+                .select('id')
                 .eq('assigned_manager', profile.id)
                 .eq('inflow_status', '유입');
               
@@ -211,8 +212,26 @@ export function Dashboard() {
               }
               
               const { data: managerPatients } = await managerPatientsQuery;
+              const managerPatientIds = managerPatients?.map(p => p.id) || [];
 
-              const revenue = managerPatients?.reduce((sum, p) => sum + (p.payment_amount || 0), 0) || 0;
+              // 해당 매니저 환자들의 당월 입원/외래 매출 집계
+              let managerRevenueQuery = supabase
+                .from('package_transactions')
+                .select('amount')
+                .in('transaction_type', ['inpatient_revenue', 'outpatient_revenue'])
+                .gte('transaction_date', startDate)
+                .lte('transaction_date', endDate);
+
+              if (currentBranch) {
+                managerRevenueQuery = managerRevenueQuery.eq('branch', currentBranch);
+              }
+
+              if (managerPatientIds.length > 0) {
+                managerRevenueQuery = managerRevenueQuery.in('patient_id', managerPatientIds);
+              }
+
+              const { data: managerRevenue } = await managerRevenueQuery;
+              const revenue = managerRevenue?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
 
               return {
                 id: profile.id,
@@ -291,7 +310,7 @@ export function Dashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(stats.monthlyRevenue)}</div>
             <p className="text-xs text-muted-foreground">
-              {new Date().getMonth() + 1}월 예치금+입원/외래
+              {new Date().getMonth() + 1}월 입원/외래
             </p>
           </CardContent>
         </Card>
@@ -304,7 +323,7 @@ export function Dashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
             <p className="text-xs text-muted-foreground">
-              전체 기간 예치금+입원/외래
+              전체 기간 입원/외래
             </p>
           </CardContent>
         </Card>
