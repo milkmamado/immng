@@ -1459,6 +1459,16 @@ export default function StatisticsManagement() {
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{statsDialog.title}</DialogTitle>
+            {statsDialog.type === 'phone' && (
+              <div className="mt-2 p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
+                <p className="text-sm font-semibold text-blue-900">
+                  📋 집계 기준: 유입상태='전화상담' AND 상담일 정확히 입력됨
+                </p>
+                <p className="text-xs text-blue-700 mt-1">
+                  ⚠️ 상담일 미입력 시 통계에서 제외되니 반드시 입력해주세요!
+                </p>
+              </div>
+            )}
             {statsDialog.type === 'newRegistration' && (
               <div className="mt-2 p-3 bg-amber-50 border-l-4 border-amber-500 rounded">
                 <p className="text-sm font-semibold text-amber-900">
@@ -1487,15 +1497,15 @@ export default function StatisticsManagement() {
               </div>
             ) : (
               <div className="space-y-2">
-                <div className="grid grid-cols-5 gap-4 pb-2 border-b font-semibold text-sm">
+                <div className={`grid ${statsDialog.type === 'phone' ? 'grid-cols-4' : 'grid-cols-5'} gap-4 pb-2 border-b font-semibold text-sm`}>
                   <div>환자명</div>
                   <div>질환</div>
                   <div>담당 매니저</div>
-                  <div>관리 상태</div>
-                  <div>유입일</div>
+                  {statsDialog.type !== 'phone' && <div>관리 상태</div>}
+                  <div>{statsDialog.type === 'phone' ? '상담일' : '유입일'}</div>
                 </div>
                 {statsDialog.patients.map((patient) => (
-                  <div key={patient.id} className="grid grid-cols-5 gap-4 py-3 border-b hover:bg-muted/50">
+                  <div key={patient.id} className={`grid ${statsDialog.type === 'phone' ? 'grid-cols-4' : 'grid-cols-5'} gap-4 py-3 border-b hover:bg-muted/50`}>
                     <div className="font-medium">{patient.name}</div>
                     <div className="text-sm text-muted-foreground">
                       {patient.diagnosis_category || patient.diagnosis_detail || '-'}
@@ -1503,13 +1513,17 @@ export default function StatisticsManagement() {
                     <div className="text-sm">
                       {patient.manager_name || '-'}
                     </div>
-                    <div className="text-sm">
-                      {patient.management_status || '-'}
-                    </div>
+                    {statsDialog.type !== 'phone' && (
+                      <div className="text-sm">
+                        {patient.management_status || '-'}
+                      </div>
+                    )}
                     <div className="text-sm text-muted-foreground">
-                      {patient.inflow_date || patient.consultation_date 
-                        ? new Date(patient.inflow_date || patient.consultation_date).toLocaleDateString('ko-KR')
-                        : '-'}
+                      {statsDialog.type === 'phone' 
+                        ? (patient.consultation_date ? new Date(patient.consultation_date).toLocaleDateString('ko-KR') : '-')
+                        : (patient.inflow_date || patient.consultation_date 
+                            ? new Date(patient.inflow_date || patient.consultation_date).toLocaleDateString('ko-KR')
+                            : '-')}
                     </div>
                   </div>
                 ))}
