@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Navigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, TrendingUp, Activity } from "lucide-react";
@@ -20,8 +21,13 @@ interface DashboardStats {
 }
 
 export function Dashboard() {
-  const { user, currentBranch } = useAuth();
+  const { user, currentBranch, userRole } = useAuth();
   const { applyBranchFilter } = useBranchFilter();
+
+  // 관리자와 마스터는 통계관리로 리다이렉트
+  if (userRole === 'admin' || userRole === 'master') {
+    return <Navigate to={`/${currentBranch}/statistics`} replace />;
+  }
   const [stats, setStats] = useState<DashboardStats>({
     monthPatients: 0,
     newPatientsThisMonth: 0,
