@@ -256,21 +256,11 @@ export default function StatisticsManagement() {
       if (monthPatientsError) throw monthPatientsError;
 
       // 선택한 월에 신규 등록된 환자 필터링
-      // - 전화상담/방문상담: consultation_date 기준
-      // - 나머지(유입/실패/치료종료): inflow_date 기준
+      // - 모든 상태: inflow_date 기준만 사용
       const monthNewPatients = allMonthPatients?.filter(p => {
-        // 전화상담 또는 방문상담
-        if (p.inflow_status === '전화상담' || p.inflow_status === '방문상담') {
-          if (!p.consultation_date) return false;
-          const consultDate = new Date(p.consultation_date);
-          return consultDate >= selectedMonthStart && consultDate <= endDate;
-        }
-        // 유입, 실패, 치료종료 등
-        else {
-          if (!p.inflow_date) return false;
-          const inflowDate = new Date(p.inflow_date);
-          return inflowDate >= selectedMonthStart && inflowDate <= endDate;
-        }
+        if (!p.inflow_date) return false;
+        const inflowDate = new Date(p.inflow_date);
+        return inflowDate >= selectedMonthStart && inflowDate <= endDate;
       });
 
       // 2. 해당 월 관리 환자: 선택한 월에 유입되어 현재 '관리 중'인 환자 (유입일 필수)
