@@ -82,7 +82,7 @@ export default function StatisticsManagement() {
   // 통계 카드 클릭 환자 리스트 다이얼로그 state
   const [statsDialog, setStatsDialog] = useState<{
     open: boolean;
-    type: 'out' | 'outThisMonth' | 'inflow' | 'phone' | 'visit' | 'failed' | 'treatmentCompleted' | 'retention' | 'missingInflow' | 'newRegistration' | null;
+    type: 'out' | 'outThisMonth' | 'totalOut' | 'inflow' | 'phone' | 'visit' | 'failed' | 'treatmentCompleted' | 'retention' | 'missingInflow' | 'newRegistration' | null;
     title: string;
     patients: any[];
   }>({
@@ -994,7 +994,7 @@ export default function StatisticsManagement() {
   };
 
   // 통계 카드 클릭 핸들러
-  const handleStatsCardClick = async (type: 'out' | 'outThisMonth' | 'inflow' | 'phone' | 'visit' | 'failed' | 'treatmentCompleted' | 'retention' | 'missingInflow' | 'newRegistration') => {
+  const handleStatsCardClick = async (type: 'out' | 'outThisMonth' | 'totalOut' | 'inflow' | 'phone' | 'visit' | 'failed' | 'treatmentCompleted' | 'retention' | 'missingInflow' | 'newRegistration') => {
     try {
       // 선택한 월의 1일부터 오늘까지 (또는 해당 월 마지막까지)
       const [year2, month2] = selectedMonth.split('-').map(Number);
@@ -1024,6 +1024,14 @@ export default function StatisticsManagement() {
             p.management_status === '아웃' || p.management_status === '아웃위기'
           ) || [];
           title = '전체 기간 아웃/아웃위기 환자';
+          break;
+
+        case 'totalOut':
+          // 전체 아웃 - 전체 기간 아웃 + 아웃위기 환자 (same as 'out')
+          filteredPatients = patients?.filter(p => 
+            p.management_status === '아웃' || p.management_status === '아웃위기'
+          ) || [];
+          title = '전체 아웃 환자';
           break;
         
         case 'outThisMonth':
@@ -1363,6 +1371,18 @@ export default function StatisticsManagement() {
             <div className="text-2xl font-bold text-red-600">{additionalStats.outPatientsThisMonth}명</div>
             <CardDescription className="text-xs mt-1">
               {selectedMonth.split('-')[1]}월 등록 후 아웃/아웃위기
+            </CardDescription>
+          </CardContent>
+        </Card>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('totalOut')}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">전체 아웃</CardTitle>
+            <Users className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{additionalStats.outPatients}명</div>
+            <CardDescription className="text-xs mt-1">
+              전체 기간 아웃/아웃위기 환자
             </CardDescription>
           </CardContent>
         </Card>
