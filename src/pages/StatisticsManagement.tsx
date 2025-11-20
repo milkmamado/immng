@@ -49,6 +49,7 @@ export default function StatisticsManagement() {
   // 새로운 통계 state 추가
   const [additionalStats, setAdditionalStats] = useState({
     outPatients: 0,
+    outPatientsThisMonth: 0, // 11월 아웃 환자 (11월에 등록됐다가 아웃됨)
     newPatientsThisMonth: 0,
     totalNewRegistrations: 0, // 신규 등록 총 수 (치료동의율 계산용)
     phoneConsultPatientsThisMonth: 0,
@@ -81,7 +82,7 @@ export default function StatisticsManagement() {
   // 통계 카드 클릭 환자 리스트 다이얼로그 state
   const [statsDialog, setStatsDialog] = useState<{
     open: boolean;
-    type: 'out' | 'inflow' | 'phone' | 'visit' | 'failed' | 'treatmentCompleted' | 'retention' | 'missingInflow' | 'newRegistration' | null;
+    type: 'out' | 'outThisMonth' | 'inflow' | 'phone' | 'visit' | 'failed' | 'treatmentCompleted' | 'retention' | 'missingInflow' | 'newRegistration' | null;
     title: string;
     patients: any[];
   }>({
@@ -599,6 +600,36 @@ export default function StatisticsManagement() {
       const { data: outPatients } = await outStatusQuery;
       const outPatientsCount = outPatients?.length || 0;
 
+      // 1-1. 11월 아웃 환자 - 11월에 신규 등록됐다가 현재 아웃/아웃위기인 환자
+      let outThisMonthQuery = supabase
+        .from('patients')
+        .select('id, inflow_date, consultation_date, inflow_status')
+        .in('management_status', ['아웃', '아웃위기']);
+      
+      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
+        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
+        outThisMonthQuery = outThisMonthQuery.eq('assigned_manager', targetManager);
+      }
+      outThisMonthQuery = applyBranchFilter(outThisMonthQuery);
+      
+      const { data: outThisMonthPatients } = await outThisMonthQuery;
+      
+      // 11월에 등록된 환자 (유입일 또는 상담일 기준)
+      const outPatientsThisMonthCount = outThisMonthPatients?.filter(p => {
+        // 전화상담 또는 방문상담
+        if (p.inflow_status === '전화상담' || p.inflow_status === '방문상담') {
+          if (!p.consultation_date) return false;
+          const consultDate = new Date(p.consultation_date);
+          return consultDate >= selectedMonthStart && consultDate <= endDate;
+        }
+        // 유입, 실패, 치료종료 등
+        else {
+          if (!p.inflow_date) return false;
+          const inflowDate = new Date(p.inflow_date);
+          return inflowDate >= selectedMonthStart && inflowDate <= endDate;
+        }
+      }).length || 0;
+
       // 2. 11월 유입 환자 (inflow_status = '유입', management_status = '관리 중', inflow_date 필수)
       let inflowQuery = supabase
         .from('patients')
@@ -819,6 +850,7 @@ export default function StatisticsManagement() {
 
       setAdditionalStats({
         outPatients: outPatientsCount,
+        outPatientsThisMonth: outPatientsThisMonthCount, // 11월 아웃 환자
         newPatientsThisMonth: newPatientsCount,
         totalNewRegistrations, // 신규 등록 총 수 추가
         phoneConsultPatientsThisMonth: phoneConsultCount,
@@ -962,7 +994,7 @@ export default function StatisticsManagement() {
   };
 
   // 통계 카드 클릭 핸들러
-  const handleStatsCardClick = async (type: 'out' | 'inflow' | 'phone' | 'visit' | 'failed' | 'treatmentCompleted' | 'retention' | 'missingInflow' | 'newRegistration') => {
+  const handleStatsCardClick = async (type: 'out' | 'outThisMonth' | 'inflow' | 'phone' | 'visit' | 'failed' | 'treatmentCompleted' | 'retention' | 'missingInflow' | 'newRegistration') => {
     try {
       // 선택한 월의 1일부터 오늘까지 (또는 해당 월 마지막까지)
       const [year2, month2] = selectedMonth.split('-').map(Number);
@@ -992,6 +1024,27 @@ export default function StatisticsManagement() {
             p.management_status === '아웃' || p.management_status === '아웃위기'
           ) || [];
           title = '전체 기간 아웃/아웃위기 환자';
+          break;
+        
+        case 'outThisMonth':
+          // 11월 아웃 - 11월에 등록됐다가 현재 아웃/아웃위기인 환자
+          filteredPatients = patients?.filter(p => {
+            if (p.management_status !== '아웃' && p.management_status !== '아웃위기') return false;
+            
+            // 전화상담 또는 방문상담
+            if (p.inflow_status === '전화상담' || p.inflow_status === '방문상담') {
+              if (!p.consultation_date) return false;
+              const consultDate = new Date(p.consultation_date);
+              return consultDate >= startOfPeriod && consultDate <= endOfPeriod;
+            }
+            // 유입, 실패, 치료종료 등
+            else {
+              if (!p.inflow_date) return false;
+              const inflowDate = new Date(p.inflow_date);
+              return inflowDate >= startOfPeriod && inflowDate <= endOfPeriod;
+            }
+          }) || [];
+          title = `${month2}월 아웃/아웃위기 환자 (등록일 기준) - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
           break;
         
         case 'inflow':
@@ -1251,7 +1304,7 @@ export default function StatisticsManagement() {
         </Card>
       </div>
 
-      {/* 세 번째 줄: 11월 전화상담 / 11월 방문상담 / 11월 실패 / 11월 치료종료 / 아웃 환자 */}
+      {/* 세 번째 줄: 11월 전화상담 / 11월 방문상담 / 11월 실패 / 11월 치료종료 / 11월 아웃 */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('phone')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -1301,15 +1354,15 @@ export default function StatisticsManagement() {
             </CardDescription>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('out')}>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('outThisMonth')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">아웃 환자</CardTitle>
+            <CardTitle className="text-sm font-medium">{selectedMonth.split('-')[1]}월 아웃</CardTitle>
             <Users className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{additionalStats.outPatients}명</div>
+            <div className="text-2xl font-bold text-red-600">{additionalStats.outPatientsThisMonth}명</div>
             <CardDescription className="text-xs mt-1">
-              전체 기간 아웃/아웃위기 환자
+              {selectedMonth.split('-')[1]}월 등록 후 아웃/아웃위기
             </CardDescription>
           </CardContent>
         </Card>

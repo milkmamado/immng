@@ -314,8 +314,8 @@ export default function PatientListManagement() {
           // management_status 자동 업데이트 로직
           const lastCheckDate = lastCheckMap.get(patient.id);
           
-          // 마지막 체크로부터 경과 일수 계산 (우선순위: last_visit_date > inflow_date > created_at)
-          const daysSinceCheck = calculateDaysSinceLastCheck(lastCheckDate, patient.created_at, patient.inflow_date);
+          // 마지막 체크로부터 경과 일수 계산 (우선순위: last_visit_date > inflow_date > consultation_date)
+          const daysSinceCheck = calculateDaysSinceLastCheck(lastCheckDate, patient.inflow_date, patient.consultation_date);
 
           let newManagementStatus = patient.management_status || "관리 중";
           
