@@ -1534,10 +1534,19 @@ export default function StatisticsManagement() {
       </Card>
 
       {/* 실장별 통계 */}
-      {isMasterOrAdmin && (
+      {managerStats.length > 0 && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {managerStats.map((stats) => (
+            {managerStats
+              .filter(stats => {
+                // 관리자가 특정 실장을 선택한 경우 해당 실장만 표시
+                if (isMasterOrAdmin && selectedManager !== 'all') {
+                  return stats.manager_id === selectedManager;
+                }
+                // 그 외의 경우 모두 표시 (전체 실장, 또는 매니저 본인)
+                return true;
+              })
+              .map((stats) => (
             <Card key={stats.manager_id} className="overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-primary to-medical-accent text-white">
                 <CardTitle className="flex items-center gap-2">
