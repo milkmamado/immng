@@ -682,12 +682,15 @@ export default function StatisticsManagement() {
       // 3. 재진관리비율 계산
       const [prevYear, prevMonth] = selectedMonth.split('-').map(Number);
       const prevMonthDate = new Date(prevYear, prevMonth - 2, 1);
-      const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
+      const prevMonthStart = new Date(prevYear, prevMonth - 2, 1);
+      const prevMonthEnd = new Date(prevYear, prevMonth - 1, 0);
       
-      // 이전 달 유입 환자를 위한 별도 쿼리
+      // 전월 유입 환자: inflow_status='유입', inflow_date가 전월에 정확히 입력됨
       let prevMonthQuery = supabase
         .from('patients')
-        .select('id, inflow_date, created_at, management_status');
+        .select('id, inflow_date, management_status')
+        .eq('inflow_status', '유입')
+        .not('inflow_date', 'is', null); // 유입일이 반드시 있어야 함
       
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
         const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
@@ -697,18 +700,14 @@ export default function StatisticsManagement() {
       
       const { data: prevMonthPatientsData } = await prevMonthQuery;
       
-      // 이전 달 유입 환자 (inflow_date 기준, 없으면 created_at)
+      // 전월에 유입일이 정확히 기재된 환자만 필터링
       const prevMonthPatients = prevMonthPatientsData?.filter(p => {
-        const inflowDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
-        const inflowYearMonth = `${inflowDate.getFullYear()}-${String(inflowDate.getMonth() + 1).padStart(2, '0')}`;
-        return inflowYearMonth === prevMonthStr;
+        const inflowDate = new Date(p.inflow_date);
+        return inflowDate >= prevMonthStart && inflowDate <= prevMonthEnd;
       }) || [];
 
-      // 현재 달에 활동한 환자 ID 목록
-      const activePatientIds = new Set(dailyStatuses?.map(s => s.patient_id) || []);
-      
-      // 이전 달 유입 중 현재 달에 활동한 환자
-      const retainedPatients = prevMonthPatients.filter(p => activePatientIds.has(p.id)).length;
+      // 전월 유입 환자 중 현재도 '관리 중'인 환자
+      const retainedPatients = prevMonthPatients.filter(p => p.management_status === '관리 중').length;
       const retentionRate = prevMonthPatients.length > 0 
         ? Math.round((retainedPatients / prevMonthPatients.length) * 100) 
         : 0;
