@@ -681,20 +681,11 @@ export default function StatisticsManagement() {
       
       const { data: outThisMonthPatients } = await outThisMonthQuery;
       
-      // 11월에 등록된 환자 (유입일 또는 상담일 기준)
+      // 11월에 등록된 환자 (inflow_date 기준만 사용)
       const outPatientsThisMonthCount = outThisMonthPatients?.filter(p => {
-        // 전화상담 또는 방문상담
-        if (p.inflow_status === '전화상담' || p.inflow_status === '방문상담') {
-          if (!p.consultation_date) return false;
-          const consultDate = new Date(p.consultation_date);
-          return consultDate >= selectedMonthStart && consultDate <= endDate;
-        }
-        // 유입, 실패, 치료종료 등
-        else {
-          if (!p.inflow_date) return false;
-          const inflowDate = new Date(p.inflow_date);
-          return inflowDate >= selectedMonthStart && inflowDate <= endDate;
-        }
+        if (!p.inflow_date) return false;
+        const inflowDate = new Date(p.inflow_date);
+        return inflowDate >= selectedMonthStart && inflowDate <= endDate;
       }).length || 0;
 
       // 2. 11월 유입 환자 (inflow_status = '유입', management_status = '관리 중', inflow_date 필수)
