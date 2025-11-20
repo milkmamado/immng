@@ -268,11 +268,12 @@ export default function StatisticsManagement() {
         }
       });
 
-      // 2. 총 관리 환자: 전체 기간 동안 management_status가 '관리 중'인 환자 (카드/통계용)
+      // 2. 해당 월 관리 환자: 선택한 월에 유입되어 현재 '관리 중'인 환자 (유입일 필수)
       let totalPatientsQuery = supabase
         .from('patients')
-        .select('id, assigned_manager, manager_name')
-        .eq('management_status', '관리 중');
+        .select('id, assigned_manager, manager_name, inflow_date')
+        .eq('management_status', '관리 중')
+        .not('inflow_date', 'is', null); // 유입일 필수
 
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
         const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
@@ -282,7 +283,13 @@ export default function StatisticsManagement() {
       totalPatientsQuery = applyBranchFilter(totalPatientsQuery);
       
       const { data: totalPatientsData } = await totalPatientsQuery;
-      const totalPatientsCount = totalPatientsData?.length || 0;
+      
+      // 선택한 월에 유입된 환자만 필터링
+      const totalPatientsFiltered = totalPatientsData?.filter(p => {
+        const inflowDate = new Date(p.inflow_date);
+        return inflowDate >= selectedMonthStart && inflowDate <= endDate;
+      });
+      const totalPatientsCount = totalPatientsFiltered?.length || 0;
 
       // 매출 집계용: 관리 상태와 무관하게 해당 매니저의 모든 환자
       let managerAllPatientsQuery = supabase
