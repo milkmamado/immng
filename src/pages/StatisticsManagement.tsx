@@ -231,30 +231,40 @@ export default function StatisticsManagement() {
       const queryStartDate = selectedMonthStart.toISOString().split('T')[0];
       const queryEndDate = endDate.toISOString().split('T')[0];
 
-      // 1. 해당 월 신규 유입 환자: inflow_date가 선택한 월에 있는 환자 (관리 상태 무관)
-      let monthInflowPatientsQuery = supabase
+      // 1. 해당 월 신규 등록 환자: inflow_date 또는 consultation_date가 선택한 월에 있는 환자
+      let monthNewPatientsQuery = supabase
         .from('patients')
-        .select('id, assigned_manager, manager_name, payment_amount, inflow_date, created_at');
+        .select('id, assigned_manager, manager_name, payment_amount, inflow_date, consultation_date, inflow_status');
 
       // 일반 매니저는 본인 환자만, 마스터/관리자가 특정 매니저 선택 시 해당 매니저만
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
         const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
-        monthInflowPatientsQuery = monthInflowPatientsQuery.eq('assigned_manager', targetManager);
+        monthNewPatientsQuery = monthNewPatientsQuery.eq('assigned_manager', targetManager);
       }
       
       // 지점 필터 적용
-      monthInflowPatientsQuery = applyBranchFilter(monthInflowPatientsQuery);
+      monthNewPatientsQuery = applyBranchFilter(monthNewPatientsQuery);
 
-      const { data: allMonthInflowPatients, error: monthInflowPatientsError } = await monthInflowPatientsQuery;
+      const { data: allMonthPatients, error: monthPatientsError } = await monthNewPatientsQuery;
 
-      if (monthInflowPatientsError) throw monthInflowPatientsError;
+      if (monthPatientsError) throw monthPatientsError;
 
-      // 선택한 월에 유입일이 정확히 기재된 환자만 필터링 (월별 신규 유입)
-      const monthNewPatients = allMonthInflowPatients?.filter(p => {
-        // 유입일이 반드시 있어야 하고, 해당 월에 속해야 함
-        if (!p.inflow_date) return false;
-        const inflowDate = new Date(p.inflow_date);
-        return inflowDate >= selectedMonthStart && inflowDate <= endDate;
+      // 선택한 월에 신규 등록된 환자 필터링
+      // - 전화상담/방문상담: consultation_date 기준
+      // - 나머지(유입/실패/치료종료): inflow_date 기준
+      const monthNewPatients = allMonthPatients?.filter(p => {
+        // 전화상담 또는 방문상담
+        if (p.inflow_status === '전화상담' || p.inflow_status === '방문상담') {
+          if (!p.consultation_date) return false;
+          const consultDate = new Date(p.consultation_date);
+          return consultDate >= selectedMonthStart && consultDate <= endDate;
+        }
+        // 유입, 실패, 치료종료 등
+        else {
+          if (!p.inflow_date) return false;
+          const inflowDate = new Date(p.inflow_date);
+          return inflowDate >= selectedMonthStart && inflowDate <= endDate;
+        }
       });
 
       // 2. 총 관리 환자: 전체 기간 동안 management_status가 '관리 중'인 환자 (카드/통계용)
@@ -419,7 +429,7 @@ export default function StatisticsManagement() {
         let stats = managerMap.get(managerId);
         if (!stats) {
           // 매니저 정보가 없으면 새로 생성
-          const patient = allMonthInflowPatients?.find(p => p.assigned_manager === managerId);
+          const patient = allMonthPatients?.find(p => p.assigned_manager === managerId);
           stats = {
             manager_id: managerId,
             manager_name: patient?.manager_name || '미지정',
