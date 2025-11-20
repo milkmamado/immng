@@ -1,15 +1,22 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, DollarSign, AlertTriangle } from "lucide-react";
+import { Users, DollarSign, AlertTriangle, Activity } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { calculateDaysSinceLastCheck, calculateAutoManagementStatus, shouldAutoUpdateStatus } from "@/utils/patientStatusUtils";
 
 interface DashboardStats {
-  totalPatients: number;
-  monthlyRevenue: number;
-  totalRevenue: number;
-  missingInflowDate: number;
+  newRegistrations: number;        // 신규 등록
+  inflowPatients: number;          // 유입 환자
+  treatmentAgreementRate: number;  // 치료동의율
+  retentionRate: number;           // 재진관리비율
+  phoneConsult: number;            // 전화상담
+  visitConsult: number;            // 방문상담
+  failed: number;                  // 실패
+  treatmentCompleted: number;      // 치료종료
+  outThisMonth: number;            // 11월 아웃
+  outTotal: number;                // 전체 아웃
+  missingInflowDate: number;       // 유입일 미등록
   riskPatients: Array<{
     id: string;
     name: string;
@@ -29,9 +36,16 @@ interface ManagerStat {
 export function Dashboard() {
   const { user, currentBranch } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
-    totalPatients: 0,
-    monthlyRevenue: 0,
-    totalRevenue: 0,
+    newRegistrations: 0,
+    inflowPatients: 0,
+    treatmentAgreementRate: 0,
+    retentionRate: 0,
+    phoneConsult: 0,
+    visitConsult: 0,
+    failed: 0,
+    treatmentCompleted: 0,
+    outThisMonth: 0,
+    outTotal: 0,
     missingInflowDate: 0,
     riskPatients: []
   });
@@ -43,9 +57,16 @@ export function Dashboard() {
     if (user && currentBranch) {
       // 데이터 초기화 (지점 변경 시 이전 데이터 제거)
       setStats({
-        totalPatients: 0,
-        monthlyRevenue: 0,
-        totalRevenue: 0,
+        newRegistrations: 0,
+        inflowPatients: 0,
+        treatmentAgreementRate: 0,
+        retentionRate: 0,
+        phoneConsult: 0,
+        visitConsult: 0,
+        failed: 0,
+        treatmentCompleted: 0,
+        outThisMonth: 0,
+        outTotal: 0,
         missingInflowDate: 0,
         riskPatients: []
       });
@@ -82,163 +103,256 @@ export function Dashboard() {
         .single();
 
       const isAdmin = roleData?.role === 'master' || roleData?.role === 'admin';
-      console.log('[Dashboard] User role:', roleData?.role, 'isAdmin:', isAdmin);
 
       // 현재 월 계산
-      const currentDate = new Date();
-      const currentYear = currentDate.getFullYear();
-      const currentMonth = currentDate.getMonth() + 1;
-      const startOfMonth = new Date(currentYear, currentMonth - 1, 1);
-      const endOfMonth = new Date(currentYear, currentMonth, 0);
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+      const selectedMonthStart = new Date(year, month - 1, 1);
+      const selectedMonthEnd = new Date(year, month, 0);
+      const endDate = selectedMonthEnd;
+      const startDateStr = `${year}-${String(month).padStart(2, '0')}-01`;
+      const endDateStr = `${year}-${String(month).padStart(2, '0')}-${String(selectedMonthEnd.getDate()).padStart(2, '0')}`;
 
-      // 1. 해당월 유입 환자 수 (inflow_date가 현재 월에 있는 환자)
-      let monthInflowPatientsQuery = supabase
+      // 1. 신규 등록 (inflow_date 기준)
+      let newRegistrationsQuery = supabase
         .from('patients')
         .select('id, inflow_date')
-        .gte('inflow_date', startOfMonth.toISOString().split('T')[0])
-        .lte('inflow_date', endOfMonth.toISOString().split('T')[0]);
+        .not('inflow_date', 'is', null);
 
       if (currentBranch) {
-        monthInflowPatientsQuery = monthInflowPatientsQuery.eq('branch', currentBranch);
+        newRegistrationsQuery = newRegistrationsQuery.eq('branch', currentBranch);
       }
-
       if (!isAdmin) {
-        monthInflowPatientsQuery = monthInflowPatientsQuery.eq('assigned_manager', user.id);
+        newRegistrationsQuery = newRegistrationsQuery.eq('assigned_manager', user.id);
       }
 
-      const { data: monthInflowPatients } = await monthInflowPatientsQuery;
-      const monthInflowCount = monthInflowPatients?.length || 0;
+      const { data: newRegsData } = await newRegistrationsQuery;
+      const newRegistrations = newRegsData?.filter(p => {
+        const inflowDate = new Date(p.inflow_date!);
+        return inflowDate >= selectedMonthStart && inflowDate <= endDate;
+      }).length || 0;
 
-      // 유입일 미등록 환자 수 (통계관리와 동일: inflow_status = '유입'이지만 inflow_date가 null)
-      let missingInflowDateQuery = supabase
+      // 2. 유입 환자 (inflow_status='유입', management_status='관리 중', inflow_date 필수)
+      let inflowQuery = supabase
+        .from('patients')
+        .select('id, inflow_date')
+        .eq('inflow_status', '유입')
+        .eq('management_status', '관리 중')
+        .not('inflow_date', 'is', null);
+
+      if (currentBranch) {
+        inflowQuery = inflowQuery.eq('branch', currentBranch);
+      }
+      if (!isAdmin) {
+        inflowQuery = inflowQuery.eq('assigned_manager', user.id);
+      }
+
+      const { data: inflowData } = await inflowQuery;
+      const inflowPatients = inflowData?.filter(p => {
+        const inflowDate = new Date(p.inflow_date!);
+        return inflowDate >= selectedMonthStart && inflowDate <= endDate;
+      }).length || 0;
+
+      // 3. 치료종료 (inflow_status='유입', management_status='치료종료', inflow_date 필수)
+      let treatmentCompletedQuery = supabase
+        .from('patients')
+        .select('id, inflow_date')
+        .eq('inflow_status', '유입')
+        .eq('management_status', '치료종료')
+        .not('inflow_date', 'is', null);
+
+      if (currentBranch) {
+        treatmentCompletedQuery = treatmentCompletedQuery.eq('branch', currentBranch);
+      }
+      if (!isAdmin) {
+        treatmentCompletedQuery = treatmentCompletedQuery.eq('assigned_manager', user.id);
+      }
+
+      const { data: completedData } = await treatmentCompletedQuery;
+      const treatmentCompleted = completedData?.filter(p => {
+        const inflowDate = new Date(p.inflow_date!);
+        return inflowDate >= selectedMonthStart && inflowDate <= endDate;
+      }).length || 0;
+
+      // 4. 치료동의율 = (유입 환자 + 치료종료) / 신규 등록 × 100
+      const treatmentAgreementRate = newRegistrations > 0
+        ? Math.round(((inflowPatients + treatmentCompleted) / newRegistrations) * 100)
+        : 0;
+
+      // 5. 재진관리비율 - 전월 유입 중 현재 관리 중 또는 치료종료 비율
+      const prevMonthStart = new Date(year, month - 2, 1);
+      const prevMonthEnd = new Date(year, month - 1, 0);
+
+      let prevMonthQuery = supabase
+        .from('patients')
+        .select('id, inflow_date, management_status')
+        .eq('inflow_status', '유입')
+        .not('inflow_date', 'is', null);
+
+      if (currentBranch) {
+        prevMonthQuery = prevMonthQuery.eq('branch', currentBranch);
+      }
+      if (!isAdmin) {
+        prevMonthQuery = prevMonthQuery.eq('assigned_manager', user.id);
+      }
+
+      const { data: prevMonthData } = await prevMonthQuery;
+      const prevMonthPatients = prevMonthData?.filter(p => {
+        const inflowDate = new Date(p.inflow_date!);
+        return inflowDate >= prevMonthStart && inflowDate <= prevMonthEnd;
+      }) || [];
+
+      const retainedPatients = prevMonthPatients.filter(p =>
+        p.management_status === '관리 중' || p.management_status === '치료종료'
+      ).length;
+
+      const retentionRate = prevMonthPatients.length > 0
+        ? Math.round((retainedPatients / prevMonthPatients.length) * 100)
+        : 0;
+
+      // 6. 전화상담
+      let phoneConsultQuery = supabase
+        .from('patients')
+        .select('id, consultation_date')
+        .eq('inflow_status', '전화상담')
+        .not('consultation_date', 'is', null);
+
+      if (currentBranch) {
+        phoneConsultQuery = phoneConsultQuery.eq('branch', currentBranch);
+      }
+      if (!isAdmin) {
+        phoneConsultQuery = phoneConsultQuery.eq('assigned_manager', user.id);
+      }
+
+      const { data: phoneConsultData } = await phoneConsultQuery;
+      const phoneConsult = phoneConsultData?.filter(p => {
+        const consultDate = new Date(p.consultation_date!);
+        return consultDate >= selectedMonthStart && consultDate <= endDate;
+      }).length || 0;
+
+      // 7. 방문상담
+      let visitConsultQuery = supabase
+        .from('patients')
+        .select('id, consultation_date')
+        .eq('inflow_status', '방문상담')
+        .not('consultation_date', 'is', null);
+
+      if (currentBranch) {
+        visitConsultQuery = visitConsultQuery.eq('branch', currentBranch);
+      }
+      if (!isAdmin) {
+        visitConsultQuery = visitConsultQuery.eq('assigned_manager', user.id);
+      }
+
+      const { data: visitConsultData } = await visitConsultQuery;
+      const visitConsult = visitConsultData?.filter(p => {
+        const consultDate = new Date(p.consultation_date!);
+        return consultDate >= selectedMonthStart && consultDate <= endDate;
+      }).length || 0;
+
+      // 8. 실패
+      let failedQuery = supabase
+        .from('patients')
+        .select('id, inflow_date')
+        .eq('inflow_status', '실패')
+        .not('inflow_date', 'is', null);
+
+      if (currentBranch) {
+        failedQuery = failedQuery.eq('branch', currentBranch);
+      }
+      if (!isAdmin) {
+        failedQuery = failedQuery.eq('assigned_manager', user.id);
+      }
+
+      const { data: failedData } = await failedQuery;
+      const failed = failedData?.filter(p => {
+        const inflowDate = new Date(p.inflow_date!);
+        return inflowDate >= selectedMonthStart && inflowDate <= endDate;
+      }).length || 0;
+
+      // 9. 11월 아웃 (해당월에 등록 후 아웃/아웃위기)
+      let outThisMonthQuery = supabase
+        .from('patients')
+        .select('id, inflow_date')
+        .in('management_status', ['아웃', '아웃위기'])
+        .not('inflow_date', 'is', null);
+
+      if (currentBranch) {
+        outThisMonthQuery = outThisMonthQuery.eq('branch', currentBranch);
+      }
+      if (!isAdmin) {
+        outThisMonthQuery = outThisMonthQuery.eq('assigned_manager', user.id);
+      }
+
+      const { data: outThisMonthData } = await outThisMonthQuery;
+      const outThisMonth = outThisMonthData?.filter(p => {
+        const inflowDate = new Date(p.inflow_date!);
+        return inflowDate >= selectedMonthStart && inflowDate <= endDate;
+      }).length || 0;
+
+      // 10. 전체 아웃
+      let outTotalQuery = supabase
+        .from('patients')
+        .select('id')
+        .in('management_status', ['아웃', '아웃위기']);
+
+      if (currentBranch) {
+        outTotalQuery = outTotalQuery.eq('branch', currentBranch);
+      }
+      if (!isAdmin) {
+        outTotalQuery = outTotalQuery.eq('assigned_manager', user.id);
+      }
+
+      const { data: outTotalData } = await outTotalQuery;
+      const outTotal = outTotalData?.length || 0;
+
+      // 11. 유입일 미등록
+      let missingInflowQuery = supabase
         .from('patients')
         .select('id')
         .eq('inflow_status', '유입')
         .is('inflow_date', null);
 
       if (currentBranch) {
-        missingInflowDateQuery = missingInflowDateQuery.eq('branch', currentBranch);
+        missingInflowQuery = missingInflowQuery.eq('branch', currentBranch);
       }
-
       if (!isAdmin) {
-        missingInflowDateQuery = missingInflowDateQuery.eq('assigned_manager', user.id);
+        missingInflowQuery = missingInflowQuery.eq('assigned_manager', user.id);
       }
 
-      const { data: missingInflowDatePatients } = await missingInflowDateQuery;
-      const missingInflowDateCount = missingInflowDatePatients?.length || 0;
+      const { data: missingInflowData } = await missingInflowQuery;
+      const missingInflowDate = missingInflowData?.length || 0;
 
-      console.log('[Dashboard] Month inflow patients:', monthInflowCount);
-      console.log('[Dashboard] Missing inflow date patients:', missingInflowDateCount);
-
-      // 2. 매출 계산용 환자 목록 (관리 상태/유입 상태 무관, 지점/권한 기준)
-      let revenuePatientsQuery = supabase
-        .from('patients')
-        .select('id');
-
-      if (currentBranch) {
-        revenuePatientsQuery = revenuePatientsQuery.eq('branch', currentBranch);
-      }
-
-      if (!isAdmin) {
-        revenuePatientsQuery = revenuePatientsQuery.eq('assigned_manager', user.id);
-      }
-
-      const { data: revenuePatients, error: revenuePatientsError } = await revenuePatientsQuery;
-      if (revenuePatientsError) throw revenuePatientsError;
-
-      const revenuePatientIds = revenuePatients?.map(p => p.id) || [];
-
-      console.log('[Dashboard] Month inflow patients:', monthInflowCount);
-      console.log('[Dashboard] Total patients for revenue calc (전체 환자):', revenuePatientIds.length);
-
-      // 3. 리스크 및 기타 통계용: 유입 상태 환자 (관리 상태 무관, 아웃 포함)
+      // 12. 이탈 리스크 환자 (기존 로직 유지)
       let patientsQuery = supabase
         .from('patients')
         .select('id, name, customer_number, assigned_manager, manager_name, last_visit_date, inflow_date, management_status, payment_amount, created_at')
         .eq('inflow_status', '유입');
 
-      // 지점 필터 추가
       if (currentBranch) {
         patientsQuery = patientsQuery.eq('branch', currentBranch);
       }
-
       if (!isAdmin) {
         patientsQuery = patientsQuery.eq('assigned_manager', user.id);
       }
 
-      const { data: patients, error: patientsError } = await patientsQuery;
-
-      if (patientsError) throw patientsError;
-      
-      // 당월 매출 계산 (입원/외래 매출만, 예치금 제외)
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth() + 1;
-      const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-      const endDate = `${year}-${String(month).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-      // 환자 ID 목록 (유입 환자 기준 - 리스크 계산용)
+      const { data: patients } = await patientsQuery;
       const patientIds = patients?.map(p => p.id) || [];
 
-      // 당월 거래 데이터 가져오기 (입원/외래만)
-      let monthlyTransactionsQuery = supabase
-        .from('package_transactions')
-        .select('amount, transaction_type')
-        .in('transaction_type', ['inpatient_revenue', 'outpatient_revenue'])
-        .gte('transaction_date', startDate)
-        .lte('transaction_date', endDate);
- 
-      // 지점 필터 추가
-      if (currentBranch) {
-        monthlyTransactionsQuery = monthlyTransactionsQuery.eq('branch', currentBranch);
-      }
- 
-      if (revenuePatientIds.length > 0) {
-        monthlyTransactionsQuery = monthlyTransactionsQuery.in('patient_id', revenuePatientIds);
-      }
-
-      const { data: monthlyTransactions } = await monthlyTransactionsQuery;
-
-      const monthlyRevenue = monthlyTransactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
-
-      // 누적 매출 계산 (전체 기간, 입원/외래만)
-      let totalTransactionsQuery = supabase
-        .from('package_transactions')
-        .select('amount, transaction_type')
-        .in('transaction_type', ['inpatient_revenue', 'outpatient_revenue']);
- 
-      // 지점 필터 추가
-      if (currentBranch) {
-        totalTransactionsQuery = totalTransactionsQuery.eq('branch', currentBranch);
-      }
- 
-      if (revenuePatientIds.length > 0) {
-        totalTransactionsQuery = totalTransactionsQuery.in('patient_id', revenuePatientIds);
-      }
- 
-      const { data: totalTransactions } = await totalTransactionsQuery;
-
-      const totalRevenue = totalTransactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
-
-      // 일별 상태 데이터 가져오기 (이탈 리스크 계산용)
       let statusQuery = supabase
         .from("daily_patient_status")
         .select("patient_id, status_date")
         .order("status_date", { ascending: false });
 
-      // 지점 필터 추가
       if (currentBranch) {
         statusQuery = statusQuery.eq('branch', currentBranch);
       }
-
-      // 환자 ID 필터 추가 (성능 향상)
       if (patientIds.length > 0) {
         statusQuery = statusQuery.in('patient_id', patientIds);
       }
 
       const { data: statusData } = await statusQuery;
-      console.log('[Dashboard] Status data fetched:', statusData?.length);
-
       const lastCheckMap = new Map<string, string>();
       statusData?.forEach(status => {
         if (!lastCheckMap.has(status.patient_id)) {
@@ -246,36 +360,29 @@ export function Dashboard() {
         }
       });
 
-      // 이탈 리스크 환자 계산 (RiskManagement와 최대한 동일하게)
       const riskPatients = patients?.filter(patient => {
         const lastCheckDate = lastCheckMap.get(patient.id);
         const daysSinceCheck = calculateDaysSinceLastCheck(lastCheckDate, patient.created_at, patient.inflow_date);
-        
-        // 자동 업데이트 가능 여부 확인
         const autoUpdateAllowed = shouldAutoUpdateStatus(patient.management_status, true);
-
-        // RiskManagement처럼: 자동 업데이트 불가한 상태는 기존 상태를 유지해서 판정
         let newManagementStatus = patient.management_status || "관리 중";
         if (autoUpdateAllowed) {
           newManagementStatus = calculateAutoManagementStatus(daysSinceCheck);
         }
-
-        const isRisk = newManagementStatus === "아웃" || newManagementStatus === "아웃위기";
-        
-        if (isRisk) {
-          console.log('[Dashboard] Risk patient:', patient.name, 'days:', daysSinceCheck, 'status:', newManagementStatus);
-        }
-        
-        return isRisk;
+        return newManagementStatus === "아웃" || newManagementStatus === "아웃위기";
       }).slice(0, 10) || [];
 
-      console.log('[Dashboard] Total risk patients:', riskPatients.length);
-
       setStats({
-        totalPatients: monthInflowCount,  // 해당월 유입 환자 수
-        monthlyRevenue,
-        totalRevenue,
-        missingInflowDate: missingInflowDateCount,  // 유입일 미등록 환자 수 (통계관리 기준)
+        newRegistrations,
+        inflowPatients,
+        treatmentAgreementRate,
+        retentionRate,
+        phoneConsult,
+        visitConsult,
+        failed,
+        treatmentCompleted,
+        outThisMonth,
+        outTotal,
+        missingInflowDate,
         riskPatients
       });
 
@@ -323,8 +430,8 @@ export function Dashboard() {
                 .from('package_transactions')
                 .select('amount')
                 .in('transaction_type', ['inpatient_revenue', 'outpatient_revenue'])
-                .gte('transaction_date', startDate)
-                .lte('transaction_date', endDate);
+                .gte('transaction_date', startDateStr)
+                .lte('transaction_date', endDateStr);
 
               if (currentBranch) {
                 managerRevenueQuery = managerRevenueQuery.eq('branch', currentBranch);
@@ -379,16 +486,133 @@ export function Dashboard() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{new Date().getMonth() + 1}월 유입 환자</CardTitle>
+            <CardTitle className="text-sm font-medium">{new Date().getMonth() + 1}월 신규 등록</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalPatients}명</div>
+            <div className="text-2xl font-bold">{stats.newRegistrations}명</div>
             <p className="text-xs text-muted-foreground">
-              이번 달 신규 유입
+              해당 월에 초진관리에 등록된 전체 환자
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{new Date().getMonth() + 1}월 유입 환자</CardTitle>
+            <Users className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{stats.inflowPatients}명</div>
+            <p className="text-xs text-muted-foreground">
+              치료동의, 결제완료
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{new Date().getMonth() + 1}월 치료동의율</CardTitle>
+            <DollarSign className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{stats.treatmentAgreementRate}%</div>
+            <p className="text-xs text-muted-foreground">
+              (유입 환자 + 치료종료) ÷ 신규 등록 × 100
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{new Date().getMonth() + 1}월 재진관리비율</CardTitle>
+            <Activity className="h-4 w-4 text-purple-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">{stats.retentionRate}%</div>
+            <p className="text-xs text-muted-foreground">
+              전월 유입 중 (관리 중+치료종료) ÷ 전월 유입 × 100
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{new Date().getMonth() + 1}월 전화상담</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.phoneConsult}명</div>
+            <p className="text-xs text-muted-foreground">
+              유입상태='전화상담' 환자
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{new Date().getMonth() + 1}월 방문상담</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.visitConsult}명</div>
+            <p className="text-xs text-muted-foreground">
+              유입상태='방문상담' 환자
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{new Date().getMonth() + 1}월 실패</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{stats.failed}명</div>
+            <p className="text-xs text-muted-foreground">
+              유입상태='실패' 환자
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{new Date().getMonth() + 1}월 치료종료</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.treatmentCompleted}명</div>
+            <p className="text-xs text-muted-foreground">
+              유입상태='유입', 관리상태='치료종료', 유입일 기준
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{new Date().getMonth() + 1}월 아웃</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{stats.outThisMonth}명</div>
+            <p className="text-xs text-muted-foreground">
+              {new Date().getMonth() + 1}월 등록 후 아웃/아웃위기
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">전체 아웃</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{stats.outTotal}명</div>
+            <p className="text-xs text-muted-foreground">
+              전체 기간 아웃/아웃위기 환자
             </p>
           </CardContent>
         </Card>
@@ -402,45 +626,6 @@ export function Dashboard() {
             <div className="text-2xl font-bold text-yellow-600">{stats.missingInflowDate}</div>
             <p className="text-xs text-muted-foreground">
               유입상태='유입' / 유입일 없음
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">이탈 리스크 환자</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{stats.riskPatients.length}</div>
-            <p className="text-xs text-muted-foreground">
-              3주 이상 체크 없음
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">당월 현재 매출</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats.monthlyRevenue)}</div>
-            <p className="text-xs text-muted-foreground">
-              {new Date().getMonth() + 1}월 입원/외래
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">누적 매출</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
-            <p className="text-xs text-muted-foreground">
-              전체 기간 입원/외래
             </p>
           </CardContent>
         </Card>
