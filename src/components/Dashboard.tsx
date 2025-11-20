@@ -137,7 +137,7 @@ export function Dashboard() {
       // 5. 전화상담 환자 수 (inflow_status='전화상담' + consultation_date 필수)
       let phoneConsultQuery = supabase
         .from('patients')
-        .select('id, consultation_date')
+        .select('id, consultation_date, assigned_manager')
         .eq('inflow_status', '전화상담')
         .not('consultation_date', 'is', null);
       
@@ -145,15 +145,32 @@ export function Dashboard() {
       phoneConsultQuery = applyBranchFilter(phoneConsultQuery);
       
       const { data: phoneConsultPatients } = await phoneConsultQuery;
-      const phoneConsultCount = phoneConsultPatients?.filter(p => {
-        const consultDate = new Date(p.consultation_date!);
-        return consultDate >= selectedMonthStart && consultDate <= endDate;
-      }).length || 0;
+      
+      console.log('[대시보드] 전화상담 조회 결과:', {
+        totalCount: phoneConsultPatients?.length,
+        selectedMonthStart,
+        endDate,
+        selectedMonth,
+        sample: phoneConsultPatients?.slice(0, 3)
+      });
+      
+      const managerPhoneConsultMap = new Map<string, number>();
+      phoneConsultPatients?.forEach(patient => {
+        const managerId = patient.assigned_manager;
+        const consultDate = new Date(patient.consultation_date!);
+        if (consultDate >= selectedMonthStart && consultDate <= endDate) {
+          const currentCount = managerPhoneConsultMap.get(managerId) || 0;
+          managerPhoneConsultMap.set(managerId, currentCount + 1);
+        }
+      });
+      
+      const phoneConsultCount = managerPhoneConsultMap.get(user.id) || 0;
+      console.log('[대시보드] 전화상담 최종 카운트:', phoneConsultCount);
 
       // 6. 방문상담 환자 수 (inflow_status='방문상담' + consultation_date 필수)
       let visitConsultQuery = supabase
         .from('patients')
-        .select('id, consultation_date')
+        .select('id, consultation_date, assigned_manager')
         .eq('inflow_status', '방문상담')
         .not('consultation_date', 'is', null);
       
@@ -161,10 +178,27 @@ export function Dashboard() {
       visitConsultQuery = applyBranchFilter(visitConsultQuery);
       
       const { data: visitConsultPatients } = await visitConsultQuery;
-      const visitConsultCount = visitConsultPatients?.filter(p => {
-        const consultDate = new Date(p.consultation_date!);
-        return consultDate >= selectedMonthStart && consultDate <= endDate;
-      }).length || 0;
+      
+      console.log('[대시보드] 방문상담 조회 결과:', {
+        totalCount: visitConsultPatients?.length,
+        selectedMonthStart,
+        endDate,
+        selectedMonth,
+        sample: visitConsultPatients?.slice(0, 3)
+      });
+      
+      const managerVisitConsultMap = new Map<string, number>();
+      visitConsultPatients?.forEach(patient => {
+        const managerId = patient.assigned_manager;
+        const consultDate = new Date(patient.consultation_date!);
+        if (consultDate >= selectedMonthStart && consultDate <= endDate) {
+          const currentCount = managerVisitConsultMap.get(managerId) || 0;
+          managerVisitConsultMap.set(managerId, currentCount + 1);
+        }
+      });
+      
+      const visitConsultCount = managerVisitConsultMap.get(user.id) || 0;
+      console.log('[대시보드] 방문상담 최종 카운트:', visitConsultCount);
 
       // 7. 실패 환자 수 (inflow_status='실패' + inflow_date 필수)
       let failedQuery = supabase
