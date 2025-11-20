@@ -257,11 +257,22 @@ export default function StatisticsManagement() {
 
       // 선택한 월에 신규 등록된 환자 필터링
       // - 모든 상태: inflow_date 기준만 사용
+      console.log('[통계관리] 신규 등록 필터 전:', {
+        totalCount: allMonthPatients?.length,
+        selectedMonthStart,
+        endDate,
+        selectedMonth,
+        sample: allMonthPatients?.slice(0, 3).map(p => ({ id: p.id, inflow_date: p.inflow_date }))
+      });
+      
       const monthNewPatients = allMonthPatients?.filter(p => {
         if (!p.inflow_date) return false;
         const inflowDate = new Date(p.inflow_date);
-        return inflowDate >= selectedMonthStart && inflowDate <= endDate;
+        const included = inflowDate >= selectedMonthStart && inflowDate <= endDate;
+        return included;
       });
+      
+      console.log('[통계관리] 신규 등록 결과:', monthNewPatients?.length);
 
       // 2. 해당 월 관리 환자: 선택한 월에 유입되어 현재 '관리 중'인 환자 (유입일 필수)
       let totalPatientsQuery = supabase

@@ -132,10 +132,22 @@ export function Dashboard() {
       }
 
       const { data: newRegsData } = await newRegistrationsQuery;
+      
+      console.log('[Dashboard] 신규 등록 필터 전:', {
+        totalCount: newRegsData?.length,
+        selectedMonthStart,
+        endDate,
+        endDateStr,
+        sample: newRegsData?.slice(0, 3).map(p => ({ id: p.id, inflow_date: p.inflow_date }))
+      });
+      
       const newRegistrations = newRegsData?.filter(p => {
         const inflowDate = new Date(p.inflow_date!);
-        return inflowDate >= selectedMonthStart && inflowDate <= endDate;
+        const included = inflowDate >= selectedMonthStart && inflowDate <= endDate;
+        return included;
       }).length || 0;
+      
+      console.log('[Dashboard] 신규 등록 결과:', newRegistrations);
 
       // 2. 유입 환자 (inflow_status='유입', management_status='관리 중', inflow_date 필수)
       let inflowQuery = supabase
