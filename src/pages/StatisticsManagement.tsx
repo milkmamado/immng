@@ -722,7 +722,7 @@ export default function StatisticsManagement() {
         avgRevenuePerPatient: totals.avgRevenuePerPatient
       });
 
-      setManagerStats(statsArray);
+      setManagerStats(finalStatsArray);
       setTotalStats(totals);
 
       // 새로운 통계 계산 로직 추가
