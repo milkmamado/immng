@@ -1447,6 +1447,16 @@ export default function StatisticsManagement() {
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{statsDialog.title}</DialogTitle>
+            {statsDialog.type === 'newRegistration' && (
+              <div className="mt-2 p-3 bg-amber-50 border-l-4 border-amber-500 rounded">
+                <p className="text-sm font-semibold text-amber-900">
+                  📋 집계 기준: 유입일이 정확히 입력된 환자만 포함됩니다
+                </p>
+                <p className="text-xs text-amber-700 mt-1">
+                  ⚠️ 유입일 미입력 시 통계에서 제외되니 반드시 입력해주세요!
+                </p>
+              </div>
+            )}
           </DialogHeader>
           <div className="mt-4">
             {statsDialog.patients.length === 0 ? (
