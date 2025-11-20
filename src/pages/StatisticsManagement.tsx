@@ -50,6 +50,7 @@ export default function StatisticsManagement() {
   const [additionalStats, setAdditionalStats] = useState({
     outPatients: 0,
     newPatientsThisMonth: 0,
+    totalNewRegistrations: 0, // 신규 등록 총 수 (치료동의율 계산용)
     phoneConsultPatientsThisMonth: 0,
     visitConsultPatientsThisMonth: 0,
     failedPatientsThisMonth: 0,
@@ -788,6 +789,7 @@ export default function StatisticsManagement() {
       setAdditionalStats({
         outPatients: outPatientsCount,
         newPatientsThisMonth: newPatientsCount,
+        totalNewRegistrations, // 신규 등록 총 수 추가
         phoneConsultPatientsThisMonth: phoneConsultCount,
         visitConsultPatientsThisMonth: visitConsultCount,
         failedPatientsThisMonth: failedCount,
@@ -1176,7 +1178,10 @@ export default function StatisticsManagement() {
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">{additionalStats.treatmentAgreementRate}%</div>
             <CardDescription className="text-xs mt-1">
-              신규등록 / 유입 환자
+              <div className="font-semibold text-foreground/80">유입 환자 ÷ 신규 등록 × 100</div>
+              <div className="text-muted-foreground mt-0.5">
+                ({additionalStats.newPatientsThisMonth}명 ÷ {additionalStats.totalNewRegistrations}명)
+              </div>
             </CardDescription>
           </CardContent>
         </Card>
