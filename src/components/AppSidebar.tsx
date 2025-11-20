@@ -101,7 +101,15 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map((item) => (
+              {navigationItems
+                .filter(item => {
+                  // 매니저 계정일 때 통계 관리 메뉴 숨김
+                  if (item.title === '통계 관리' && userRole === 'manager') {
+                    return false;
+                  }
+                  return true;
+                })
+                .map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink 
