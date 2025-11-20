@@ -107,6 +107,10 @@ export function AppSidebar() {
                   if (item.title === '통계 관리' && userRole === 'manager') {
                     return false;
                   }
+                  // 관리자와 마스터일 때 대시보드 메뉴 숨김
+                  if (item.title === '대시보드' && (userRole === 'admin' || userRole === 'master')) {
+                    return false;
+                  }
                   return true;
                 })
                 .map((item) => (
