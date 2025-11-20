@@ -13,6 +13,7 @@ interface ManagerStats {
   manager_id: string;
   manager_name: string;
   total_patients: number;
+  total_all_patients: number; // 전체 관리 중 환자 (기간 무관)
   total_revenue: number;
   inpatient_revenue: number;
   outpatient_revenue: number;
@@ -284,12 +285,15 @@ export default function StatisticsManagement() {
       
       const { data: totalPatientsData } = await totalPatientsQuery;
       
-      // 선택한 월에 유입된 환자만 필터링
+      // 선택한 월에 유입된 환자만 필터링 (11월 관리 환자)
       const totalPatientsFiltered = totalPatientsData?.filter(p => {
         const inflowDate = new Date(p.inflow_date);
         return inflowDate >= selectedMonthStart && inflowDate <= endDate;
       });
       const totalPatientsCount = totalPatientsFiltered?.length || 0;
+
+      // 전체 관리 중인 환자 (기간 무관)
+      const totalAllPatientsCount = totalPatientsData?.length || 0;
 
       // 매출 집계용: 관리 상태와 무관하게 해당 매니저의 모든 환자
       let managerAllPatientsQuery = supabase
@@ -336,6 +340,7 @@ export default function StatisticsManagement() {
             manager_id: managerId,
             manager_name: managerName,
             total_patients: 0,
+            total_all_patients: 0, // 전체 관리 환자
             total_revenue: 0,
             inpatient_revenue: 0,
             outpatient_revenue: 0,
@@ -352,6 +357,14 @@ export default function StatisticsManagement() {
 
         const stats = managerMap.get(managerId)!;
         stats.total_patients += 1; // 11월 유입 + 현재 관리 중인 환자 수
+      });
+
+      // 전체 관리 중인 환자 수 집계 (기간 무관)
+      totalPatientsData?.forEach(patient => {
+        const stats = managerMap.get(patient.assigned_manager);
+        if (stats) {
+          stats.total_all_patients += 1;
+        }
       });
 
       // 실제 결제 데이터로 매출 계산 (치료 계획)
@@ -442,6 +455,7 @@ export default function StatisticsManagement() {
             manager_id: managerId,
             manager_name: patient?.manager_name || '미지정',
             total_patients: 0,
+            total_all_patients: 0,
             total_revenue: 0,
             inpatient_revenue: 0,
             outpatient_revenue: 0,
@@ -492,8 +506,9 @@ export default function StatisticsManagement() {
       });
 
       // 상태별 일수 집계 (입원/재원, 외래, 낮병동, 전화F/U 각각의 총 일수)
+      // 11월 기간 동안의 모든 상태 기록을 매니저별로 집계
       dailyStatuses?.forEach(status => {
-        const patient = monthNewPatients?.find(p => p.id === status.patient_id);
+        const patient = managerAllPatients?.find(p => p.id === status.patient_id);
         if (!patient) return;
 
         const stats = managerMap.get(patient.assigned_manager);
@@ -1475,7 +1490,7 @@ export default function StatisticsManagement() {
                   {stats.manager_name}
                 </CardTitle>
                 <CardDescription className="text-primary-light">
-                  관리 환자 {stats.total_patients}명
+                  {selectedMonth.split('-')[1]}월 관리 환자 {stats.total_patients}명 / 전체 {stats.total_all_patients}명
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-6 space-y-4">
