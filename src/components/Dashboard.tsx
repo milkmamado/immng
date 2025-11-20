@@ -84,29 +84,36 @@ export function Dashboard() {
       const isAdmin = roleData?.role === 'master' || roleData?.role === 'admin';
       console.log('[Dashboard] User role:', roleData?.role, 'isAdmin:', isAdmin);
 
-      // 1. 총 관리 환자 수 (통계관리와 동일: inflow_date 있고 management_status = '관리 중')
-      let managedPatientsQuery = supabase
+      // 현재 월 계산
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth() + 1;
+      const startOfMonth = new Date(currentYear, currentMonth - 1, 1);
+      const endOfMonth = new Date(currentYear, currentMonth, 0);
+
+      // 1. 해당월 유입 환자 수 (inflow_date가 현재 월에 있는 환자)
+      let monthInflowPatientsQuery = supabase
         .from('patients')
         .select('id, inflow_date')
-        .eq('management_status', '관리 중')
-        .not('inflow_date', 'is', null);
+        .gte('inflow_date', startOfMonth.toISOString().split('T')[0])
+        .lte('inflow_date', endOfMonth.toISOString().split('T')[0]);
 
       if (currentBranch) {
-        managedPatientsQuery = managedPatientsQuery.eq('branch', currentBranch);
+        monthInflowPatientsQuery = monthInflowPatientsQuery.eq('branch', currentBranch);
       }
 
       if (!isAdmin) {
-        managedPatientsQuery = managedPatientsQuery.eq('assigned_manager', user.id);
+        monthInflowPatientsQuery = monthInflowPatientsQuery.eq('assigned_manager', user.id);
       }
 
-      const { data: managedPatients } = await managedPatientsQuery;
-      const totalManagedPatients = managedPatients?.length || 0;
+      const { data: monthInflowPatients } = await monthInflowPatientsQuery;
+      const monthInflowCount = monthInflowPatients?.length || 0;
 
-      // 유입일 미등록 환자 수 (management_status = '관리 중'이지만 inflow_date가 null)
+      // 유입일 미등록 환자 수 (통계관리와 동일: inflow_status = '유입'이지만 inflow_date가 null)
       let missingInflowDateQuery = supabase
         .from('patients')
         .select('id')
-        .eq('management_status', '관리 중')
+        .eq('inflow_status', '유입')
         .is('inflow_date', null);
 
       if (currentBranch) {
@@ -119,6 +126,9 @@ export function Dashboard() {
 
       const { data: missingInflowDatePatients } = await missingInflowDateQuery;
       const missingInflowDateCount = missingInflowDatePatients?.length || 0;
+
+      console.log('[Dashboard] Month inflow patients:', monthInflowCount);
+      console.log('[Dashboard] Missing inflow date patients:', missingInflowDateCount);
 
       // 2. 매출 계산용 환자 목록 (관리 상태/유입 상태 무관, 지점/권한 기준)
       let revenuePatientsQuery = supabase
@@ -138,7 +148,7 @@ export function Dashboard() {
 
       const revenuePatientIds = revenuePatients?.map(p => p.id) || [];
 
-      console.log('[Dashboard] Total managed patients (관리 중):', totalManagedPatients);
+      console.log('[Dashboard] Month inflow patients:', monthInflowCount);
       console.log('[Dashboard] Total patients for revenue calc (전체 환자):', revenuePatientIds.length);
 
       // 3. 리스크 및 기타 통계용: 유입 상태 환자 (관리 상태 무관, 아웃 포함)
@@ -262,10 +272,10 @@ export function Dashboard() {
       console.log('[Dashboard] Total risk patients:', riskPatients.length);
 
       setStats({
-        totalPatients: totalManagedPatients,  // 관리 중 환자 수 (inflow_date 있는 경우만)
+        totalPatients: monthInflowCount,  // 해당월 유입 환자 수
         monthlyRevenue,
         totalRevenue,
-        missingInflowDate: missingInflowDateCount,  // 유입일 미등록 환자 수
+        missingInflowDate: missingInflowDateCount,  // 유입일 미등록 환자 수 (통계관리 기준)
         riskPatients
       });
 
@@ -372,13 +382,13 @@ export function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">총 관리 환자</CardTitle>
+            <CardTitle className="text-sm font-medium">{new Date().getMonth() + 1}월 유입 환자</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalPatients}명</div>
             <p className="text-xs text-muted-foreground">
-              유입일 등록 & 관리 중
+              이번 달 신규 유입
             </p>
           </CardContent>
         </Card>
@@ -391,7 +401,7 @@ export function Dashboard() {
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">{stats.missingInflowDate}</div>
             <p className="text-xs text-muted-foreground">
-              관리 중이나 유입일 없음
+              유입상태='유입' / 유입일 없음
             </p>
           </CardContent>
         </Card>
