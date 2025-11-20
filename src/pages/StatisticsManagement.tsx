@@ -621,13 +621,13 @@ export default function StatisticsManagement() {
         avgRevenuePerPatient: totals.avgRevenuePerPatient
       });
 
-      // 전화상담 환자 수 (해당 월 기준, inflow_status가 '전화상담'인 환자)
-      // 초진관리와 동일: inflow_date가 없으면 created_at 사용
+      // 전화상담 환자 수 (inflow_status='전화상담', management_status='관리 중', inflow_date 필수)
       let phoneConsultQuery = supabase
         .from('patients')
-        .select('id, inflow_date, created_at')
+        .select('id, inflow_date')
         .eq('inflow_status', '전화상담')
-        .eq('management_status', '관리 중');
+        .eq('management_status', '관리 중')
+        .not('inflow_date', 'is', null); // 유입일이 반드시 있어야 함
       
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
         const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
@@ -637,8 +637,8 @@ export default function StatisticsManagement() {
       
       const { data: phoneConsultPatients } = await phoneConsultQuery;
       const phoneConsultCount = phoneConsultPatients?.filter(p => {
-        const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
-        return refDate >= selectedMonthStart && refDate <= endDate;
+        const inflowDate = new Date(p.inflow_date);
+        return inflowDate >= selectedMonthStart && inflowDate <= endDate;
       }).length || 0;
 
       // 방문상담 환자 수 (해당 월 기준, inflow_status가 '방문상담'인 환자)
@@ -976,13 +976,15 @@ export default function StatisticsManagement() {
           break;
         
         case 'phone':
-          // 전화상담 비율 - 초진관리와 동일: inflow_date가 없으면 created_at 사용
+          // 11월 전화상담 - inflow_status='전화상담', management_status='관리 중', inflow_date 필수
           filteredPatients = patients?.filter(p => {
             if (p.inflow_status !== '전화상담') return false;
-            const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
-            return refDate >= startOfPeriod && refDate <= endOfPeriod;
+            if (p.management_status !== '관리 중') return false;
+            if (!p.inflow_date) return false; // 유입일이 반드시 있어야 함
+            const inflowDate = new Date(p.inflow_date);
+            return inflowDate >= startOfPeriod && inflowDate <= endOfPeriod;
           }) || [];
-          title = `전화상담 비율 - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
+          title = `${month2}월 전화상담 환자 (전화상담/관리 중) - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
           break;
         
         case 'visit':
