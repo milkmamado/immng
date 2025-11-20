@@ -110,9 +110,13 @@ export function Dashboard() {
       const month = now.getMonth() + 1;
       const selectedMonthStart = new Date(year, month - 1, 1);
       const selectedMonthEnd = new Date(year, month, 0);
-      const endDate = selectedMonthEnd;
+
+      // 현재 월이면 오늘까지만, 지난 달이면 해당 월 말일까지 집계 (통계관리와 동일하게 맞춤)
+      const isCurrentMonth = now.getFullYear() === year && now.getMonth() === month - 1;
+      const endDate = isCurrentMonth ? now : selectedMonthEnd;
+
       const startDateStr = `${year}-${String(month).padStart(2, '0')}-01`;
-      const endDateStr = `${year}-${String(month).padStart(2, '0')}-${String(selectedMonthEnd.getDate()).padStart(2, '0')}`;
+      const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
 
       // 1. 신규 등록 (inflow_date 기준)
       let newRegistrationsQuery = supabase
