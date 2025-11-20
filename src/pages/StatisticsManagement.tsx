@@ -1586,25 +1586,25 @@ export default function StatisticsManagement() {
                     <div className="flex justify-between p-2 bg-blue-50 rounded">
                       <span className="text-sm text-gray-600">입원</span>
                       <span className="text-sm font-semibold text-blue-700">
-                        {stats.status_breakdown.입원}일
+                        {stats.status_breakdown.입원}회
                       </span>
                     </div>
                     <div className="flex justify-between p-2 bg-green-50 rounded">
                       <span className="text-sm text-gray-600">외래</span>
                       <span className="text-sm font-semibold text-green-700">
-                        {stats.status_breakdown.외래}일
+                        {stats.status_breakdown.외래}회
                       </span>
                     </div>
                     <div className="flex justify-between p-2 bg-purple-50 rounded">
                       <span className="text-sm text-gray-600">낮병동</span>
                       <span className="text-sm font-semibold text-purple-700">
-                        {stats.status_breakdown.낮병동}일
+                        {stats.status_breakdown.낮병동}회
                       </span>
                     </div>
                     <div className="flex justify-between p-2 bg-orange-50 rounded">
                       <span className="text-sm text-gray-600">전화F/U</span>
                       <span className="text-sm font-semibold text-orange-700">
-                        {stats.status_breakdown.전화FU}일
+                        {stats.status_breakdown.전화FU}회
                       </span>
                     </div>
                   </div>
