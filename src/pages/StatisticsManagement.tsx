@@ -54,6 +54,7 @@ export default function StatisticsManagement() {
     phoneConsultPatientsThisMonth: 0,
     visitConsultPatientsThisMonth: 0,
     failedPatientsThisMonth: 0,
+    treatmentCompletedThisMonth: 0, // 11월 치료종료 환자
     retentionRate: 0,
     prevMonthInflowTotal: 0, // 전월 유입 총 수 (재진관리비율 계산용)
     retainedPatientsCount: 0, // 전월 유입 중 현재 관리 중인 환자 수
@@ -80,7 +81,7 @@ export default function StatisticsManagement() {
   // 통계 카드 클릭 환자 리스트 다이얼로그 state
   const [statsDialog, setStatsDialog] = useState<{
     open: boolean;
-    type: 'out' | 'inflow' | 'phone' | 'visit' | 'failed' | 'retention' | 'missingInflow' | 'newRegistration' | null;
+    type: 'out' | 'inflow' | 'phone' | 'visit' | 'failed' | 'treatmentCompleted' | 'retention' | 'missingInflow' | 'newRegistration' | null;
     title: string;
     patients: any[];
   }>({
@@ -678,6 +679,26 @@ export default function StatisticsManagement() {
         return inflowDate >= selectedMonthStart && inflowDate <= endDate;
       }).length || 0;
 
+      // 치료종료 환자 수 (inflow_status='유입' + management_status='치료종료' + inflow_date 필수)
+      let treatmentCompletedQuery = supabase
+        .from('patients')
+        .select('id, inflow_date')
+        .eq('inflow_status', '유입')
+        .eq('management_status', '치료종료')
+        .not('inflow_date', 'is', null); // 유입일이 반드시 있어야 함
+      
+      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
+        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
+        treatmentCompletedQuery = treatmentCompletedQuery.eq('assigned_manager', targetManager);
+      }
+      treatmentCompletedQuery = applyBranchFilter(treatmentCompletedQuery);
+      
+      const { data: treatmentCompletedPatients } = await treatmentCompletedQuery;
+      const treatmentCompletedCount = treatmentCompletedPatients?.filter(p => {
+        const inflowDate = new Date(p.inflow_date!);
+        return inflowDate >= selectedMonthStart && inflowDate <= endDate;
+      }).length || 0;
+
       // 3. 재진관리비율 계산
       const [prevYear, prevMonth] = selectedMonth.split('-').map(Number);
       const prevMonthDate = new Date(prevYear, prevMonth - 2, 1);
@@ -705,8 +726,10 @@ export default function StatisticsManagement() {
         return inflowDate >= prevMonthStart && inflowDate <= prevMonthEnd;
       }) || [];
 
-      // 전월 유입 환자 중 현재도 '관리 중'인 환자
-      const retainedPatients = prevMonthPatients.filter(p => p.management_status === '관리 중').length;
+      // 전월 유입 환자 중 현재도 '관리 중' 또는 '치료종료'인 환자
+      const retainedPatients = prevMonthPatients.filter(p => 
+        p.management_status === '관리 중' || p.management_status === '치료종료'
+      ).length;
       const retentionRate = prevMonthPatients.length > 0 
         ? Math.round((retainedPatients / prevMonthPatients.length) * 100) 
         : 0;
@@ -760,12 +783,12 @@ export default function StatisticsManagement() {
       }).length;
 
       // 치료동의율 계산
-      // 치료동의율 = (11월 유입 환자 수) / (11월 신규 등록 수) × 100
-      // - 분자: inflow_status='유입' AND management_status='관리 중' AND inflow_date 정확 (newPatientsCount)
+      // 치료동의율 = (11월 유입 환자 수 + 11월 치료종료 환자 수) / (11월 신규 등록 수) × 100
+      // - 분자: (inflow_status='유입' AND management_status='관리 중' AND inflow_date 정확) + (inflow_status='유입' AND management_status='치료종료' AND inflow_date 정확)
       // - 분모: inflow_date가 11월에 정확히 입력된 모든 환자 (monthNewPatients.length)
       const totalNewRegistrations = monthNewPatients?.length || 0;
       const treatmentAgreementRate = totalNewRegistrations > 0 
-        ? Math.round((newPatientsCount / totalNewRegistrations) * 100) 
+        ? Math.round(((newPatientsCount + treatmentCompletedCount) / totalNewRegistrations) * 100) 
         : 0;
 
       // 유입상태='유입'인데 유입일(inflow_date) 미등록 환자
@@ -791,9 +814,10 @@ export default function StatisticsManagement() {
         phoneConsultPatientsThisMonth: phoneConsultCount,
         visitConsultPatientsThisMonth: visitConsultCount,
         failedPatientsThisMonth: failedCount,
+        treatmentCompletedThisMonth: treatmentCompletedCount, // 11월 치료종료 환자
         retentionRate,
         prevMonthInflowTotal: prevMonthPatients.length, // 전월 유입 총 수
-        retainedPatientsCount: retainedPatients, // 전월 유입 중 현재 관리 중
+        retainedPatientsCount: retainedPatients, // 전월 유입 중 현재 관리 중 또는 치료종료
         treatmentAgreementRate,
         missingInflowDatePatients,
         patients1MonthPlus,
@@ -928,7 +952,7 @@ export default function StatisticsManagement() {
   };
 
   // 통계 카드 클릭 핸들러
-  const handleStatsCardClick = async (type: 'out' | 'inflow' | 'phone' | 'visit' | 'failed' | 'retention' | 'missingInflow' | 'newRegistration') => {
+  const handleStatsCardClick = async (type: 'out' | 'inflow' | 'phone' | 'visit' | 'failed' | 'treatmentCompleted' | 'retention' | 'missingInflow' | 'newRegistration') => {
     try {
       // 선택한 월의 1일부터 오늘까지 (또는 해당 월 마지막까지)
       const [year2, month2] = selectedMonth.split('-').map(Number);
@@ -1181,9 +1205,9 @@ export default function StatisticsManagement() {
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">{additionalStats.treatmentAgreementRate}%</div>
             <CardDescription className="text-xs mt-1">
-              <div className="font-semibold text-foreground/80">유입 환자 ÷ 신규 등록 × 100</div>
+              <div className="font-semibold text-foreground/80">(유입 환자 + 치료종료) ÷ 신규 등록 × 100</div>
               <div className="text-muted-foreground mt-0.5">
-                ({additionalStats.newPatientsThisMonth}명 ÷ {additionalStats.totalNewRegistrations}명)
+                ({additionalStats.newPatientsThisMonth}명 + {additionalStats.treatmentCompletedThisMonth}명 ÷ {additionalStats.totalNewRegistrations}명)
               </div>
             </CardDescription>
           </CardContent>
@@ -1196,7 +1220,7 @@ export default function StatisticsManagement() {
           <CardContent>
             <div className="text-2xl font-bold text-indigo-600">{additionalStats.retentionRate}%</div>
             <CardDescription className="text-xs mt-1">
-              <div className="font-semibold text-foreground/80">전월 유입 중 관리 중 ÷ 전월 유입 × 100</div>
+              <div className="font-semibold text-foreground/80">전월 유입 중 (관리 중+치료종료) ÷ 전월 유입 × 100</div>
               <div className="text-muted-foreground mt-0.5">
                 ({additionalStats.retainedPatientsCount}명 ÷ {additionalStats.prevMonthInflowTotal}명)
               </div>
@@ -1205,7 +1229,7 @@ export default function StatisticsManagement() {
         </Card>
       </div>
 
-      {/* 세 번째 줄: 11월 전화상담 / 11월 방문상담 / 11월 실패 / 아웃 환자 */}
+      {/* 세 번째 줄: 11월 전화상담 / 11월 방문상담 / 11월 실패 / 11월 치료종료 / 아웃 환자 */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('phone')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -1240,6 +1264,18 @@ export default function StatisticsManagement() {
             <div className="text-2xl font-bold text-gray-600">{additionalStats.failedPatientsThisMonth}명</div>
             <CardDescription className="text-xs mt-1">
               유입상태='실패' 환자
+            </CardDescription>
+          </CardContent>
+        </Card>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('treatmentCompleted')}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{selectedMonth.split('-')[1]}월 치료종료</CardTitle>
+            <TrendingUp className="h-4 w-4 text-cyan-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-cyan-600">{additionalStats.treatmentCompletedThisMonth}명</div>
+            <CardDescription className="text-xs mt-1">
+              치료완료 환자
             </CardDescription>
           </CardContent>
         </Card>
