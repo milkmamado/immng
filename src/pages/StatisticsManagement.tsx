@@ -330,6 +330,29 @@ export default function StatisticsManagement() {
       // 실장별로 그룹핑
       const managerMap = new Map<string, ManagerStats>();
       
+      // 먼저 모든 매니저를 0으로 초기화 (마스터/관리자인 경우)
+      if (isMasterOrAdmin && selectedManager === 'all') {
+        managers.forEach(manager => {
+          managerMap.set(manager.id, {
+            manager_id: manager.id,
+            manager_name: manager.name,
+            total_patients: 0,
+            total_all_patients: 0,
+            total_revenue: 0,
+            inpatient_revenue: 0,
+            outpatient_revenue: 0,
+            non_covered_revenue: 0,
+            avg_revenue_per_patient: 0,
+            status_breakdown: {
+              입원: 0,
+              외래: 0,
+              낮병동: 0,
+              전화FU: 0
+            }
+          });
+        });
+      }
+      
       // 11월 유입일 기준 관리 중인 환자로 매니저별 환자 수 집계
       totalPatientsFiltered?.forEach(patient => {
         const managerId = patient.assigned_manager;
