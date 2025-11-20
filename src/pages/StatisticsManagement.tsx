@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useBranchFilter } from '@/hooks/useBranchFilter';
@@ -232,6 +233,9 @@ export default function StatisticsManagement() {
       
       const queryStartDate = selectedMonthStart.toISOString().split('T')[0];
       const queryEndDate = endDate.toISOString().split('T')[0];
+
+      // 공통 필터 조건 생성
+      const targetManager = isMasterOrAdmin && selectedManager !== 'all' ? selectedManager : (isMasterOrAdmin ? null : user?.id);
 
       // 1. 해당 월 신규 등록 환자: inflow_date 또는 consultation_date가 선택한 월에 있는 환자
       let monthNewPatientsQuery = supabase
