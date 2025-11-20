@@ -9,6 +9,7 @@ interface DashboardStats {
   totalPatients: number;
   monthlyRevenue: number;
   totalRevenue: number;
+  missingInflowDate: number;
   riskPatients: Array<{
     id: string;
     name: string;
@@ -31,6 +32,7 @@ export function Dashboard() {
     totalPatients: 0,
     monthlyRevenue: 0,
     totalRevenue: 0,
+    missingInflowDate: 0,
     riskPatients: []
   });
   const [managerStats, setManagerStats] = useState<ManagerStat[]>([]);
@@ -44,6 +46,7 @@ export function Dashboard() {
         totalPatients: 0,
         monthlyRevenue: 0,
         totalRevenue: 0,
+        missingInflowDate: 0,
         riskPatients: []
       });
       setManagerStats([]);
@@ -81,11 +84,12 @@ export function Dashboard() {
       const isAdmin = roleData?.role === 'master' || roleData?.role === 'admin';
       console.log('[Dashboard] User role:', roleData?.role, 'isAdmin:', isAdmin);
 
-      // 1. 총 관리 환자 수 (management_status = '관리 중')
+      // 1. 총 관리 환자 수 (통계관리와 동일: inflow_date 있고 management_status = '관리 중')
       let managedPatientsQuery = supabase
         .from('patients')
-        .select('id')
-        .eq('management_status', '관리 중');
+        .select('id, inflow_date')
+        .eq('management_status', '관리 중')
+        .not('inflow_date', 'is', null);
 
       if (currentBranch) {
         managedPatientsQuery = managedPatientsQuery.eq('branch', currentBranch);
@@ -97,6 +101,24 @@ export function Dashboard() {
 
       const { data: managedPatients } = await managedPatientsQuery;
       const totalManagedPatients = managedPatients?.length || 0;
+
+      // 유입일 미등록 환자 수 (management_status = '관리 중'이지만 inflow_date가 null)
+      let missingInflowDateQuery = supabase
+        .from('patients')
+        .select('id')
+        .eq('management_status', '관리 중')
+        .is('inflow_date', null);
+
+      if (currentBranch) {
+        missingInflowDateQuery = missingInflowDateQuery.eq('branch', currentBranch);
+      }
+
+      if (!isAdmin) {
+        missingInflowDateQuery = missingInflowDateQuery.eq('assigned_manager', user.id);
+      }
+
+      const { data: missingInflowDatePatients } = await missingInflowDateQuery;
+      const missingInflowDateCount = missingInflowDatePatients?.length || 0;
 
       // 2. 매출 계산용 환자 목록 (관리 상태/유입 상태 무관, 지점/권한 기준)
       let revenuePatientsQuery = supabase
@@ -240,9 +262,10 @@ export function Dashboard() {
       console.log('[Dashboard] Total risk patients:', riskPatients.length);
 
       setStats({
-        totalPatients: totalManagedPatients,  // 관리 중 환자 수
+        totalPatients: totalManagedPatients,  // 관리 중 환자 수 (inflow_date 있는 경우만)
         monthlyRevenue,
         totalRevenue,
+        missingInflowDate: missingInflowDateCount,  // 유입일 미등록 환자 수
         riskPatients
       });
 
@@ -346,7 +369,7 @@ export function Dashboard() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">총 관리 환자</CardTitle>
@@ -355,7 +378,20 @@ export function Dashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalPatients}명</div>
             <p className="text-xs text-muted-foreground">
-              관리 중 환자 수
+              유입일 등록 & 관리 중
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">유입일 미등록</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">{stats.missingInflowDate}</div>
+            <p className="text-xs text-muted-foreground">
+              관리 중이나 유입일 없음
             </p>
           </CardContent>
         </Card>
