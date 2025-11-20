@@ -340,12 +340,19 @@ export default function StatisticsManagement() {
       // 실장별로 그룹핑
       const managerMap = new Map<string, ManagerStats>();
       
-      // 먼저 모든 매니저를 0으로 초기화 (마스터/관리자인 경우)
-      if (isMasterOrAdmin && selectedManager === 'all') {
-        managers.forEach(manager => {
-          managerMap.set(manager.id, {
-            manager_id: manager.id,
-            manager_name: manager.name,
+      // 매니저별 신규 등록 환자 수 매핑 (모든 상태 포함)
+      const managerNewRegistrationMap = new Map<string, number>();
+      monthNewPatients?.forEach(patient => {
+        const managerId = patient.assigned_manager;
+        const managerName = patient.manager_name || '미지정';
+        const currentCount = managerNewRegistrationMap.get(managerId) || 0;
+        managerNewRegistrationMap.set(managerId, currentCount + 1);
+        
+        // 매니저 카드가 없으면 생성
+        if (!managerMap.has(managerId)) {
+          managerMap.set(managerId, {
+            manager_id: managerId,
+            manager_name: managerName,
             total_patients: 0,
             total_all_patients: 0,
             total_revenue: 0,
@@ -360,42 +367,41 @@ export default function StatisticsManagement() {
               전화FU: 0
             }
           });
-        });
-      }
-      
-      // 매니저별 신규 등록 환자 수 매핑 (모든 상태 포함)
-      const managerNewRegistrationMap = new Map<string, number>();
-      monthNewPatients?.forEach(patient => {
-        const managerId = patient.assigned_manager;
-        const currentCount = managerNewRegistrationMap.get(managerId) || 0;
-        managerNewRegistrationMap.set(managerId, currentCount + 1);
-      });
-      
-      // 11월 유입일 기준 관리 중인 환자로 매니저별 환자 수 집계
-      totalPatientsFiltered?.forEach(patient => {
-        const managerId = patient.assigned_manager;
-        const managerName = patient.manager_name || '미지정';
-
-        if (!managerMap.has(managerId)) {
-          managerMap.set(managerId, {
-            manager_id: managerId,
-            manager_name: managerName,
-            total_patients: managerNewRegistrationMap.get(managerId) || 0, // 신규 등록 환자 수 (모든 상태 포함)
-            total_all_patients: 0, // 전체 관리 환자
-            total_revenue: 0,
-            inpatient_revenue: 0,
-            outpatient_revenue: 0,
-            non_covered_revenue: 0,
-            avg_revenue_per_patient: 0,
-            status_breakdown: {
-              입원: 0,
-              외래: 0,
-              낮병동: 0,
-              전화FU: 0
-            }
-          });
         }
       });
+      
+      // 모든 매니저 카드의 total_patients를 신규 등록 수로 설정
+      for (const [managerId, count] of managerNewRegistrationMap.entries()) {
+        const stats = managerMap.get(managerId);
+        if (stats) {
+          stats.total_patients = count;
+        }
+      }
+      
+      // 매니저 목록에는 있지만 신규 등록이 0명인 매니저도 카드 생성
+      if (isMasterOrAdmin && selectedManager === 'all') {
+        managers.forEach(manager => {
+          if (!managerMap.has(manager.id)) {
+            managerMap.set(manager.id, {
+              manager_id: manager.id,
+              manager_name: manager.name,
+              total_patients: 0,
+              total_all_patients: 0,
+              total_revenue: 0,
+              inpatient_revenue: 0,
+              outpatient_revenue: 0,
+              non_covered_revenue: 0,
+              avg_revenue_per_patient: 0,
+              status_breakdown: {
+                입원: 0,
+                외래: 0,
+                낮병동: 0,
+                전화FU: 0
+              }
+            });
+          }
+        });
+      }
 
       // 전체 관리 중인 환자 수 집계 (기간 무관)
       totalPatientsData?.forEach(patient => {
