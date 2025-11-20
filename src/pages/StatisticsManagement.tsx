@@ -245,9 +245,11 @@ export default function StatisticsManagement() {
 
       if (monthInflowPatientsError) throw monthInflowPatientsError;
 
-      // 선택한 월에 유입일이 있는 환자만 필터링 (월별 신규 유입)
+      // 선택한 월에 유입일이 정확히 기재된 환자만 필터링 (월별 신규 유입)
       const monthNewPatients = allMonthInflowPatients?.filter(p => {
-        const inflowDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
+        // 유입일이 반드시 있어야 하고, 해당 월에 속해야 함
+        if (!p.inflow_date) return false;
+        const inflowDate = new Date(p.inflow_date);
         return inflowDate >= selectedMonthStart && inflowDate <= endDate;
       });
 
