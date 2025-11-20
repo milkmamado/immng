@@ -585,13 +585,13 @@ export default function StatisticsManagement() {
       const { data: outPatients } = await outStatusQuery;
       const outPatientsCount = outPatients?.length || 0;
 
-      // 2. 유입률 (해당 월 기준, inflow_status가 '유입'인 환자)
-      // 초진관리와 동일: inflow_date가 없으면 created_at 사용
+      // 2. 11월 유입 환자 (inflow_status = '유입', management_status = '관리 중', inflow_date 필수)
       let inflowQuery = supabase
         .from('patients')
-        .select('id, inflow_date, created_at')
+        .select('id, inflow_date')
         .eq('inflow_status', '유입')
-        .eq('management_status', '관리 중');
+        .eq('management_status', '관리 중')
+        .not('inflow_date', 'is', null); // inflow_date가 반드시 있어야 함
       
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
         const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
@@ -601,12 +601,10 @@ export default function StatisticsManagement() {
       
       const { data: inflowPatients } = await inflowQuery;
       
-      // 이미 위에서 계산한 날짜 범위 사용
+      // 유입일이 해당 월에 속한 환자만 카운트
       const newPatientsCount = inflowPatients?.filter(p => {
-        const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
-        const refStartDate = selectedMonthStart;
-        const refEndDate = endDate;
-        return refDate >= refStartDate && refDate <= refEndDate;
+        const inflowDate = new Date(p.inflow_date);
+        return inflowDate >= selectedMonthStart && inflowDate <= endDate;
       }).length || 0;
 
       // 객단가를 newPatientsCount(11월 유입환자) 기준으로 계산
