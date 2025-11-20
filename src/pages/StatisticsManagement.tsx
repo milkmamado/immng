@@ -363,6 +363,14 @@ export default function StatisticsManagement() {
         });
       }
       
+      // 매니저별 신규 등록 환자 수 매핑 (모든 상태 포함)
+      const managerNewRegistrationMap = new Map<string, number>();
+      monthNewPatients?.forEach(patient => {
+        const managerId = patient.assigned_manager;
+        const currentCount = managerNewRegistrationMap.get(managerId) || 0;
+        managerNewRegistrationMap.set(managerId, currentCount + 1);
+      });
+      
       // 11월 유입일 기준 관리 중인 환자로 매니저별 환자 수 집계
       totalPatientsFiltered?.forEach(patient => {
         const managerId = patient.assigned_manager;
@@ -372,7 +380,7 @@ export default function StatisticsManagement() {
           managerMap.set(managerId, {
             manager_id: managerId,
             manager_name: managerName,
-            total_patients: 0,
+            total_patients: managerNewRegistrationMap.get(managerId) || 0, // 신규 등록 환자 수 (모든 상태 포함)
             total_all_patients: 0, // 전체 관리 환자
             total_revenue: 0,
             inpatient_revenue: 0,
@@ -387,9 +395,6 @@ export default function StatisticsManagement() {
             }
           });
         }
-
-        const stats = managerMap.get(managerId)!;
-        stats.total_patients += 1; // 11월 유입 + 현재 관리 중인 환자 수
       });
 
       // 전체 관리 중인 환자 수 집계 (기간 무관)
