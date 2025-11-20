@@ -1275,7 +1275,7 @@ export default function StatisticsManagement() {
           <CardContent>
             <div className="text-2xl font-bold text-cyan-600">{additionalStats.treatmentCompletedThisMonth}명</div>
             <CardDescription className="text-xs mt-1">
-              치료완료 환자
+              유입상태='유입', 관리상태='치료종료', 유입일 기준
             </CardDescription>
           </CardContent>
         </Card>
