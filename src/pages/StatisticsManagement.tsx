@@ -614,27 +614,30 @@ export default function StatisticsManagement() {
       }
 
       // 누락된 매니저(이번 달/전체 데이터 0명인 실장)도 항상 카드로 보이도록 보정
-      managers.forEach(manager => {
-        if (!managerMap.has(manager.id)) {
-          managerMap.set(manager.id, {
-            manager_id: manager.id,
-            manager_name: manager.name,
-            total_patients: 0,
-            total_all_patients: 0,
-            total_revenue: 0,
-            inpatient_revenue: 0,
-            outpatient_revenue: 0,
-            non_covered_revenue: 0,
-            avg_revenue_per_patient: 0,
-            status_breakdown: {
-              입원: 0,
-              외래: 0,
-              낮병동: 0,
-              전화FU: 0,
-            },
-          });
-        }
-      });
+      // 단, 전체 선택일 때만 모든 매니저 카드를 생성
+      if (isMasterOrAdmin && selectedManager === 'all') {
+        managers.forEach(manager => {
+          if (!managerMap.has(manager.id)) {
+            managerMap.set(manager.id, {
+              manager_id: manager.id,
+              manager_name: manager.name,
+              total_patients: 0,
+              total_all_patients: 0,
+              total_revenue: 0,
+              inpatient_revenue: 0,
+              outpatient_revenue: 0,
+              non_covered_revenue: 0,
+              avg_revenue_per_patient: 0,
+              status_breakdown: {
+                입원: 0,
+                외래: 0,
+                낮병동: 0,
+                전화FU: 0,
+              },
+            });
+          }
+        });
+      }
 
       // 평균 계산 - 당월 매출 / 11월 유입환자 수
       const statsArray = Array.from(managerMap.values()).map(stats => {
