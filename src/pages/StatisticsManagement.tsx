@@ -659,13 +659,12 @@ export default function StatisticsManagement() {
         return consultDate >= selectedMonthStart && consultDate <= endDate;
       }).length || 0;
 
-      // 실패 환자 수 (해당 월 기준, inflow_status가 '실패'인 환자)
-      // 초진관리와 동일: inflow_date가 없으면 created_at 사용
+      // 실패 환자 수 (inflow_status='실패' + inflow_date 필수)
       let failedQuery = supabase
         .from('patients')
-        .select('id, inflow_date, created_at')
+        .select('id, inflow_date')
         .eq('inflow_status', '실패')
-        .eq('management_status', '관리 중');
+        .not('inflow_date', 'is', null); // 유입일이 반드시 있어야 함
       
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
         const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
@@ -675,8 +674,8 @@ export default function StatisticsManagement() {
       
       const { data: failedPatients } = await failedQuery;
       const failedCount = failedPatients?.filter(p => {
-        const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
-        return refDate >= selectedMonthStart && refDate <= endDate;
+        const inflowDate = new Date(p.inflow_date!);
+        return inflowDate >= selectedMonthStart && inflowDate <= endDate;
       }).length || 0;
 
       // 3. 재진관리비율 계산
@@ -996,13 +995,14 @@ export default function StatisticsManagement() {
           break;
         
         case 'failed':
-          // 실패율 - 초진관리와 동일: inflow_date가 없으면 created_at 사용
+          // 11월 실패 - inflow_status='실패' + inflow_date 필수
           filteredPatients = patients?.filter(p => {
             if (p.inflow_status !== '실패') return false;
-            const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
-            return refDate >= startOfPeriod && refDate <= endOfPeriod;
+            if (!p.inflow_date) return false; // 유입일이 반드시 있어야 함
+            const inflowDate = new Date(p.inflow_date);
+            return inflowDate >= startOfPeriod && inflowDate <= endOfPeriod;
           }) || [];
-          title = `실패율 - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
+          title = `${month2}월 실패 환자 (유입일 기준) - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
           break;
         
         case 'retention':
@@ -1479,6 +1479,16 @@ export default function StatisticsManagement() {
                 </p>
               </div>
             )}
+            {statsDialog.type === 'failed' && (
+              <div className="mt-2 p-3 bg-gray-50 border-l-4 border-gray-500 rounded">
+                <p className="text-sm font-semibold text-gray-900">
+                  📋 집계 기준: 유입상태='실패' AND 유입일 정확히 입력됨
+                </p>
+                <p className="text-xs text-gray-700 mt-1">
+                  ⚠️ 유입일 미입력 시 통계에서 제외되니 반드시 입력해주세요!
+                </p>
+              </div>
+            )}
             {statsDialog.type === 'newRegistration' && (
               <div className="mt-2 p-3 bg-amber-50 border-l-4 border-amber-500 rounded">
                 <p className="text-sm font-semibold text-amber-900">
@@ -1507,15 +1517,17 @@ export default function StatisticsManagement() {
               </div>
             ) : (
               <div className="space-y-2">
-                <div className={`grid ${(statsDialog.type === 'phone' || statsDialog.type === 'visit') ? 'grid-cols-4' : 'grid-cols-5'} gap-4 pb-2 border-b font-semibold text-sm`}>
+                <div className={`grid ${(statsDialog.type === 'phone' || statsDialog.type === 'visit') ? 'grid-cols-4' : (statsDialog.type === 'failed' ? 'grid-cols-4' : 'grid-cols-5')} gap-4 pb-2 border-b font-semibold text-sm`}>
                   <div>환자명</div>
                   <div>질환</div>
                   <div>담당 매니저</div>
-                  {(statsDialog.type !== 'phone' && statsDialog.type !== 'visit') && <div>관리 상태</div>}
-                  <div>{(statsDialog.type === 'phone' || statsDialog.type === 'visit') ? '상담일' : '유입일'}</div>
+                  {(statsDialog.type !== 'phone' && statsDialog.type !== 'visit' && statsDialog.type !== 'failed') && <div>관리 상태</div>}
+                  <div>
+                    {(statsDialog.type === 'phone' || statsDialog.type === 'visit') ? '상담일' : '유입일'}
+                  </div>
                 </div>
                 {statsDialog.patients.map((patient) => (
-                  <div key={patient.id} className={`grid ${(statsDialog.type === 'phone' || statsDialog.type === 'visit') ? 'grid-cols-4' : 'grid-cols-5'} gap-4 py-3 border-b hover:bg-muted/50`}>
+                  <div key={patient.id} className={`grid ${(statsDialog.type === 'phone' || statsDialog.type === 'visit') ? 'grid-cols-4' : (statsDialog.type === 'failed' ? 'grid-cols-4' : 'grid-cols-5')} gap-4 py-3 border-b hover:bg-muted/50`}>
                     <div className="font-medium">{patient.name}</div>
                     <div className="text-sm text-muted-foreground">
                       {patient.diagnosis_category || patient.diagnosis_detail || '-'}
@@ -1523,7 +1535,7 @@ export default function StatisticsManagement() {
                     <div className="text-sm">
                       {patient.manager_name || '-'}
                     </div>
-                    {(statsDialog.type !== 'phone' && statsDialog.type !== 'visit') && (
+                    {(statsDialog.type !== 'phone' && statsDialog.type !== 'visit' && statsDialog.type !== 'failed') && (
                       <div className="text-sm">
                         {patient.management_status || '-'}
                       </div>
@@ -1531,8 +1543,8 @@ export default function StatisticsManagement() {
                     <div className="text-sm text-muted-foreground">
                       {(statsDialog.type === 'phone' || statsDialog.type === 'visit')
                         ? (patient.consultation_date ? new Date(patient.consultation_date).toLocaleDateString('ko-KR') : '-')
-                        : (patient.inflow_date || patient.consultation_date 
-                            ? new Date(patient.inflow_date || patient.consultation_date).toLocaleDateString('ko-KR')
+                        : (patient.inflow_date 
+                            ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
                             : '-')}
                     </div>
                   </div>
