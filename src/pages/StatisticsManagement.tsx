@@ -587,7 +587,7 @@ export default function StatisticsManagement() {
         avgRevenuePerPatient: 0 
       });
 
-      totals.totalPatients = totalPatientsCount; // 전체 기간 관리 중 환자
+      totals.totalPatients = totalAllPatientsCount; // 유입일 정확히 입력된 전체 관리 중 환자
       totals.monthlyRevenue = monthlyRevenue; // 당월 매출 (입원+외래 총진료비)
       
       // 객단가 계산은 아래에서 newPatientsCount(11월 유입환자 카드 기준)로 계산
@@ -1229,7 +1229,7 @@ export default function StatisticsManagement() {
           <CardContent>
             <div className="text-2xl font-bold">{totalStats.totalPatients}명</div>
             <CardDescription className="text-xs mt-1">
-              관리 중 상태 전체 환자
+              유입상태='유입', 유입일 입력된 관리 중 환자
             </CardDescription>
           </CardContent>
         </Card>
