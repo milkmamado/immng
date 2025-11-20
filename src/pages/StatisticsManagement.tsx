@@ -77,7 +77,7 @@ export default function StatisticsManagement() {
   // 통계 카드 클릭 환자 리스트 다이얼로그 state
   const [statsDialog, setStatsDialog] = useState<{
     open: boolean;
-    type: 'out' | 'inflow' | 'phone' | 'visit' | 'failed' | 'retention' | 'missingInflow' | null;
+    type: 'out' | 'inflow' | 'phone' | 'visit' | 'failed' | 'retention' | 'missingInflow' | 'newRegistration' | null;
     title: string;
     patients: any[];
   }>({
@@ -925,7 +925,7 @@ export default function StatisticsManagement() {
   };
 
   // 통계 카드 클릭 핸들러
-  const handleStatsCardClick = async (type: 'out' | 'inflow' | 'phone' | 'visit' | 'failed' | 'retention' | 'missingInflow') => {
+  const handleStatsCardClick = async (type: 'out' | 'inflow' | 'phone' | 'visit' | 'failed' | 'retention' | 'missingInflow' | 'newRegistration') => {
     try {
       // 선택한 월의 1일부터 오늘까지 (또는 해당 월 마지막까지)
       const [year2, month2] = selectedMonth.split('-').map(Number);
@@ -1002,11 +1002,20 @@ export default function StatisticsManagement() {
           return;
         
         case 'missingInflow':
-          // 유입상태='유입'인데 유입일 미등록 환자
+          // 유입일 미등록 환자
           filteredPatients = patients?.filter(p => 
             p.inflow_status === '유입' && !p.inflow_date
           ) || [];
-          title = '유입상태: 유입 / 유입일 미등록 환자';
+          title = '유입일 미등록 환자';
+          break;
+        
+        case 'newRegistration':
+          // 신규 등록 환자 - inflow_date가 없으면 created_at 사용
+          filteredPatients = patients?.filter(p => {
+            const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
+            return refDate >= startOfPeriod && refDate <= endOfPeriod;
+          }) || [];
+          title = `${month2}월 신규 등록 환자 - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
           break;
       }
 
@@ -1129,7 +1138,7 @@ export default function StatisticsManagement() {
 
       {/* 두 번째 줄: 11월 신규 등록 / 11월 유입 환자 / 11월 치료동의율 / 11월 재진관리 비율 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsCardClick('newRegistration')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               {selectedMonth.split('-')[1]}월 신규 등록
