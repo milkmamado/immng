@@ -1010,12 +1010,15 @@ export default function StatisticsManagement() {
           break;
         
         case 'newRegistration':
-          // 신규 등록 환자 - inflow_date가 없으면 created_at 사용
-          filteredPatients = patients?.filter(p => {
-            const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
-            return refDate >= startOfPeriod && refDate <= endOfPeriod;
-          }) || [];
-          title = `${month2}월 신규 등록 환자 - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
+          // 신규 등록 환자 - 유입상태='전화상담', 관리상태='관리 중', 유입일이 해당 월에 속함
+          filteredPatients = patients?.filter(p => 
+            p.inflow_status === '전화상담' && 
+            p.management_status === '관리 중' &&
+            p.inflow_date && // 유입일이 반드시 있어야 함 (created_at 제외)
+            new Date(p.inflow_date) >= startOfPeriod && 
+            new Date(p.inflow_date) <= endOfPeriod
+          ) || [];
+          title = `${month2}월 신규 등록 환자 (전화상담/관리 중) - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
           break;
       }
 
