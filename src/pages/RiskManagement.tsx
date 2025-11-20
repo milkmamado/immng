@@ -197,7 +197,7 @@ export default function RiskManagement() {
         }
         
         // 마지막 체크로부터 경과 일수 계산
-        const daysSinceCheck = calculateDaysSinceLastCheck(lastCheckDate, patient.created_at, patient.inflow_date);
+        const daysSinceCheck = calculateDaysSinceLastCheck(lastCheckDate, patient.inflow_date, patient.consultation_date);
         
         let newManagementStatus = patient.management_status || "관리 중";
 

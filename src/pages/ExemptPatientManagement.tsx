@@ -180,8 +180,8 @@ export default function ExemptPatientManagement() {
       const patientsWithRisk = (data || []).map(patient => {
         const daysSinceCheck = calculateDaysSinceLastCheck(
           patient.last_visit_date,
-          patient.created_at || '',
-          patient.inflow_date
+          patient.inflow_date,
+          patient.consultation_date
         );
 
         return {
