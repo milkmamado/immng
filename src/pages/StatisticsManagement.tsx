@@ -660,8 +660,40 @@ export default function StatisticsManagement() {
         };
       });
 
+      // 관리자/마스터가 특정 실장만 선택했는데 해당 기간 데이터가 전혀 없는 경우에도
+      // 카드가 항상 보이도록 0값 기본 카드 생성
+      let finalStatsArray = statsArray;
+      if (isMasterOrAdmin && selectedManager !== 'all') {
+        const hasSelectedManager = statsArray.some((s) => s.manager_id === selectedManager);
+        if (!hasSelectedManager) {
+          const managerInfo = managers.find((m) => m.id === selectedManager);
+          if (managerInfo) {
+            finalStatsArray = [
+              ...statsArray,
+              {
+                manager_id: selectedManager,
+                manager_name: managerInfo.name,
+                total_patients: 0,
+                total_all_patients: 0,
+                total_revenue: 0,
+                inpatient_revenue: 0,
+                outpatient_revenue: 0,
+                non_covered_revenue: 0,
+                avg_revenue_per_patient: 0,
+                status_breakdown: {
+                  입원: 0,
+                  외래: 0,
+                  낮병동: 0,
+                  전화FU: 0,
+                },
+              },
+            ];
+          }
+        }
+      }
+      
       // 전체 통계 계산
-      const totals = statsArray.reduce((acc, stats) => ({
+      const totals = finalStatsArray.reduce((acc, stats) => ({
         totalPatients: 0, // 별도 계산됨
         monthPatients: acc.monthPatients + stats.total_patients,
         totalRevenue: acc.totalRevenue + stats.total_revenue, // 누적 매출 합계
