@@ -55,6 +55,8 @@ export default function StatisticsManagement() {
     visitConsultPatientsThisMonth: 0,
     failedPatientsThisMonth: 0,
     retentionRate: 0,
+    prevMonthInflowTotal: 0, // 전월 유입 총 수 (재진관리비율 계산용)
+    retainedPatientsCount: 0, // 전월 유입 중 현재 관리 중인 환자 수
     treatmentAgreementRate: 0,
     missingInflowDatePatients: 0,
     patients1MonthPlus: 0,
@@ -793,6 +795,8 @@ export default function StatisticsManagement() {
         visitConsultPatientsThisMonth: visitConsultCount,
         failedPatientsThisMonth: failedCount,
         retentionRate,
+        prevMonthInflowTotal: prevMonthPatients.length, // 전월 유입 총 수
+        retainedPatientsCount: retainedPatients, // 전월 유입 중 현재 관리 중
         treatmentAgreementRate,
         missingInflowDatePatients,
         patients1MonthPlus,
@@ -1192,7 +1196,10 @@ export default function StatisticsManagement() {
           <CardContent>
             <div className="text-2xl font-bold text-indigo-600">{additionalStats.retentionRate}%</div>
             <CardDescription className="text-xs mt-1">
-              전월 유입 중 당월 활동 비율
+              <div className="font-semibold text-foreground/80">전월 유입 중 관리 중 ÷ 전월 유입 × 100</div>
+              <div className="text-muted-foreground mt-0.5">
+                ({additionalStats.retainedPatientsCount}명 ÷ {additionalStats.prevMonthInflowTotal}명)
+              </div>
             </CardDescription>
           </CardContent>
         </Card>
