@@ -621,12 +621,11 @@ export default function StatisticsManagement() {
         avgRevenuePerPatient: totals.avgRevenuePerPatient
       });
 
-      // 전화상담 환자 수 (inflow_status='전화상담', management_status='관리 중', inflow_date 필수)
+      // 전화상담 환자 수 (inflow_status='전화상담', inflow_date 필수)
       let phoneConsultQuery = supabase
         .from('patients')
         .select('id, inflow_date')
         .eq('inflow_status', '전화상담')
-        .eq('management_status', '관리 중')
         .not('inflow_date', 'is', null); // 유입일이 반드시 있어야 함
       
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
@@ -976,15 +975,14 @@ export default function StatisticsManagement() {
           break;
         
         case 'phone':
-          // 11월 전화상담 - inflow_status='전화상담', management_status='관리 중', inflow_date 필수
+          // 11월 전화상담 - inflow_status='전화상담', inflow_date 필수
           filteredPatients = patients?.filter(p => {
             if (p.inflow_status !== '전화상담') return false;
-            if (p.management_status !== '관리 중') return false;
             if (!p.inflow_date) return false; // 유입일이 반드시 있어야 함
             const inflowDate = new Date(p.inflow_date);
             return inflowDate >= startOfPeriod && inflowDate <= endOfPeriod;
           }) || [];
-          title = `${month2}월 전화상담 환자 (전화상담/관리 중) - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
+          title = `${month2}월 전화상담 환자 - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
           break;
         
         case 'visit':
