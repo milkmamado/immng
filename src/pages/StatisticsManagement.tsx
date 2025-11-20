@@ -322,12 +322,17 @@ export default function StatisticsManagement() {
       if (paymentsError) throw paymentsError;
 
       // 해당 기간의 일별 상태 가져오기
-      const { data: dailyStatuses, error: statusError } = await supabase
+      let dailyStatusesQuery = supabase
         .from('daily_patient_status')
         .select('patient_id, status_type, status_date')
         .gte('status_date', queryStartDate)
         .lte('status_date', queryEndDate)
         .order('status_date', { ascending: false });
+
+      // 지점 필터 적용
+      dailyStatusesQuery = applyBranchFilter(dailyStatusesQuery);
+
+      const { data: dailyStatuses, error: statusError } = await dailyStatusesQuery;
 
       if (statusError) throw statusError;
 
