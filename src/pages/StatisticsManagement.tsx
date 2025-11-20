@@ -958,13 +958,15 @@ export default function StatisticsManagement() {
           break;
         
         case 'inflow':
-          // 유입률 - 초진관리와 동일: inflow_date가 없으면 created_at 사용
+          // 11월 유입 환자 - inflow_status='유입', management_status='관리 중', inflow_date 필수
           filteredPatients = patients?.filter(p => {
             if (p.inflow_status !== '유입') return false;
-            const refDate = p.inflow_date ? new Date(p.inflow_date) : new Date(p.created_at);
-            return refDate >= startOfPeriod && refDate <= endOfPeriod;
+            if (p.management_status !== '관리 중') return false;
+            if (!p.inflow_date) return false; // 유입일이 반드시 있어야 함
+            const inflowDate = new Date(p.inflow_date);
+            return inflowDate >= startOfPeriod && inflowDate <= endOfPeriod;
           }) || [];
-          title = `유입률 - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
+          title = `${month2}월 유입 환자 (유입상태/관리 중) - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
           break;
         
         case 'phone':
@@ -1452,6 +1454,16 @@ export default function StatisticsManagement() {
                 </p>
                 <p className="text-xs text-amber-700 mt-1">
                   ⚠️ 유입일 미입력 시 통계에서 제외되니 반드시 입력해주세요!
+                </p>
+              </div>
+            )}
+            {statsDialog.type === 'inflow' && (
+              <div className="mt-2 p-3 bg-green-50 border-l-4 border-green-500 rounded">
+                <p className="text-sm font-semibold text-green-900">
+                  📋 집계 기준: 유입상태='유입' AND 관리상태='관리 중' AND 유입일 정확히 입력됨
+                </p>
+                <p className="text-xs text-green-700 mt-1">
+                  ⚠️ 유입일 미입력 또는 관리상태가 다른 경우 통계에서 제외됩니다!
                 </p>
               </div>
             )}
