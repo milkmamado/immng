@@ -440,7 +440,7 @@ export default function PatientListManagement() {
           : '-',
         '유입일': patient.inflow_date 
           ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
-          : new Date(patient.created_at).toLocaleDateString('ko-KR'),
+          : '-',
         '입원/외래': patient.visit_type || '-',
         '진단명': patient.diagnosis_category || '-',
         '세부진단명': patient.diagnosis_detail || '-',
@@ -2098,7 +2098,7 @@ export default function PatientListManagement() {
                         <span className="whitespace-nowrap">
                           {patient.inflow_date 
                             ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
-                            : new Date(patient.created_at).toLocaleDateString('ko-KR')}
+                            : '-'}
                         </span>
                       </div>
                     </TableCell>
@@ -2737,9 +2737,7 @@ export default function PatientListManagement() {
                       <span className="text-sm">
                         {selectedPatientDetail?.inflow_date 
                           ? new Date(selectedPatientDetail.inflow_date).toLocaleDateString('ko-KR')
-                          : selectedPatientDetail?.created_at 
-                            ? new Date(selectedPatientDetail.created_at).toLocaleDateString('ko-KR') 
-                            : '-'
+                          : '-'
                         }
                       </span>
                     </div>
