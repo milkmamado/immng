@@ -1029,6 +1029,18 @@ export default function StatisticsManagement() {
           title = `${month2}월 실패 환자 (유입일 기준) - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
           break;
         
+        case 'treatmentCompleted':
+          // 11월 치료종료 - inflow_status='유입' + management_status='치료종료' + inflow_date 필수
+          filteredPatients = patients?.filter(p => {
+            if (p.inflow_status !== '유입') return false;
+            if (p.management_status !== '치료종료') return false;
+            if (!p.inflow_date) return false; // 유입일이 반드시 있어야 함
+            const inflowDate = new Date(p.inflow_date);
+            return inflowDate >= startOfPeriod && inflowDate <= endOfPeriod;
+          }) || [];
+          title = `${month2}월 치료종료 환자 (유입일 기준) - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
+          break;
+        
         case 'retention':
           // 재진관리는 클릭해도 아무것도 안 함
           return;
