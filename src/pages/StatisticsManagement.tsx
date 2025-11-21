@@ -322,33 +322,15 @@ export default function StatisticsManagement() {
 
       if (paymentsError) throw paymentsError;
 
-      // 해당 기간의 일별 상태 가져오기
-      // 먼저 필터링된 환자들의 ID 목록 가져오기
-      let filteredPatientIds: string[] = [];
-      
-      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
-        const targetManagerForStatus = isMasterOrAdmin ? selectedManager : user?.id;
-        let patientIdsQuery = supabase
-          .from('patients')
-          .select('id')
-          .eq('assigned_manager', targetManagerForStatus);
-        
-        patientIdsQuery = applyBranchFilter(patientIdsQuery);
-        const { data: patientIdsData } = await patientIdsQuery;
-        filteredPatientIds = patientIdsData?.map(p => p.id) || [];
-      }
-      
+      // 2-1. 해당 기간의 일별 상태 가져오기
+      // ⚠️ 매니저별 분포는 patient.assigned_manager 를 통해 나누기 때문에
+      // 여기서는 매니저로 미리 필터하지 않고, 지점/기간 기준으로만 가져온다.
       let dailyStatusesQuery = supabase
         .from('daily_patient_status')
         .select('patient_id, status_type, status_date')
         .gte('status_date', queryStartDate)
         .lte('status_date', queryEndDate)
         .order('status_date', { ascending: false });
-
-      // 특정 매니저 선택 시 해당 매니저의 환자들만 필터링
-      if (filteredPatientIds.length > 0) {
-        dailyStatusesQuery = dailyStatusesQuery.in('patient_id', filteredPatientIds);
-      }
 
       // 지점 필터 적용
       dailyStatusesQuery = applyBranchFilter(dailyStatusesQuery);
