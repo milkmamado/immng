@@ -67,6 +67,8 @@ export default function FirstVisitManagement() {
   // 필터 상태
   const [inflowDateStart, setInflowDateStart] = useState<Date | undefined>();
   const [inflowDateEnd, setInflowDateEnd] = useState<Date | undefined>();
+  const [consultationDateStart, setConsultationDateStart] = useState<Date | undefined>();
+  const [consultationDateEnd, setConsultationDateEnd] = useState<Date | undefined>();
   const [selectedInflowStatuses, setSelectedInflowStatuses] = useState<string[]>([]);
   const [selectedVisitTypes, setSelectedVisitTypes] = useState<string[]>([]);
   const [diagnosisSearch, setDiagnosisSearch] = useState('');
@@ -365,6 +367,14 @@ export default function FirstVisitManagement() {
       if (inflowDateEnd && patientDate > inflowDateEnd) return false;
     }
 
+    // 상담일 필터
+    if (consultationDateStart || consultationDateEnd) {
+      if (!patient.consultation_date) return false;
+      const consultationDate = new Date(patient.consultation_date);
+      if (consultationDateStart && consultationDate < consultationDateStart) return false;
+      if (consultationDateEnd && consultationDate > consultationDateEnd) return false;
+    }
+
     // 유입상태 필터
     if (selectedInflowStatuses.length > 0) {
       if (!patient.inflow_status || !selectedInflowStatuses.includes(patient.inflow_status)) {
@@ -441,7 +451,19 @@ export default function FirstVisitManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>고객번호</TableHead>
-                  <TableHead>상담일</TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      상담일
+                      <DateRangeFilter
+                        startDate={consultationDateStart}
+                        endDate={consultationDateEnd}
+                        onDateChange={(start, end) => {
+                          setConsultationDateStart(start);
+                          setConsultationDateEnd(end);
+                        }}
+                      />
+                    </div>
+                  </TableHead>
                   <TableHead>
                     <div className="flex items-center gap-1">
                       유입일
