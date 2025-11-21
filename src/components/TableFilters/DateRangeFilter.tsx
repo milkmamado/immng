@@ -47,25 +47,27 @@ export function DateRangeFilter({ startDate, endDate, onDateChange }: DateRangeF
       </PopoverTrigger>
       <PopoverContent className="w-auto p-4 z-50 bg-background" align="start">
         <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">시작일</label>
-            <Calendar
-              mode="single"
-              selected={tempStartDate}
-              onSelect={setTempStartDate}
-              className="pointer-events-auto"
-              disabled={(date) => tempEndDate ? date > tempEndDate : false}
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">종료일</label>
-            <Calendar
-              mode="single"
-              selected={tempEndDate}
-              onSelect={setTempEndDate}
-              className="pointer-events-auto"
-              disabled={(date) => tempStartDate ? date < tempStartDate : false}
-            />
+          <div className="flex gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">시작일</label>
+              <Calendar
+                mode="single"
+                selected={tempStartDate}
+                onSelect={setTempStartDate}
+                className="pointer-events-auto"
+                disabled={(date) => tempEndDate ? date > tempEndDate : false}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">종료일</label>
+              <Calendar
+                mode="single"
+                selected={tempEndDate}
+                onSelect={setTempEndDate}
+                className="pointer-events-auto"
+                disabled={(date) => tempStartDate ? date < tempStartDate : false}
+              />
+            </div>
           </div>
           <div className="flex gap-2">
             <Button onClick={handleReset} variant="outline" size="sm" className="flex-1">
