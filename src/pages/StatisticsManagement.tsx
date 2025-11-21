@@ -1592,97 +1592,124 @@ export default function StatisticsManagement() {
       </Card>
 
       {/* 실장별 통계 */}
-      {managerStats.length > 0 && (
+      {((isMasterOrAdmin && managers.length > 0) || managerStats.length > 0) && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {managerStats
-              .filter(stats => {
-                // 관리자가 특정 실장을 선택한 경우 해당 실장만 표시
-                if (isMasterOrAdmin && selectedManager !== 'all') {
-                  return stats.manager_id === selectedManager;
-                }
-                // 그 외의 경우 모두 표시 (전체 실장, 또는 매니저 본인)
-                return true;
-              })
-              .map((stats) => (
-            <Card key={stats.manager_id} className="overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-primary to-medical-accent text-white">
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  {stats.manager_name}
-                </CardTitle>
-                <CardDescription className="text-primary-light">
-                  {selectedMonth.split('-')[1]}월 관리 환자 {stats.total_patients}명 / 전체 {stats.total_all_patients}명
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6 space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-600">총 매출</span>
-                    <span className="text-lg font-bold text-primary">
-                      {formatCurrency(stats.total_revenue)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center pl-4">
-                    <span className="text-xs text-gray-500">입원 매출</span>
-                    <span className="text-sm font-semibold text-blue-600">
-                      {formatCurrency(stats.inpatient_revenue)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center pl-4">
-                    <span className="text-xs text-gray-500">외래 매출</span>
-                    <span className="text-sm font-semibold text-green-600">
-                      {formatCurrency(stats.outpatient_revenue)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center pl-4">
-                    <span className="text-xs text-gray-500">비급여 매출</span>
-                    <span className="text-sm font-semibold text-orange-600">
-                      {formatCurrency(stats.non_covered_revenue)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-600">평균 객단가</span>
-                    <span className="text-lg font-bold text-medical-accent">
-                      {formatCurrency(stats.avg_revenue_per_patient)}
-                    </span>
-                  </div>
-                </div>
+            {(function getDisplayStats() {
+              // 관리자/마스터가 특정 실장을 선택한 경우 해당 실장만 표시
+              if (isMasterOrAdmin && selectedManager !== 'all') {
+                const filtered = managerStats.filter((stats) => stats.manager_id === selectedManager);
 
-                <div className="pt-4 border-t">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Activity className="h-4 w-4 text-gray-600" />
-                    <span className="text-sm font-semibold text-gray-700">상태별 분포</span>
+                // 통계 배열에 선택한 실장 데이터가 전혀 없을 때도 카드가 보이도록
+                if (filtered.length === 0) {
+                  const managerInfo = managers.find((m) => m.id === selectedManager);
+                  if (managerInfo) {
+                    return [
+                      {
+                        manager_id: selectedManager,
+                        manager_name: managerInfo.name,
+                        total_patients: 0,
+                        total_all_patients: 0,
+                        total_revenue: 0,
+                        inpatient_revenue: 0,
+                        outpatient_revenue: 0,
+                        non_covered_revenue: 0,
+                        avg_revenue_per_patient: 0,
+                        status_breakdown: {
+                          입원: 0,
+                          외래: 0,
+                          낮병동: 0,
+                          전화FU: 0,
+                        },
+                      },
+                    ];
+                  }
+                }
+
+                return filtered;
+              }
+
+              // 그 외의 경우 모두 표시 (전체 실장, 또는 매니저 본인)
+              return managerStats;
+            })().map((stats) => (
+              <Card key={stats.manager_id} className="overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-primary to-medical-accent text-white">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    {stats.manager_name}
+                  </CardTitle>
+                  <CardDescription className="text-primary-light">
+                    {selectedMonth.split('-')[1]}월 관리 환자 {stats.total_patients}명 / 전체 {stats.total_all_patients}명
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">총 매출</span>
+                      <span className="text-lg font-bold text-primary">
+                        {formatCurrency(stats.total_revenue)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center pl-4">
+                      <span className="text-xs text-gray-500">입원 매출</span>
+                      <span className="text-sm font-semibold text-blue-600">
+                        {formatCurrency(stats.inpatient_revenue)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center pl-4">
+                      <span className="text-xs text-gray-500">외래 매출</span>
+                      <span className="text-sm font-semibold text-green-600">
+                        {formatCurrency(stats.outpatient_revenue)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center pl-4">
+                      <span className="text-xs text-gray-500">비급여 매출</span>
+                      <span className="text-sm font-semibold text-orange-600">
+                        {formatCurrency(stats.non_covered_revenue)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">평균 객단가</span>
+                      <span className="text-lg font-bold text-medical-accent">
+                        {formatCurrency(stats.avg_revenue_per_patient)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="flex justify-between p-2 bg-blue-50 rounded">
-                      <span className="text-sm text-gray-600">입원</span>
-                      <span className="text-sm font-semibold text-blue-700">
-                        {stats.status_breakdown.입원}회
-                      </span>
+
+                  <div className="pt-4 border-t">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Activity className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm font-semibold text-gray-700">상태별 분포</span>
                     </div>
-                    <div className="flex justify-between p-2 bg-green-50 rounded">
-                      <span className="text-sm text-gray-600">외래</span>
-                      <span className="text-sm font-semibold text-green-700">
-                        {stats.status_breakdown.외래}회
-                      </span>
-                    </div>
-                    <div className="flex justify-between p-2 bg-purple-50 rounded">
-                      <span className="text-sm text-gray-600">낮병동</span>
-                      <span className="text-sm font-semibold text-purple-700">
-                        {stats.status_breakdown.낮병동}회
-                      </span>
-                    </div>
-                    <div className="flex justify-between p-2 bg-orange-50 rounded">
-                      <span className="text-sm text-gray-600">전화F/U</span>
-                      <span className="text-sm font-semibold text-orange-700">
-                        {stats.status_breakdown.전화FU}회
-                      </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex justify-between p-2 bg-blue-50 rounded">
+                        <span className="text-sm text-gray-600">입원</span>
+                        <span className="text-sm font-semibold text-blue-700">
+                          {stats.status_breakdown.입원}회
+                        </span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-green-50 rounded">
+                        <span className="text-sm text-gray-600">외래</span>
+                        <span className="text-sm font-semibold text-green-700">
+                          {stats.status_breakdown.외래}회
+                        </span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-purple-50 rounded">
+                        <span className="text-sm text-gray-600">낮병동</span>
+                        <span className="text-sm font-semibold text-purple-700">
+                          {stats.status_breakdown.낮병동}회
+                        </span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-orange-50 rounded">
+                        <span className="text-sm text-gray-600">전화F/U</span>
+                        <span className="text-sm font-semibold text-orange-700">
+                          {stats.status_breakdown.전화FU}회
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
