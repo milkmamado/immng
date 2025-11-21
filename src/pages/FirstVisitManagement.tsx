@@ -425,24 +425,6 @@ export default function FirstVisitManagement() {
           <div className="flex items-center justify-between">
             <CardTitle>등록된 환자 목록 ({filteredPatients.length}명)</CardTitle>
             <div className="flex items-center gap-2">
-              {(inflowDateStart || inflowDateEnd || consultationDateStart || consultationDateEnd || 
-                selectedInflowStatuses.length > 0 || selectedVisitTypes.length > 0 || diagnosisSearch) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setInflowDateStart(undefined);
-                    setInflowDateEnd(undefined);
-                    setConsultationDateStart(undefined);
-                    setConsultationDateEnd(undefined);
-                    setSelectedInflowStatuses([]);
-                    setSelectedVisitTypes([]);
-                    setDiagnosisSearch('');
-                  }}
-                >
-                  전체 필터 초기화
-                </Button>
-              )}
               <div className="relative w-80">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input

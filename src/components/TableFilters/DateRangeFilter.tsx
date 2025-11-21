@@ -4,7 +4,6 @@ import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
 interface DateRangeFilterProps {
@@ -46,39 +45,37 @@ export function DateRangeFilter({ startDate, endDate, onDateChange }: DateRangeF
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 z-50 bg-background" align="start">
-        <ScrollArea className="max-h-[500px]">
-          <div className="p-4 space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">시작일</label>
-              <Calendar
-                mode="single"
-                selected={tempStartDate}
-                onSelect={setTempStartDate}
-                className="pointer-events-auto"
-                disabled={(date) => tempEndDate ? date > tempEndDate : false}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">종료일</label>
-              <Calendar
-                mode="single"
-                selected={tempEndDate}
-                onSelect={setTempEndDate}
-                className="pointer-events-auto"
-                disabled={(date) => tempStartDate ? date < tempStartDate : false}
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleReset} variant="outline" size="sm" className="flex-1">
-                초기화
-              </Button>
-              <Button onClick={handleApply} size="sm" className="flex-1">
-                적용
-              </Button>
-            </div>
+      <PopoverContent className="w-auto p-4 z-50 bg-background" align="start">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">시작일</label>
+            <Calendar
+              mode="single"
+              selected={tempStartDate}
+              onSelect={setTempStartDate}
+              className="pointer-events-auto"
+              disabled={(date) => tempEndDate ? date > tempEndDate : false}
+            />
           </div>
-        </ScrollArea>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">종료일</label>
+            <Calendar
+              mode="single"
+              selected={tempEndDate}
+              onSelect={setTempEndDate}
+              className="pointer-events-auto"
+              disabled={(date) => tempStartDate ? date < tempStartDate : false}
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={handleReset} variant="outline" size="sm" className="flex-1">
+              초기화
+            </Button>
+            <Button onClick={handleApply} size="sm" className="flex-1">
+              적용
+            </Button>
+          </div>
+        </div>
       </PopoverContent>
     </Popover>
   );
