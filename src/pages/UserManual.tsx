@@ -471,6 +471,18 @@ export default function UserManual() {
                       <li>• 다시 "관리 중"으로 변경하면 일별 관리에 표시</li>
                     </ul>
                   </div>
+
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-1">
+                      <Badge className="bg-purple-600">면책기간</Badge>
+                    </div>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• 관리 환자 리스트에서 수동으로 설정하는 상태</li>
+                      <li>• 면책환자 관리 페이지에 별도로 표시됨</li>
+                      <li>• 일별 관리에서 제외되며, 재연락 및 복귀 관리가 가능</li>
+                      <li>• "관리 중으로 복귀" 시 일별 관리에 돌환 상태로 자동 기록됨</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>
@@ -622,57 +634,75 @@ export default function UserManual() {
               <ShieldCheck className="w-5 h-5 text-primary" />
               6. 면책기간 환자 관리
             </CardTitle>
-            <CardDescription>단기 치료 환자의 면책기간 추적 및 관리</CardDescription>
+            <CardDescription>면책기간 상태 환자의 재연락 및 복귀 관리</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-4">
               <div>
                 <h4 className="font-semibold mb-3">🔍 면책기간 상태란?</h4>
-                <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
+                <div className="bg-purple-50 border-l-4 border-purple-500 p-4">
                   <p className="text-sm mb-2">
-                    특정 진단 환자들의 단기 치료 기간을 추적하기 위한 상태입니다.
+                    관리 환자 리스트에서 환자의 관리 상태를 "면책기간"으로 수동 설정한 환자들이 
+                    이 페이지에 표시됩니다.
                   </p>
-                  <p className="text-sm font-medium">자동 분류 대상 진단:</p>
+                  <p className="text-sm">
+                    <strong>주요 특징:</strong>
+                  </p>
                   <ul className="text-sm mt-2 space-y-1 ml-4">
-                    <li>• 부인과 수술 후 회복</li>
-                    <li>• 척추질환</li>
+                    <li>• 일별 환자 관리 현황에서 제외됨</li>
+                    <li>• 별도의 면책환자 관리 페이지에서 관리</li>
+                    <li>• 재연락 및 복귀 프로세스 지원</li>
                   </ul>
-                </div>
-                <div className="mt-3 border rounded-lg p-3">
-                  <p className="text-sm text-muted-foreground">
-                    위 진단을 가진 환자는 자동으로 "면책기간" 상태로 분류되며, 
-                    마지막 내원일로부터 경과 일수가 자동 계산됩니다.
-                  </p>
                 </div>
               </div>
 
               <Separator />
 
               <div>
-                <h4 className="font-semibold mb-3">🎯 필터링 및 검색 기능</h4>
+                <h4 className="font-semibold mb-3">📋 면책환자 관리 페이지 구성</h4>
+                <p className="text-sm mb-3">
+                  면책기간 상태의 환자들을 조회하고 관리하는 전용 페이지입니다.
+                </p>
                 <div className="space-y-3">
                   <div className="border rounded-lg p-3">
-                    <div className="font-medium mb-2">담당 실장 선택</div>
+                    <div className="font-medium mb-2">환자 카드 정보</div>
+                    <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+                      <li>• 환자 기본 정보 (이름, 연락처, 진단명)</li>
+                      <li>• 유입일, 입원/외래 구분, 담당 실장</li>
+                      <li>• 마지막 체크 이후 경과일 (자동 계산)</li>
+                      <li>• 재연락 완료 상태</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold mb-3">🎯 필터링 기능</h4>
+                <div className="grid gap-3">
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-1">담당 실장 선택</div>
                     <p className="text-sm text-muted-foreground">
                       특정 실장이 담당하는 면책기간 환자만 조회
                     </p>
                   </div>
                   <div className="border rounded-lg p-3">
-                    <div className="font-medium mb-2">유입일자 기간 필터</div>
+                    <div className="font-medium mb-1">유입일자 기간 필터</div>
                     <p className="text-sm text-muted-foreground">
                       시작일~종료일 범위로 유입일 기준 환자 조회
                     </p>
                   </div>
                   <div className="border rounded-lg p-3">
-                    <div className="font-medium mb-2">입원/외래 분류</div>
+                    <div className="font-medium mb-1">입원/외래 분류</div>
                     <p className="text-sm text-muted-foreground">
                       입원 또는 외래 환자만 필터링
                     </p>
                   </div>
                   <div className="border rounded-lg p-3">
-                    <div className="font-medium mb-2">진단명 검색</div>
+                    <div className="font-medium mb-1">진단명 검색</div>
                     <p className="text-sm text-muted-foreground">
-                      진단명 키워드로 환자 검색 (예: "부인과", "척추")
+                      진단명 키워드로 환자 검색
                     </p>
                   </div>
                 </div>
@@ -690,7 +720,7 @@ export default function UserManual() {
                     각 환자 카드에 "마지막 체크 이후" 경과일이 자동으로 표시됩니다.
                   </p>
                   <p className="text-sm text-muted-foreground mt-2">
-                    • 기준: 최종 내원일 또는 유입일<br/>
+                    • 기준: 최종 내원일, 유입일, 또는 등록일 중 가장 최근 날짜<br/>
                     • 실시간 계산되어 항상 최신 상태 유지
                   </p>
                 </div>
@@ -700,7 +730,7 @@ export default function UserManual() {
 
               <div>
                 <h4 className="font-semibold mb-3">🔄 재연락 관리</h4>
-                <ol className="space-y-2 ml-4">
+                <ol className="space-y-3 ml-4">
                   <li className="flex gap-2">
                     <span className="font-bold text-primary">1.</span>
                     <div>
@@ -714,10 +744,14 @@ export default function UserManual() {
                     <span className="font-bold text-primary">2.</span>
                     <div>
                       <strong>재연락 노트</strong> 입력창에 상담 내용 작성
-                      <div className="mt-1 text-sm text-muted-foreground ml-4">
-                        • 전화 응답 여부<br/>
-                        • 상담 내용<br/>
-                        • 다음 연락 계획 등
+                      <div className="mt-2 ml-4 text-sm text-muted-foreground">
+                        기록할 내용:
+                        <ul className="mt-1 space-y-1">
+                          <li>• 전화 응답 여부</li>
+                          <li>• 상담 내용 요약</li>
+                          <li>• 환자 상태 및 반응</li>
+                          <li>• 다음 연락 계획</li>
+                        </ul>
                       </div>
                     </div>
                   </li>
@@ -738,18 +772,24 @@ export default function UserManual() {
                   <p className="text-sm">
                     환자가 정상적으로 관리 가능한 상태가 되었을 때 사용하는 기능입니다.
                   </p>
-                  <ol className="space-y-2 ml-4">
-                    <li>1. 환자 카드에서 <Badge>관리 중으로 복귀</Badge> 버튼 클릭</li>
-                    <li>2. 확인 메시지에서 <Badge>확인</Badge> 선택</li>
-                  </ol>
+                  
+                  <div>
+                    <p className="text-sm font-medium mb-2">절차:</p>
+                    <ol className="space-y-2 ml-4 text-sm">
+                      <li>1. 환자 카드에서 <Badge>관리 중으로 복귀</Badge> 버튼 클릭</li>
+                      <li>2. 확인 메시지에서 <Badge>확인</Badge> 선택</li>
+                    </ol>
+                  </div>
+
                   <div className="bg-green-50 border-l-4 border-green-500 p-4">
-                    <p className="text-sm">
-                      <strong>✅ 자동 처리 사항:</strong>
+                    <p className="text-sm font-medium mb-2">
+                      ✅ 자동 처리 사항:
                     </p>
-                    <ul className="text-sm mt-2 space-y-1 ml-4">
-                      <li>• 환자 관리 상태가 "관리 중"으로 변경</li>
+                    <ul className="text-sm space-y-1 ml-4">
+                      <li>• 환자의 관리 상태가 "관리 중"으로 자동 변경</li>
                       <li>• 일별 환자 관리 현황에 오늘 날짜로 <Badge className="bg-purple-500">돌환</Badge> 상태 자동 기록</li>
-                      <li>• 면책기간 환자 목록에서 자동으로 제외</li>
+                      <li>• 면책환자 관리 목록에서 자동으로 제외됨</li>
+                      <li>• 이후 일별 환자 관리 현황에 정상 표시됨</li>
                     </ul>
                   </div>
                 </div>
@@ -774,13 +814,13 @@ export default function UserManual() {
               </div>
 
               <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mt-4">
-                <p className="text-sm">
-                  <strong>⚠️ 주의사항:</strong>
+                <p className="text-sm font-medium mb-2">
+                  ⚠️ 주의사항:
                 </p>
-                <ul className="text-sm mt-2 space-y-1 ml-4">
-                  <li>• 재연락 완료 체크만으로는 관리 상태가 변경되지 않습니다</li>
+                <ul className="text-sm space-y-1 ml-4">
+                  <li>• 재연락 완료 체크와 노트 저장만으로는 관리 상태가 변경되지 않습니다</li>
                   <li>• 정상 관리로 전환하려면 반드시 "관리 중으로 복귀" 버튼을 클릭하세요</li>
-                  <li>• 면책기간 환자는 일반 아웃위기 기준과는 별도로 관리됩니다</li>
+                  <li>• 면책기간 상태는 관리 환자 리스트에서만 수동으로 설정 가능합니다</li>
                 </ul>
               </div>
             </div>
