@@ -102,7 +102,22 @@ export default function StatisticsManagement() {
   }, [user]);
 
   useEffect(() => {
-    if (user && (isMasterOrAdmin || selectedManager !== 'all')) {
+    if (!user) return;
+
+    // 관리자/마스터는 매니저 목록이 먼저 로딩된 후에만 통계를 조회하도록 보호
+    if (isMasterOrAdmin) {
+      if (selectedManager === 'all' && managers.length === 0) {
+        // 전체 보기인데 아직 매니저 목록을 못 불러온 상태면 대기
+        return;
+      }
+
+      if (selectedManager !== 'all' && managers.length === 0) {
+        // 특정 실장 보기인데 매니저 목록이 비어 있으면 역시 대기
+        return;
+      }
+    }
+
+    if (isMasterOrAdmin || selectedManager !== 'all') {
       fetchStatistics();
     }
 
@@ -153,7 +168,7 @@ export default function StatisticsManagement() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedMonth, selectedManager, user, isMasterOrAdmin]);
+  }, [selectedMonth, selectedManager, user, isMasterOrAdmin, managers]);
 
   const checkUserRole = async () => {
     if (!user) {
