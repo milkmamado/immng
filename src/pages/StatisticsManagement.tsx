@@ -379,11 +379,19 @@ export default function StatisticsManagement() {
           stats.total_patients = count;
         }
       }
-      
-      // 매니저 목록에는 있지만 신규 등록이 0명인 매니저도 카드 생성
+
+      // 전체 관리 중인 환자 수 집계 (기간 무관)
+      totalPatientsData?.forEach(patient => {
+        const stats = managerMap.get(patient.assigned_manager);
+        if (stats) {
+          stats.total_all_patients += 1;
+        }
+      });
+
+      // 매니저 목록에는 있지만 신규 등록이 0명인 매니저도 카드 생성 (상태 분포 집계 전에 실행)
       if (isMasterOrAdmin) {
         if (selectedManager === 'all') {
-          // 전체 보기: 모든 매니저 기본 카드 생성 (이 단계가 daily status 집계보다 앞에 와야 함)
+          // 전체 보기: 모든 매니저 기본 카드 생성
           managers.forEach(manager => {
             if (!managerMap.has(manager.id)) {
               managerMap.set(manager.id, {
@@ -400,13 +408,13 @@ export default function StatisticsManagement() {
                   입원: 0,
                   외래: 0,
                   낮병동: 0,
-                  전화FU: 0
+                  전화FU: 0,
                 }
               });
             }
           });
         } else if (selectedManager) {
-          // 특정 실장 단독 보기: 선택된 실장 기본 카드도 여기서 미리 생성
+          // 특정 실장 단독 보기: 선택된 실장 기본 카드도 미리 생성
           const managerInfo = managers.find(m => m.id === selectedManager);
           if (managerInfo && !managerMap.has(selectedManager)) {
             managerMap.set(selectedManager, {
@@ -423,20 +431,12 @@ export default function StatisticsManagement() {
                 입원: 0,
                 외래: 0,
                 낮병동: 0,
-                전화FU: 0
+                전화FU: 0,
               }
             });
           }
         }
       }
-
-      // 전체 관리 중인 환자 수 집계 (기간 무관)
-      totalPatientsData?.forEach(patient => {
-        const stats = managerMap.get(patient.assigned_manager);
-        if (stats) {
-          stats.total_all_patients += 1;
-        }
-      });
 
       // 실제 결제 데이터로 매출 계산 (치료 계획)
       payments?.forEach(payment => {
@@ -618,56 +618,6 @@ export default function StatisticsManagement() {
         }).length || 0;
         
         managerInflowCountMap.set(managerId, managerNewPatientsCount);
-      }
-
-      // 누락된 매니저(이번 달/전체 데이터 0명인 실장)도 항상 카드로 보이도록 보정
-      if (isMasterOrAdmin) {
-        if (selectedManager === 'all') {
-          // 전체 보기: 모든 실장을 기본 카드로 생성
-          managers.forEach((manager) => {
-            if (!managerMap.has(manager.id)) {
-              managerMap.set(manager.id, {
-                manager_id: manager.id,
-                manager_name: manager.name,
-                total_patients: 0,
-                total_all_patients: 0,
-                total_revenue: 0,
-                inpatient_revenue: 0,
-                outpatient_revenue: 0,
-                non_covered_revenue: 0,
-                avg_revenue_per_patient: 0,
-                status_breakdown: {
-                  입원: 0,
-                  외래: 0,
-                  낮병동: 0,
-                  전화FU: 0,
-                },
-              });
-            }
-          });
-        } else {
-          // 특정 실장 단독 보기: 선택된 실장만 기본 카드로 미리 생성
-          const managerInfo = managers.find((m) => m.id === selectedManager);
-          if (managerInfo && !managerMap.has(selectedManager)) {
-            managerMap.set(selectedManager, {
-              manager_id: selectedManager,
-              manager_name: managerInfo.name,
-              total_patients: 0,
-              total_all_patients: 0,
-              total_revenue: 0,
-              inpatient_revenue: 0,
-              outpatient_revenue: 0,
-              non_covered_revenue: 0,
-              avg_revenue_per_patient: 0,
-              status_breakdown: {
-                입원: 0,
-                외래: 0,
-                낮병동: 0,
-                전화FU: 0,
-              },
-            });
-          }
-        }
       }
 
       // 평균 계산 - 당월 매출 / 11월 유입환자 수
