@@ -23,7 +23,9 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ShieldCheck,
+  Clock
 } from "lucide-react";
 import excelStep1 from "@/assets/manual/excel-step1.png";
 import excelStep2 from "@/assets/manual/excel-step2.png";
@@ -613,12 +615,184 @@ export default function UserManual() {
           </CardContent>
         </Card>
 
-        {/* 6. 통계 관리 */}
+        {/* 6. 면책기간 환자 관리 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-primary" />
+              6. 면책기간 환자 관리
+            </CardTitle>
+            <CardDescription>단기 치료 환자의 면책기간 추적 및 관리</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-3">🔍 면책기간 상태란?</h4>
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
+                  <p className="text-sm mb-2">
+                    특정 진단 환자들의 단기 치료 기간을 추적하기 위한 상태입니다.
+                  </p>
+                  <p className="text-sm font-medium">자동 분류 대상 진단:</p>
+                  <ul className="text-sm mt-2 space-y-1 ml-4">
+                    <li>• 부인과 수술 후 회복</li>
+                    <li>• 척추질환</li>
+                  </ul>
+                </div>
+                <div className="mt-3 border rounded-lg p-3">
+                  <p className="text-sm text-muted-foreground">
+                    위 진단을 가진 환자는 자동으로 "면책기간" 상태로 분류되며, 
+                    마지막 내원일로부터 경과 일수가 자동 계산됩니다.
+                  </p>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold mb-3">🎯 필터링 및 검색 기능</h4>
+                <div className="space-y-3">
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-2">담당 실장 선택</div>
+                    <p className="text-sm text-muted-foreground">
+                      특정 실장이 담당하는 면책기간 환자만 조회
+                    </p>
+                  </div>
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-2">유입일자 기간 필터</div>
+                    <p className="text-sm text-muted-foreground">
+                      시작일~종료일 범위로 유입일 기준 환자 조회
+                    </p>
+                  </div>
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-2">입원/외래 분류</div>
+                    <p className="text-sm text-muted-foreground">
+                      입원 또는 외래 환자만 필터링
+                    </p>
+                  </div>
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-2">진단명 검색</div>
+                    <p className="text-sm text-muted-foreground">
+                      진단명 키워드로 환자 검색 (예: "부인과", "척추")
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-blue-600" />
+                  경과일 자동 계산
+                </h4>
+                <div className="border rounded-lg p-3">
+                  <p className="text-sm text-muted-foreground">
+                    각 환자 카드에 "마지막 체크 이후" 경과일이 자동으로 표시됩니다.
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    • 기준: 최종 내원일 또는 유입일<br/>
+                    • 실시간 계산되어 항상 최신 상태 유지
+                  </p>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold mb-3">🔄 재연락 관리</h4>
+                <ol className="space-y-2 ml-4">
+                  <li className="flex gap-2">
+                    <span className="font-bold text-primary">1.</span>
+                    <div>
+                      환자 카드에서 <Badge className="bg-green-600">재연락 완료</Badge> 체크박스 선택
+                      <div className="mt-1 text-sm text-muted-foreground ml-4">
+                        → 재연락 완료 시간이 자동으로 기록됩니다
+                      </div>
+                    </div>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold text-primary">2.</span>
+                    <div>
+                      <strong>재연락 노트</strong> 입력창에 상담 내용 작성
+                      <div className="mt-1 text-sm text-muted-foreground ml-4">
+                        • 전화 응답 여부<br/>
+                        • 상담 내용<br/>
+                        • 다음 연락 계획 등
+                      </div>
+                    </div>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold text-primary">3.</span>
+                    <div>
+                      <Badge variant="outline">노트 저장</Badge> 버튼 클릭하여 기록 저장
+                    </div>
+                  </li>
+                </ol>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold mb-3">↩️ 관리 중으로 복귀</h4>
+                <div className="space-y-3">
+                  <p className="text-sm">
+                    환자가 정상적으로 관리 가능한 상태가 되었을 때 사용하는 기능입니다.
+                  </p>
+                  <ol className="space-y-2 ml-4">
+                    <li>1. 환자 카드에서 <Badge>관리 중으로 복귀</Badge> 버튼 클릭</li>
+                    <li>2. 확인 메시지에서 <Badge>확인</Badge> 선택</li>
+                  </ol>
+                  <div className="bg-green-50 border-l-4 border-green-500 p-4">
+                    <p className="text-sm">
+                      <strong>✅ 자동 처리 사항:</strong>
+                    </p>
+                    <ul className="text-sm mt-2 space-y-1 ml-4">
+                      <li>• 환자 관리 상태가 "관리 중"으로 변경</li>
+                      <li>• 일별 환자 관리 현황에 오늘 날짜로 <Badge className="bg-purple-500">돌환</Badge> 상태 자동 기록</li>
+                      <li>• 면책기간 환자 목록에서 자동으로 제외</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold mb-3">📥 엑셀 내보내기</h4>
+                <div className="space-y-3">
+                  <ol className="space-y-2 ml-4">
+                    <li>1. 우측 상단 <Badge variant="outline">엑셀 내보내기</Badge> 버튼 클릭</li>
+                    <li>2. 현재 필터링된 환자 목록이 엑셀 파일로 다운로드됩니다</li>
+                  </ol>
+                  <div className="border rounded-lg p-3">
+                    <p className="text-sm text-muted-foreground">
+                      <strong>포함 정보:</strong> 환자명, 연락처, 진단명, 유입일, 입원/외래, 
+                      담당 실장, 경과일, 재연락 상태, 재연락 노트 등
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mt-4">
+                <p className="text-sm">
+                  <strong>⚠️ 주의사항:</strong>
+                </p>
+                <ul className="text-sm mt-2 space-y-1 ml-4">
+                  <li>• 재연락 완료 체크만으로는 관리 상태가 변경되지 않습니다</li>
+                  <li>• 정상 관리로 전환하려면 반드시 "관리 중으로 복귀" 버튼을 클릭하세요</li>
+                  <li>• 면책기간 환자는 일반 아웃위기 기준과는 별도로 관리됩니다</li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 7. 통계 관리 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-primary" />
-              6. 통계 관리
+              7. 통계 관리
             </CardTitle>
             <CardDescription>매출 및 환자 관리 통계 분석</CardDescription>
           </CardHeader>
@@ -676,12 +850,12 @@ export default function UserManual() {
           </CardContent>
         </Card>
 
-        {/* 7. CRM 연동 */}
+        {/* 8. CRM 연동 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookMarked className="w-5 h-5 text-primary" />
-              7. CRM 연동
+              8. CRM 연동
             </CardTitle>
             <CardDescription>병원 CRM 시스템과의 연동</CardDescription>
           </CardHeader>
