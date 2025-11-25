@@ -1,28 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DiagnosisFilterProps {
-  searchText: string;
-  onSearchChange: (text: string) => void;
+  selectedDiagnoses: string[];
+  onDiagnosisChange: (diagnoses: string[]) => void;
 }
 
-export function DiagnosisFilter({ searchText, onSearchChange }: DiagnosisFilterProps) {
-  const [tempText, setTempText] = useState(searchText);
+export function DiagnosisFilter({ selectedDiagnoses, onDiagnosisChange }: DiagnosisFilterProps) {
+  const [tempSelected, setTempSelected] = useState<string[]>(selectedDiagnoses);
+  const [diagnosisOptions, setDiagnosisOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetchDiagnosisOptions();
+  }, []);
+
+  useEffect(() => {
+    setTempSelected(selectedDiagnoses);
+  }, [selectedDiagnoses]);
+
+  const fetchDiagnosisOptions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('diagnosis_options')
+        .select('name')
+        .is('parent_id', null)
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      if (data) {
+        setDiagnosisOptions(data.map(d => d.name));
+      }
+    } catch (error) {
+      console.error('Error fetching diagnosis options:', error);
+    }
+  };
+
+  const handleToggle = (diagnosis: string) => {
+    setTempSelected(prev =>
+      prev.includes(diagnosis)
+        ? prev.filter(d => d !== diagnosis)
+        : [...prev, diagnosis]
+    );
+  };
 
   const handleApply = () => {
-    onSearchChange(tempText);
+    onDiagnosisChange(tempSelected);
   };
 
   const handleReset = () => {
-    setTempText('');
-    onSearchChange('');
+    setTempSelected([]);
+    onDiagnosisChange([]);
   };
 
-  const hasActiveFilter = searchText.length > 0;
+  const hasActiveFilter = selectedDiagnoses.length > 0;
 
   return (
     <Popover>
@@ -44,17 +79,24 @@ export function DiagnosisFilter({ searchText, onSearchChange }: DiagnosisFilterP
       <PopoverContent className="w-64 z-50 bg-background" align="start">
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">진단명 검색</label>
-            <Input
-              placeholder="진단명 입력..."
-              value={tempText}
-              onChange={(e) => setTempText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleApply();
-                }
-              }}
-            />
+            <label className="text-sm font-medium">진단명 선택</label>
+            <div className="max-h-64 overflow-y-auto space-y-2">
+              {diagnosisOptions.map((diagnosis) => (
+                <div key={diagnosis} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={diagnosis}
+                    checked={tempSelected.includes(diagnosis)}
+                    onCheckedChange={() => handleToggle(diagnosis)}
+                  />
+                  <label
+                    htmlFor={diagnosis}
+                    className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    {diagnosis}
+                  </label>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="flex gap-2">
             <Button onClick={handleReset} variant="outline" size="sm" className="flex-1">
