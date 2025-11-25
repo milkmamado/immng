@@ -71,7 +71,7 @@ export default function FirstVisitManagement() {
   const [consultationDateEnd, setConsultationDateEnd] = useState<Date | undefined>();
   const [selectedInflowStatuses, setSelectedInflowStatuses] = useState<string[]>([]);
   const [selectedVisitTypes, setSelectedVisitTypes] = useState<string[]>([]);
-  const [diagnosisSearch, setDiagnosisSearch] = useState('');
+  const [selectedDiagnoses, setSelectedDiagnoses] = useState<string[]>([]);
   
   const { toast } = useToast();
   const { userRole } = useAuth();
@@ -390,12 +390,10 @@ export default function FirstVisitManagement() {
     }
 
     // 진단명 필터
-    if (diagnosisSearch.trim()) {
-      const diagnosisText = diagnosisSearch.toLowerCase();
-      const matchesDiagnosis = 
-        (patient.diagnosis_detail && patient.diagnosis_detail.toLowerCase().includes(diagnosisText));
-      
-      if (!matchesDiagnosis) return false;
+    if (selectedDiagnoses.length > 0) {
+      if (!patient.diagnosis_category || !selectedDiagnoses.includes(patient.diagnosis_category)) {
+        return false;
+      }
     }
 
     return true;
@@ -501,8 +499,8 @@ export default function FirstVisitManagement() {
                     <div className="flex items-center gap-1">
                       진단명
                       <DiagnosisFilter
-                        searchText={diagnosisSearch}
-                        onSearchChange={setDiagnosisSearch}
+                        selectedDiagnoses={selectedDiagnoses}
+                        onDiagnosisChange={setSelectedDiagnoses}
                       />
                     </div>
                   </TableHead>

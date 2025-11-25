@@ -149,7 +149,7 @@ export default function PatientListManagement() {
   const [inflowDateStart, setInflowDateStart] = useState<Date | undefined>();
   const [inflowDateEnd, setInflowDateEnd] = useState<Date | undefined>();
   const [selectedVisitTypes, setSelectedVisitTypes] = useState<string[]>([]);
-  const [diagnosisSearch, setDiagnosisSearch] = useState('');
+  const [selectedDiagnoses, setSelectedDiagnoses] = useState<string[]>([]);
   
   const { toast } = useToast();
   const { userRole } = useAuth();
@@ -252,18 +252,16 @@ export default function PatientListManagement() {
       }
 
       // 진단명 필터
-      if (diagnosisSearch.trim()) {
-        const diagnosisText = diagnosisSearch.toLowerCase();
-        const matchesDiagnosis = 
-          (patient.diagnosis_detail && patient.diagnosis_detail.toLowerCase().includes(diagnosisText));
-        
-        if (!matchesDiagnosis) return false;
+      if (selectedDiagnoses.length > 0) {
+        if (!patient.diagnosis_category || !selectedDiagnoses.includes(patient.diagnosis_category)) {
+          return false;
+        }
       }
 
       return true;
     });
     setFilteredPatients(filtered);
-  }, [patients, searchTerm, inflowDateStart, inflowDateEnd, selectedVisitTypes, diagnosisSearch]);
+  }, [patients, searchTerm, inflowDateStart, inflowDateEnd, selectedVisitTypes, selectedDiagnoses]);
 
   const fetchPatients = async () => {
     setLoading(true);
@@ -2012,8 +2010,8 @@ export default function PatientListManagement() {
                     <div className="flex items-center gap-1">
                       진단명
                       <DiagnosisFilter
-                        searchText={diagnosisSearch}
-                        onSearchChange={setDiagnosisSearch}
+                        selectedDiagnoses={selectedDiagnoses}
+                        onDiagnosisChange={setSelectedDiagnoses}
                       />
                     </div>
                   </TableHead>
