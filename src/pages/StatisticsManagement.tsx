@@ -1780,10 +1780,10 @@ export default function StatisticsManagement() {
             {statsDialog.type === 'failed' && (
               <div className="mt-2 p-3 bg-gray-50 border-l-4 border-gray-500 rounded">
                 <p className="text-sm font-semibold text-gray-900">
-                  📋 집계 기준: 유입상태='실패' AND 유입일 정확히 입력됨
+                  📋 집계 기준: 유입상태='실패' AND 상담일 정확히 입력됨
                 </p>
                 <p className="text-xs text-gray-700 mt-1">
-                  ⚠️ 유입일 미입력 시 통계에서 제외되니 반드시 입력해주세요!
+                  ⚠️ 상담일 미입력 시 통계에서 제외되니 반드시 입력해주세요!
                 </p>
               </div>
             )}
@@ -1821,7 +1821,7 @@ export default function StatisticsManagement() {
                   <div>담당 매니저</div>
                   {(statsDialog.type !== 'phone' && statsDialog.type !== 'visit' && statsDialog.type !== 'failed') && <div>관리 상태</div>}
                   <div>
-                    {(statsDialog.type === 'phone' || statsDialog.type === 'visit') ? '상담일' : '유입일'}
+                    {(statsDialog.type === 'phone' || statsDialog.type === 'visit' || statsDialog.type === 'failed') ? '상담일' : '유입일'}
                   </div>
                 </div>
                 {statsDialog.patients.map((patient) => (
@@ -1839,7 +1839,7 @@ export default function StatisticsManagement() {
                       </div>
                     )}
                     <div className="text-sm text-muted-foreground">
-                      {(statsDialog.type === 'phone' || statsDialog.type === 'visit')
+                      {(statsDialog.type === 'phone' || statsDialog.type === 'visit' || statsDialog.type === 'failed')
                         ? (patient.consultation_date ? new Date(patient.consultation_date).toLocaleDateString('ko-KR') : '-')
                         : (patient.inflow_date 
                             ? new Date(patient.inflow_date).toLocaleDateString('ko-KR')
