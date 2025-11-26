@@ -1477,9 +1477,7 @@ export default function StatisticsManagement() {
           <CardContent>
             <div className="text-2xl font-bold text-gray-600">{additionalStats.failedPatientsThisMonth}명</div>
             <CardDescription className="text-xs mt-1">
-              📋 집계 기준: 유입상태='실패' AND 상담일 정확히 입력됨
-              <br />
-              ⚠️ 상담일 미입력 시 통계에서 제외되니 반드시 입력해주세요!
+              유입상태='실패' 환자
             </CardDescription>
           </CardContent>
         </Card>
