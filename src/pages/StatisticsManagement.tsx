@@ -1221,14 +1221,14 @@ export default function StatisticsManagement() {
           break;
         
         case 'failed':
-          // 11월 실패 - inflow_status='실패' + inflow_date 필수
+          // 11월 실패 - inflow_status='실패' + consultation_date 필수
           filteredPatients = patients?.filter(p => {
             if (p.inflow_status !== '실패') return false;
-            if (!p.inflow_date) return false; // 유입일이 반드시 있어야 함
-            const inflowDate = new Date(p.inflow_date);
-            return inflowDate >= startOfPeriod && inflowDate <= endOfPeriod;
+            if (!p.consultation_date) return false; // 상담일이 반드시 있어야 함
+            const consultDate = new Date(p.consultation_date);
+            return consultDate >= startOfPeriod && consultDate <= endOfPeriod;
           }) || [];
-          title = `${month2}월 실패 환자 (유입일 기준) - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
+          title = `${month2}월 실패 환자 (상담일 기준) - ${month2}월 ${isCurrentMonth2 ? `1일~${today2.getDate()}일` : '전체'}`;
           break;
         
         case 'treatmentCompleted':
