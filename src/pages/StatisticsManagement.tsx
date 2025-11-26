@@ -832,12 +832,12 @@ export default function StatisticsManagement() {
         return consultDate >= selectedMonthStart && consultDate <= endDate;
       }).length || 0;
 
-      // 실패 환자 수 (inflow_status='실패' + inflow_date 필수)
+      // 실패 환자 수 (inflow_status='실패' + consultation_date 필수)
       let failedQuery = supabase
         .from('patients')
-        .select('id, inflow_date')
+        .select('id, consultation_date')
         .eq('inflow_status', '실패')
-        .not('inflow_date', 'is', null); // 유입일이 반드시 있어야 함
+        .not('consultation_date', 'is', null); // 상담일이 반드시 있어야 함
       
       if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
         const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
@@ -847,8 +847,8 @@ export default function StatisticsManagement() {
       
       const { data: failedPatients } = await failedQuery;
       const failedCount = failedPatients?.filter(p => {
-        const inflowDate = new Date(p.inflow_date!);
-        return inflowDate >= selectedMonthStart && inflowDate <= endDate;
+        const consultDate = new Date(p.consultation_date!);
+        return consultDate >= selectedMonthStart && consultDate <= endDate;
       }).length || 0;
 
       // 치료종료 환자 수 (inflow_status='유입' + management_status='치료종료' + inflow_date 필수)
