@@ -57,7 +57,7 @@ function extractPatientData() {
   return data;
 }
 
-// 검색 실행 함수
+// 검색 실행 함수 (이름 + 전화번호)
 function executeSearch(searchData) {
   const branchSelect = document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_srch_bnch_cd');
   const nameInput = document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_srch_clnt_nm');
@@ -67,6 +67,23 @@ function executeSearch(searchData) {
   if (branchSelect) branchSelect.value = '';
   if (nameInput) nameInput.value = searchData.name || '';
   if (phoneInput) phoneInput.value = searchData.phone || '';
+  if (searchBtn) searchBtn.click();
+
+  return true;
+}
+
+// 검색 실행 함수 (고객번호로 검색) - 휴대폰 번호 최신화용
+function executeSearchByCustomerNumber(searchData) {
+  const branchSelect = document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_srch_bnch_cd');
+  const nameInput = document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_srch_clnt_nm');
+  const phoneInput = document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_srch_hp_telno');
+  const searchBtn = document.querySelector('#pagetabs_2705_4_popupClnt_01_2715_btn_srch01');
+
+  if (branchSelect) branchSelect.value = '';
+  // 고객번호를 고객명/고객번호 통합 필드에 입력
+  if (nameInput) nameInput.value = searchData.customer_number || '';
+  // 전화번호 필드는 비워둠
+  if (phoneInput) phoneInput.value = '';
   if (searchBtn) searchBtn.click();
 
   return true;
@@ -90,6 +107,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.action === 'executeSearch') {
     const success = executeSearch(request.searchData);
+    sendResponse({ success: success });
+    return true;
+  }
+
+  if (request.action === 'executeSearchByCustomerNumber') {
+    const success = executeSearchByCustomerNumber(request.searchData);
     sendResponse({ success: success });
     return true;
   }

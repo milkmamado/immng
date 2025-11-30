@@ -70,6 +70,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
   const [diagnosisCategoryOptions, setDiagnosisCategoryOptions] = useState<Option[]>([]);
   const [hospitalCategoryOptions, setHospitalCategoryOptions] = useState<Option[]>([]);
   const [syncing, setSyncing] = useState(false);
+  const [syncingPhone, setSyncingPhone] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -79,6 +80,10 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'crm-patient-data' && event.data?.data) {
         handleCRMDataReceived(event.data.data);
+      }
+      // 휴대폰 번호 최신화용 데이터 수신
+      if (event.data?.type === 'crm-phone-data' && event.data?.data) {
+        handlePhoneCRMDataReceived(event.data.data);
       }
     };
 
@@ -263,6 +268,113 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         });
       }
     }, 30000);
+  };
+
+  // 휴대폰 번호 최신화 - 고객번호로 검색
+  const handleSyncPhoneCRM = () => {
+    if (!patient?.customer_number) {
+      toast({
+        title: "오류",
+        description: "고객번호가 없어 CRM 정보를 가져올 수 없습니다.",
+        variant: "destructive",
+        duration: 2000,
+      });
+      return;
+    }
+
+    setSyncingPhone(true);
+
+    // 휴대폰 번호 최신화 모드 플래그 설정
+    localStorage.setItem('crm_phone_update_mode', patient.id);
+
+    const searchData = {
+      customer_number: patient.customer_number,
+      appUrl: window.location.origin + '/first-visit'
+    };
+
+    const encoded = btoa(encodeURIComponent(JSON.stringify(searchData)));
+    const crmUrl = `http://192.168.1.101/html/MEDI20/main.html#crm_phone_data=${encoded}`;
+
+    window.open(crmUrl, '_blank');
+
+    // 30초 타임아웃
+    setTimeout(() => {
+      if (syncingPhone) {
+        setSyncingPhone(false);
+        localStorage.removeItem('crm_phone_update_mode');
+        toast({
+          title: "타임아웃",
+          description: "CRM 데이터를 받지 못했습니다. 다시 시도해주세요.",
+          variant: "destructive",
+          duration: 2000,
+        });
+      }
+    }, 30000);
+  };
+
+  const handlePhoneCRMDataReceived = async (crmData: any) => {
+    // 휴대폰 번호 최신화 모드 확인
+    const updatePatientId = localStorage.getItem('crm_phone_update_mode');
+    
+    // 업데이트 모드가 아니거나 현재 환자가 아니면 무시
+    if (!updatePatientId || !patient || updatePatientId !== patient.id) {
+      return;
+    }
+
+    setSyncingPhone(false);
+    localStorage.removeItem('crm_phone_update_mode');
+
+    try {
+      const newPhone = crmData.phone;
+      
+      if (!newPhone) {
+        toast({
+          title: "오류",
+          description: "CRM에서 휴대폰 번호를 가져올 수 없습니다.",
+          variant: "destructive",
+          duration: 2000,
+        });
+        return;
+      }
+
+      if (newPhone === patient.phone) {
+        toast({
+          title: "최신 상태",
+          description: "휴대폰 번호가 이미 최신 상태입니다.",
+          duration: 2000,
+        });
+        return;
+      }
+
+      // DB 업데이트 - 휴대폰 번호만
+      const { error } = await supabase
+        .from('patients')
+        .update({ phone: newPhone })
+        .eq('id', patient.id);
+
+      if (error) throw error;
+
+      // 폼 데이터 업데이트
+      setFormData(prev => ({
+        ...prev,
+        phone: newPhone
+      }));
+
+      toast({
+        title: "휴대폰 번호 최신화 완료",
+        description: `${patient.phone || '(없음)'} → ${newPhone}`,
+        duration: 2000,
+      });
+
+    } catch (error) {
+      console.error('Error updating phone:', error);
+      toast({
+        title: "오류",
+        description: "휴대폰 번호 업데이트에 실패했습니다.",
+        variant: "destructive",
+        duration: 2000,
+      });
+    }
   };
 
   const handleCRMDataReceived = async (crmData: any) => {
@@ -531,17 +643,30 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
             <Badge variant="secondary">자동</Badge>
           </div>
           {patient && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleSyncCRM}
-              disabled={syncing || !patient.customer_number}
-              className="gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? '최신화 중...' : '기본 정보 최신화'}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSyncCRM}
+                disabled={syncing || syncingPhone || !patient.customer_number}
+                className="gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? '최신화 중...' : '기본 정보 최신화'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSyncPhoneCRM}
+                disabled={syncing || syncingPhone || !patient.customer_number}
+                className="gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${syncingPhone ? 'animate-spin' : ''}`} />
+                {syncingPhone ? '최신화 중...' : '휴대폰 번호 최신화'}
+              </Button>
+            </div>
           )}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
