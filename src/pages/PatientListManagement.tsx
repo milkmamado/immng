@@ -311,103 +311,114 @@ export default function PatientListManagement() {
 
       if (error) throw error;
       
-      // 모든 환자의 일별 상태 데이터 가져오기
+      // 모든 환자의 일별 상태 데이터 가져오기 (일괄 쿼리 - N+1 문제 해결)
       const { data: allStatusData } = await supabase
         .from('daily_patient_status')
         .select('patient_id, status_date, status_type')
         .order('status_date', { ascending: false });
 
-      // 각 환자의 마지막 체크 날짜 맵 생성
+      // 환자별 상태 데이터를 Map으로 그룹화 (메모리에서 처리)
+      const statusByPatient = new Map<string, Array<{ status_date: string; status_type: string }>>();
       const lastCheckMap = new Map<string, string>();
+      
       allStatusData?.forEach(status => {
+        // 환자별 상태 데이터 그룹화
+        if (!statusByPatient.has(status.patient_id)) {
+          statusByPatient.set(status.patient_id, []);
+        }
+        statusByPatient.get(status.patient_id)!.push({
+          status_date: status.status_date,
+          status_type: status.status_type
+        });
+        
+        // 마지막 체크 날짜 (첫 번째 데이터가 최신)
         if (!lastCheckMap.has(status.patient_id)) {
           lastCheckMap.set(status.patient_id, status.status_date);
         }
       });
 
       const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      const actualVisitStatuses = ['입원', '퇴원', '재원', '외래', '낮병동'];
+      const inpatientStatuses = ['입원', '재입원', '낮병동'];
+      const outpatientStatuses = ['외래'];
       
-      // 각 환자의 일별 상태 데이터를 가져와서 통계 계산 및 management_status 자동 업데이트
-      const patientsWithStats = await Promise.all(
-        (data || []).map(async (patient) => {
-          const { data: statusData } = await supabase
-            .from('daily_patient_status')
-            .select('status_date, status_type')
-            .eq('patient_id', patient.id)
-            .order('status_date', { ascending: false });
+      // 상태 업데이트가 필요한 환자 수집 (배치 업데이트용)
+      const statusUpdates: Array<{ id: string; management_status: string }> = [];
+      
+      // 각 환자의 통계 계산 (DB 쿼리 없이 메모리에서 처리)
+      const patientsWithStats = (data || []).map((patient) => {
+        // 해당 환자의 상태 데이터 (이미 날짜 내림차순 정렬됨)
+        const statusData = statusByPatient.get(patient.id) || [];
 
-          // 마지막 내원일 (실제 내원 활동만: 입원, 퇴원, 재원, 외래, 낮병동, 오늘 이전 날짜만)
-          const actualVisitStatuses = ['입원', '퇴원', '재원', '외래', '낮병동'];
-          const todayStr = today.toISOString().split('T')[0];
-          const actualVisitData = statusData?.filter(s => 
-            actualVisitStatuses.includes(s.status_type) && s.status_date <= todayStr
-          ) || [];
-          const last_visit_date = actualVisitData.length > 0 
-            ? actualVisitData[0].status_date 
-            : null;
+        // 마지막 내원일 (실제 내원 활동만, 오늘 이전 날짜만)
+        const actualVisitData = statusData.filter(s => 
+          actualVisitStatuses.includes(s.status_type) && s.status_date <= todayStr
+        );
+        const last_visit_date = actualVisitData.length > 0 
+          ? actualVisitData[0].status_date 
+          : null;
 
-          // management_status 자동 업데이트 로직
-          const lastCheckDate = lastCheckMap.get(patient.id);
-          
-          // 마지막 체크로부터 경과 일수 계산 (우선순위: last_visit_date > inflow_date > consultation_date)
-          const daysSinceCheck = calculateDaysSinceLastCheck(lastCheckDate, patient.inflow_date, patient.consultation_date);
+        // management_status 자동 업데이트 로직
+        const lastCheckDate = lastCheckMap.get(patient.id);
+        const daysSinceCheck = calculateDaysSinceLastCheck(lastCheckDate, patient.inflow_date, patient.consultation_date);
 
-          let newManagementStatus = patient.management_status || "관리 중";
-          
-          // 자동 업데이트 가능 여부 확인 (최종 상태 제외, excludeManuallySet = false)
-          if (shouldAutoUpdateStatus(patient.management_status, false)) {
-            // 경과 일수에 따른 새 상태 계산
-            newManagementStatus = calculateAutoManagementStatus(daysSinceCheck);
+        let newManagementStatus = patient.management_status || "관리 중";
+        
+        if (shouldAutoUpdateStatus(patient.management_status, false)) {
+          newManagementStatus = calculateAutoManagementStatus(daysSinceCheck);
 
-            // management_status가 변경되었으면 업데이트
-            if (patient.management_status !== newManagementStatus) {
-              await supabase
-                .from("patients")
-                .update({ management_status: newManagementStatus })
-                .eq("id", patient.id);
-            }
+          // 변경이 필요한 경우 배치 업데이트 목록에 추가
+          if (patient.management_status !== newManagementStatus) {
+            statusUpdates.push({ id: patient.id, management_status: newManagementStatus });
           }
+        }
 
-          // 월평균 입원/외래 일수 계산
-          let monthly_avg_inpatient_days = 0;
-          let monthly_avg_outpatient_days = 0;
+        // 월평균 입원/외래 일수 계산
+        let monthly_avg_inpatient_days = 0;
+        let monthly_avg_outpatient_days = 0;
+        
+        if (statusData.length > 0) {
+          const inpatientDays = statusData.filter(s => inpatientStatuses.includes(s.status_type));
+          const outpatientDays = statusData.filter(s => outpatientStatuses.includes(s.status_type));
           
-          if (statusData && statusData.length > 0) {
-            // 입원 관련: 입원, 재입원, 낮병동
-            const inpatientStatuses = ['입원', '재입원', '낮병동'];
-            const inpatientDays = statusData.filter(s => inpatientStatuses.includes(s.status_type));
+          const allRelevantDays = [...inpatientDays, ...outpatientDays];
+          if (allRelevantDays.length > 0) {
+            const dates = allRelevantDays.map(s => new Date(s.status_date));
+            const firstDate = new Date(Math.min(...dates.map(d => d.getTime())));
+            const lastDate = new Date(Math.max(...dates.map(d => d.getTime())));
+            const monthsDiff = (lastDate.getFullYear() - firstDate.getFullYear()) * 12 
+              + (lastDate.getMonth() - firstDate.getMonth()) + 1;
             
-            // 외래 관련: 외래
-            const outpatientStatuses = ['외래'];
-            const outpatientDays = statusData.filter(s => outpatientStatuses.includes(s.status_type));
-            
-            // 전체 기간 계산 (첫 기록부터 마지막 기록까지)
-            const allRelevantDays = [...inpatientDays, ...outpatientDays];
-            if (allRelevantDays.length > 0) {
-              const dates = allRelevantDays.map(s => new Date(s.status_date));
-              const firstDate = new Date(Math.min(...dates.map(d => d.getTime())));
-              const lastDate = new Date(Math.max(...dates.map(d => d.getTime())));
-              const monthsDiff = (lastDate.getFullYear() - firstDate.getFullYear()) * 12 
-                + (lastDate.getMonth() - firstDate.getMonth()) + 1;
-              
-              monthly_avg_inpatient_days = inpatientDays.length > 0 
-                ? Math.round(inpatientDays.length / monthsDiff) 
-                : 0;
-              monthly_avg_outpatient_days = outpatientDays.length > 0 
-                ? Math.round(outpatientDays.length / monthsDiff) 
-                : 0;
-            }
+            monthly_avg_inpatient_days = inpatientDays.length > 0 
+              ? Math.round(inpatientDays.length / monthsDiff) 
+              : 0;
+            monthly_avg_outpatient_days = outpatientDays.length > 0 
+              ? Math.round(outpatientDays.length / monthsDiff) 
+              : 0;
           }
+        }
 
-          return {
-            ...patient,
-            management_status: newManagementStatus,
-            last_visit_date,
-            monthly_avg_inpatient_days,
-            monthly_avg_outpatient_days
-          };
-        })
-      );
+        return {
+          ...patient,
+          management_status: newManagementStatus,
+          last_visit_date,
+          monthly_avg_inpatient_days,
+          monthly_avg_outpatient_days
+        };
+      });
+
+      // 상태 업데이트가 필요한 환자들 배치 처리 (백그라운드)
+      if (statusUpdates.length > 0) {
+        Promise.all(
+          statusUpdates.map(update =>
+            supabase
+              .from("patients")
+              .update({ management_status: update.management_status })
+              .eq("id", update.id)
+          )
+        ).catch(error => console.error('Management status batch update error:', error));
+      }
 
       setPatients(patientsWithStats);
     } catch (error) {
