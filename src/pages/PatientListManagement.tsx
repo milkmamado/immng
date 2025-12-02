@@ -304,9 +304,11 @@ export default function PatientListManagement() {
             .eq('patient_id', patient.id)
             .order('status_date', { ascending: false });
 
-          // 마지막 내원일 (가장 최근 상태 날짜)
-          const last_visit_date = statusData && statusData.length > 0 
-            ? statusData[0].status_date 
+          // 마지막 내원일 (실제 내원 활동만: 입원, 퇴원, 재원, 외래, 낮병동)
+          const actualVisitStatuses = ['입원', '퇴원', '재원', '외래', '낮병동'];
+          const actualVisitData = statusData?.filter(s => actualVisitStatuses.includes(s.status_type)) || [];
+          const last_visit_date = actualVisitData.length > 0 
+            ? actualVisitData[0].status_date 
             : null;
 
           // management_status 자동 업데이트 로직
