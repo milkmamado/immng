@@ -304,9 +304,12 @@ export default function PatientListManagement() {
             .eq('patient_id', patient.id)
             .order('status_date', { ascending: false });
 
-          // 마지막 내원일 (실제 내원 활동만: 입원, 퇴원, 재원, 외래, 낮병동)
+          // 마지막 내원일 (실제 내원 활동만: 입원, 퇴원, 재원, 외래, 낮병동, 오늘 이전 날짜만)
           const actualVisitStatuses = ['입원', '퇴원', '재원', '외래', '낮병동'];
-          const actualVisitData = statusData?.filter(s => actualVisitStatuses.includes(s.status_type)) || [];
+          const todayStr = today.toISOString().split('T')[0];
+          const actualVisitData = statusData?.filter(s => 
+            actualVisitStatuses.includes(s.status_type) && s.status_date <= todayStr
+          ) || [];
           const last_visit_date = actualVisitData.length > 0 
             ? actualVisitData[0].status_date 
             : null;
