@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,6 +20,7 @@ import * as XLSX from 'xlsx';
 import { DateRangeFilter } from "@/components/TableFilters/DateRangeFilter";
 import { VisitTypeFilter } from "@/components/TableFilters/VisitTypeFilter";
 import { DiagnosisFilter } from "@/components/TableFilters/DiagnosisFilter";
+import { MonthFilter } from "@/components/TableFilters/MonthFilter";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -150,6 +151,7 @@ export default function PatientListManagement() {
   const [inflowDateEnd, setInflowDateEnd] = useState<Date | undefined>();
   const [selectedVisitTypes, setSelectedVisitTypes] = useState<string[]>([]);
   const [selectedDiagnoses, setSelectedDiagnoses] = useState<string[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   
   const { toast } = useToast();
   const { userRole } = useAuth();
@@ -237,6 +239,17 @@ export default function PatientListManagement() {
         if (!matchesSearch) return false;
       }
 
+      // 월별 필터 (유입일 기준)
+      if (selectedMonth) {
+        const patientDate = patient.inflow_date || patient.created_at;
+        if (patientDate) {
+          const patientMonth = patientDate.substring(0, 7); // 'YYYY-MM'
+          if (patientMonth !== selectedMonth) return false;
+        } else {
+          return false;
+        }
+      }
+
       // 유입일 필터
       if (inflowDateStart || inflowDateEnd) {
         const patientDate = patient.inflow_date ? new Date(patient.inflow_date) : new Date(patient.created_at);
@@ -261,7 +274,16 @@ export default function PatientListManagement() {
       return true;
     });
     setFilteredPatients(filtered);
-  }, [patients, searchTerm, inflowDateStart, inflowDateEnd, selectedVisitTypes, selectedDiagnoses]);
+  }, [patients, searchTerm, inflowDateStart, inflowDateEnd, selectedVisitTypes, selectedDiagnoses, selectedMonth]);
+
+  // 환자 데이터에서 사용 가능한 월 목록 추출
+  const availableMonths = useMemo(() => {
+    const months = patients.map(p => {
+      const date = p.inflow_date || p.created_at;
+      return date ? date.substring(0, 7) : null;
+    }).filter((m): m is string => m !== null);
+    return [...new Set(months)].sort().reverse();
+  }, [patients]);
 
   const fetchPatients = async () => {
     setLoading(true);
@@ -1972,7 +1994,14 @@ export default function PatientListManagement() {
       <Card className="w-full overflow-x-auto">
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>유입 환자 목록 ({filteredPatients.length}명)</CardTitle>
+            <div className="flex items-center gap-3">
+              <CardTitle>유입 환자 목록 ({filteredPatients.length}명)</CardTitle>
+              <MonthFilter
+                selectedMonth={selectedMonth}
+                onMonthChange={setSelectedMonth}
+                availableMonths={availableMonths}
+              />
+            </div>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-2">
                 <Search className="h-4 w-4 text-muted-foreground" />
