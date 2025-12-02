@@ -21,6 +21,7 @@ import { DateRangeFilter } from "@/components/TableFilters/DateRangeFilter";
 import { VisitTypeFilter } from "@/components/TableFilters/VisitTypeFilter";
 import { DiagnosisFilter } from "@/components/TableFilters/DiagnosisFilter";
 import { MonthFilter } from "@/components/TableFilters/MonthFilter";
+import { ManagementStatusFilter } from "@/components/TableFilters/ManagementStatusFilter";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -152,6 +153,7 @@ export default function PatientListManagement() {
   const [selectedVisitTypes, setSelectedVisitTypes] = useState<string[]>([]);
   const [selectedDiagnoses, setSelectedDiagnoses] = useState<string[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [selectedManagementStatuses, setSelectedManagementStatuses] = useState<string[]>([]);
   
   const { toast } = useToast();
   const { userRole } = useAuth();
@@ -271,10 +273,18 @@ export default function PatientListManagement() {
         }
       }
 
+      // 관리 상태 필터
+      if (selectedManagementStatuses.length > 0) {
+        const patientStatus = (patient as any).management_status || '관리 중';
+        if (!selectedManagementStatuses.includes(patientStatus)) {
+          return false;
+        }
+      }
+
       return true;
     });
     setFilteredPatients(filtered);
-  }, [patients, searchTerm, inflowDateStart, inflowDateEnd, selectedVisitTypes, selectedDiagnoses, selectedMonth]);
+  }, [patients, searchTerm, inflowDateStart, inflowDateEnd, selectedVisitTypes, selectedDiagnoses, selectedMonth, selectedManagementStatuses]);
 
   // 환자 데이터에서 사용 가능한 월 목록 추출
   const availableMonths = useMemo(() => {
@@ -2000,6 +2010,10 @@ export default function PatientListManagement() {
                 selectedMonth={selectedMonth}
                 onMonthChange={setSelectedMonth}
                 availableMonths={availableMonths}
+              />
+              <ManagementStatusFilter
+                selectedStatuses={selectedManagementStatuses}
+                onStatusChange={setSelectedManagementStatuses}
               />
             </div>
             <div className="flex items-center gap-2">
