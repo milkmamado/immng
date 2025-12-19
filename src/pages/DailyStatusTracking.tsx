@@ -209,11 +209,11 @@ export default function DailyStatusTracking() {
       for (const patient of patientsData || []) {
         const lastCheckDate = lastCheckMap.get(patient.id);
         
-        const autoUpdateAllowed = shouldAutoUpdateStatus(patient.management_status, false);
+        const autoUpdateAllowed = shouldAutoUpdateStatus(patient.management_status, false, patient.visit_type);
         
         // 자동 업데이트 가능 여부 확인 (최종 상태 제외)
         if (!autoUpdateAllowed) {
-          console.log(`[DailyStatusTracking] "${patient.name}" (${patient.management_status}) 자동 업데이트 건너뜀`);
+          console.log(`[DailyStatusTracking] "${patient.name}" (상태: ${patient.management_status}, 방문유형: ${patient.visit_type}) 자동 업데이트 건너뜀`);
           continue;
         }
 
