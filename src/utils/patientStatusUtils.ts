@@ -70,11 +70,18 @@ export const calculateAutoManagementStatus = (
  * 자동 상태 업데이트 가능 여부 확인
  * @param currentStatus 현재 환자 상태
  * @param excludeManuallySet true이면 수동 설정된 아웃/아웃위기도 제외 (RiskManagement용)
+ * @param visitType 방문 유형 (입원 환자는 자동 업데이트 제외)
  */
 export const shouldAutoUpdateStatus = (
   currentStatus: string | undefined,
-  excludeManuallySet: boolean = false
+  excludeManuallySet: boolean = false,
+  visitType?: string | null
 ): boolean => {
+  // 입원 환자는 자동 아웃/아웃위기 처리에서 제외
+  if (visitType === '입원') {
+    return false;
+  }
+  
   const finalStatuses = ['사망', '상태악화', '치료종료', '면책기간'];
   
   // 최종 상태는 자동 업데이트하지 않음

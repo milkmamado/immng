@@ -201,8 +201,8 @@ export default function RiskManagement() {
         
         let newManagementStatus = patient.management_status || "관리 중";
 
-        const autoUpdateAllowed = shouldAutoUpdateStatus(patient.management_status, true);
-        console.log(`[RiskManagement] 환자: ${patient.name}, DB상태: ${patient.management_status}, 경과일: ${daysSinceCheck}, 자동업데이트허용: ${autoUpdateAllowed}`);
+        const autoUpdateAllowed = shouldAutoUpdateStatus(patient.management_status, true, patient.visit_type);
+        console.log(`[RiskManagement] 환자: ${patient.name}, DB상태: ${patient.management_status}, 방문유형: ${patient.visit_type}, 경과일: ${daysSinceCheck}, 자동업데이트허용: ${autoUpdateAllowed}`);
 
         // 자동 업데이트 가능 여부 확인
         if (autoUpdateAllowed) {

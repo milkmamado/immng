@@ -365,7 +365,7 @@ export default function PatientListManagement() {
 
         let newManagementStatus = patient.management_status || "관리 중";
         
-        if (shouldAutoUpdateStatus(patient.management_status, false)) {
+        if (shouldAutoUpdateStatus(patient.management_status, false, patient.visit_type)) {
           newManagementStatus = calculateAutoManagementStatus(daysSinceCheck);
 
           // 변경이 필요한 경우 배치 업데이트 목록에 추가
