@@ -1053,12 +1053,6 @@ export default function RiskManagement() {
                       {selectedPatientDetail.crm_memo || '-'}
                     </p>
                   </div>
-                  <div className="space-y-2">
-                    <span className="font-medium">담당자 메모:</span>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                      {selectedPatientDetail.memo1 || '-'}
-                    </p>
-                  </div>
                 </CardContent>
               </Card>
 
