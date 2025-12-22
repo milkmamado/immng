@@ -64,6 +64,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
     western_doctor: '',         // 양방주치의
     inflow_date: '',            // 유입일
     consultation_date: '',      // 상담일
+    memo1: '',                  // 초진 메모 (담당자 메모)
   });
 
   const [loading, setLoading] = useState(false);
@@ -132,7 +133,8 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         korean_doctor: patient.korean_doctor || '',
         western_doctor: patient.western_doctor || '',
         inflow_date: patient.inflow_date || '',
-        consultation_date: patient.consultation_date || ''
+        consultation_date: patient.consultation_date || '',
+        memo1: patient.memo1 || ''
       });
       
       // manager_name이 없으면 현재 사용자 이름 가져오기
@@ -532,6 +534,7 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         western_doctor: formData.western_doctor || null,
         inflow_date: formData.inflow_date || null,
         consultation_date: formData.consultation_date || null,
+        memo1: formData.memo1 || null,
         assigned_manager: user.id,
         branch: currentBranch // 현재 지점 정보 추가
       };
@@ -616,7 +619,8 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
         korean_doctor: '',
         western_doctor: '',
         inflow_date: '',
-        consultation_date: ''
+        consultation_date: '',
+        memo1: ''
       });
 
       onClose();
@@ -1155,6 +1159,19 @@ export function PatientBasicForm({ patient, onClose, initialData }: PatientBasic
                   : '-'
               }
             </div>
+          </div>
+
+          {/* 초진 메모 (담당자 메모) */}
+          <div className="md:col-span-2 lg:col-span-3">
+            <Label htmlFor="memo1">초진 메모 (담당자 메모)</Label>
+            <Textarea
+              id="memo1"
+              name="memo1"
+              value={formData.memo1}
+              onChange={handleInputChange}
+              placeholder="초진 상담 내용이나 담당자 메모를 입력하세요 (일별환자관리와 연동됩니다)"
+              rows={3}
+            />
           </div>
         </div>
       </div>
