@@ -43,6 +43,7 @@ interface Patient {
   visit_motivation?: string;
   crm_memo?: string;
   management_status?: string;
+  memo1?: string;
 }
 
 interface ReconnectTracking {
@@ -1050,6 +1051,12 @@ export default function RiskManagement() {
                     <span className="font-medium">CRM메모:</span>
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                       {selectedPatientDetail.crm_memo || '-'}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <span className="font-medium">담당자 메모:</span>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {selectedPatientDetail.memo1 || '-'}
                     </p>
                   </div>
                 </CardContent>
