@@ -685,10 +685,6 @@ export default function ExemptPatientManagement() {
                   <p className="whitespace-pre-wrap">{selectedPatient.crm_memo}</p>
                 </div>
               )}
-              <div>
-                <Label className="text-muted-foreground">담당자 메모</Label>
-                <p className="whitespace-pre-wrap">{selectedPatient.memo1 || '-'}</p>
-              </div>
             </div>
           )}
         </DialogContent>
