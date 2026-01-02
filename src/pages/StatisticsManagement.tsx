@@ -246,8 +246,9 @@ export default function StatisticsManagement() {
       const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month - 1;
       const endDate = isCurrentMonth ? today : selectedMonthEnd;
       
-      const queryStartDate = selectedMonthStart.toISOString().split('T')[0];
-      const queryEndDate = endDate.toISOString().split('T')[0];
+      // 로컬 날짜 형식 사용 (toISOString()은 UTC로 변환되어 한국 시간대에서 하루 전이 됨)
+      const queryStartDate = `${year}-${String(month).padStart(2, '0')}-01`;
+      const queryEndDate = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
 
       // 공통 필터 조건 생성
       const targetManager = isMasterOrAdmin && selectedManager !== 'all' ? selectedManager : (isMasterOrAdmin ? null : user?.id);
