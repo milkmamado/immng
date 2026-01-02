@@ -1643,7 +1643,7 @@ export default function StatisticsManagement() {
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium text-gray-600">총 매출</span>
                       <span className="text-lg font-bold text-primary">
-                        {formatCurrency(stats.total_revenue)}
+                        {formatCurrency(stats.inpatient_revenue + stats.outpatient_revenue)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center pl-4">
