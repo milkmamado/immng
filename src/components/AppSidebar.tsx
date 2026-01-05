@@ -11,7 +11,8 @@ import {
   BookMarked,
   Package,
   UserX,
-  FileSpreadsheet
+  FileSpreadsheet,
+  AlertTriangle
 } from "lucide-react";
 import { NavLink, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -45,6 +46,7 @@ const getNavigationItems = (branch: string) => [
 const managementItems: never[] = [];
 
 const getAdminItems = (branch: string) => [
+  { title: "미분류 환자 리스트", url: `/${branch}/unclassified-patients`, icon: AlertTriangle },
   { title: "입원/외래매출 관리", url: `/${branch}/revenue-bulk-management`, icon: FileSpreadsheet, requiredRole: 'master' as const },
   { title: "계정 관리", url: `/${branch}/account-management`, icon: Shield, requiredRole: 'master' as const },
 ];
