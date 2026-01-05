@@ -103,11 +103,11 @@ export default function UnclassifiedPatientList() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // 매니저 목록 가져오기
+      // 매니저 목록 가져오기 (매니저, 어드민 모두 포함 - 환자 담당 가능)
       let managersQuery = supabase
         .from('approved_users')
-        .select('user_id, name, email, branch')
-        .eq('role', 'manager')
+        .select('user_id, name, email, branch, role')
+        .in('role', ['manager', 'admin'])
         .eq('approval_status', 'approved');
 
       if (currentBranch) {
