@@ -17,6 +17,7 @@ import ChurnedPatientSchedule from "./pages/ChurnedPatientSchedule";
 import RiskManagement from "./pages/RiskManagement";
 import ExemptPatientManagement from "./pages/ExemptPatientManagement";
 import StatisticsManagement from "./pages/StatisticsManagement";
+import UnclassifiedPatientList from "./pages/UnclassifiedPatientList";
 
 import RevenueBulkManagement from "./pages/RevenueBulkManagement";
 import UserManual from "./pages/UserManual";
@@ -158,6 +159,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute requiredRole="master">
               <AccountManagement />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="unclassified-patients"
+          element={
+            <ProtectedRoute allowedRoles={['master', 'admin']}>
+              <UnclassifiedPatientList />
             </ProtectedRoute>
           } 
         />
