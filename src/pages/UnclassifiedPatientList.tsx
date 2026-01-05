@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AlertTriangle, Download, Search, RefreshCw, Filter } from "lucide-react";
+import { AlertTriangle, Download, Search, RefreshCw, Filter, X } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { PatientDetailModal } from "@/components/PatientDetailModal";
 
@@ -407,7 +407,7 @@ export default function UnclassifiedPatientList() {
               </div>
             </div>
 
-            {/* 검색 */}
+            {/* 검색 및 담당자 필터 칩 */}
             <div className="flex items-center gap-2 ml-auto">
               <Search className="h-4 w-4 text-muted-foreground" />
               <Input
@@ -416,6 +416,16 @@ export default function UnclassifiedPatientList() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-64"
               />
+              {managerNameFilter && (
+                <Badge 
+                  variant="secondary" 
+                  className="flex items-center gap-1 px-3 py-1.5 cursor-pointer hover:bg-secondary/80"
+                  onClick={() => setManagerNameFilter(null)}
+                >
+                  담당자: {managerNameFilter}
+                  <X className="h-3 w-3" />
+                </Badge>
+              )}
             </div>
 
             {/* 새로고침 & 엑셀 */}
@@ -434,14 +444,7 @@ export default function UnclassifiedPatientList() {
       {/* 환자 테이블 */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between gap-3">
-            <span>미분류 환자 목록 ({filteredPatients.length}명)</span>
-            {managerNameFilter ? (
-              <Button variant="secondary" size="sm" onClick={() => setManagerNameFilter(null)}>
-                {managerNameFilter} 필터 해제
-              </Button>
-            ) : null}
-          </CardTitle>
+          <CardTitle>미분류 환자 목록 ({filteredPatients.length}명)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border overflow-x-auto">
