@@ -396,15 +396,7 @@ export default function StatisticsManagement() {
         }
       }
 
-      // 전체 관리 중인 환자 수 집계 (기간 무관)
-      totalPatientsData?.forEach(patient => {
-        const stats = managerMap.get(patient.assigned_manager);
-        if (stats) {
-          stats.total_all_patients += 1;
-        }
-      });
-
-      // 매니저 목록에는 있지만 신규 등록이 0명인 매니저도 카드 생성 (상태 분포 집계 전에 실행)
+      // 매니저 목록에는 있지만 신규 등록이 0명인 매니저도 카드 생성 (전체 관리 환자 집계 전에 실행!)
       if (isMasterOrAdmin) {
         if (selectedManager === 'all') {
           // 전체 보기: 모든 매니저 기본 카드 생성
@@ -453,6 +445,14 @@ export default function StatisticsManagement() {
           }
         }
       }
+
+      // 전체 관리 중인 환자 수 집계 (기간 무관) - 모든 매니저 카드가 생성된 후 실행
+      totalPatientsData?.forEach(patient => {
+        const stats = managerMap.get(patient.assigned_manager);
+        if (stats) {
+          stats.total_all_patients += 1;
+        }
+      });
 
       // 실제 결제 데이터로 매출 계산 (치료 계획)
       payments?.forEach(payment => {
