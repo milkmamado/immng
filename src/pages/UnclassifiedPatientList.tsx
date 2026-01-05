@@ -8,9 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AlertTriangle, Download, Search, Users, RefreshCw, Filter } from "lucide-react";
+import { AlertTriangle, Download, Search, RefreshCw, Filter } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { PatientDetailModal } from "@/components/PatientDetailModal";
 
@@ -61,13 +60,6 @@ interface Patient {
   branch: string;
 }
 
-interface Manager {
-  id: string;
-  name: string;
-  email: string;
-  branch: string;
-}
-
 type UnclassifiedReason = 'missing_inflow_date' | 'missing_visit_type' | 'no_daily_activity' | 'inflow_status_mismatch';
 
 interface UnclassifiedPatient extends Patient {
@@ -82,9 +74,8 @@ export default function UnclassifiedPatientList() {
 
   const [loading, setLoading] = useState(true);
   const [patients, setPatients] = useState<UnclassifiedPatient[]>([]);
-  const [managers, setManagers] = useState<Manager[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedManager, setSelectedManager] = useState<string>('all');
+  const [managerNameFilter, setManagerNameFilter] = useState<string | null>(null);
   const [selectedReasons, setSelectedReasons] = useState<UnclassifiedReason[]>([
     'missing_inflow_date',
     'missing_visit_type',
@@ -103,27 +94,6 @@ export default function UnclassifiedPatientList() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // 매니저 목록 가져오기 (매니저, 어드민 모두 포함 - 환자 담당 가능)
-      let managersQuery = supabase
-        .from('approved_users')
-        .select('user_id, name, email, branch, role')
-        .in('role', ['manager', 'admin'])
-        .eq('approval_status', 'approved');
-
-      if (currentBranch) {
-        managersQuery = managersQuery.eq('branch', currentBranch);
-      }
-
-      const { data: managersData } = await managersQuery;
-      
-      const managersList: Manager[] = (managersData || []).map(m => ({
-        id: m.user_id || '',
-        name: m.name || '',
-        email: m.email || '',
-        branch: m.branch || ''
-      }));
-      setManagers(managersList);
-
       // 환자 데이터 가져오기 (관리상태 = 관리 중)
       // 유입상태가 '유입'인 환자 + 유입상태가 '유입'이 아닌데 관리 중인 환자 모두 포함
       let patientsQuery = supabase
@@ -208,20 +178,20 @@ export default function UnclassifiedPatientList() {
   // 필터링된 환자 목록
   const filteredPatients = useMemo(() => {
     return patients.filter(patient => {
+      // 담당자 필터 (담당자 컬럼 클릭으로 설정)
+      if (managerNameFilter && (patient.manager_name || '-') !== managerNameFilter) {
+        return false;
+      }
+
       // 검색어 필터
       if (searchTerm) {
         const search = searchTerm.toLowerCase();
-        const matchesSearch = 
+        const matchesSearch =
           patient.name.toLowerCase().includes(search) ||
           (patient.customer_number && patient.customer_number.toLowerCase().includes(search)) ||
           (patient.manager_name && patient.manager_name.toLowerCase().includes(search));
-        
-        if (!matchesSearch) return false;
-      }
 
-      // 담당자 필터
-      if (selectedManager !== 'all' && patient.assigned_manager !== selectedManager) {
-        return false;
+        if (!matchesSearch) return false;
       }
 
       // 미분류 사유 필터
@@ -232,35 +202,7 @@ export default function UnclassifiedPatientList() {
 
       return true;
     });
-  }, [patients, searchTerm, selectedManager, selectedReasons]);
-
-  // 담당자별 통계
-  const managerStats = useMemo(() => {
-    const stats = new Map<string, { total: number; byReason: Record<UnclassifiedReason, number> }>();
-    
-    patients.forEach(patient => {
-      const managerId = patient.assigned_manager;
-      if (!stats.has(managerId)) {
-        stats.set(managerId, {
-          total: 0,
-          byReason: {
-            missing_inflow_date: 0,
-            missing_visit_type: 0,
-            no_daily_activity: 0,
-            inflow_status_mismatch: 0
-          }
-        });
-      }
-      
-      const stat = stats.get(managerId)!;
-      stat.total += 1;
-      patient.reasons.forEach(reason => {
-        stat.byReason[reason] += 1;
-      });
-    });
-    
-    return stats;
-  }, [patients]);
+  }, [patients, managerNameFilter, searchTerm, selectedReasons]);
 
   const getReasonBadge = (reason: UnclassifiedReason) => {
     switch (reason) {
@@ -427,24 +369,7 @@ export default function UnclassifiedPatientList() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4 items-center">
-            {/* 담당자 필터 */}
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <Select value={selectedManager} onValueChange={setSelectedManager}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="담당자 선택" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">전체 담당자</SelectItem>
-                  {managers.map(manager => (
-                    <SelectItem key={manager.id} value={manager.id}>
-                      {manager.name} ({managerStats.get(manager.id)?.total || 0}명)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
+            {/* 담당자 필터는 테이블의 담당자 컬럼 클릭으로 대체 */}
             {/* 미분류 사유 필터 */}
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-sm text-muted-foreground">미분류 사유:</span>
@@ -509,8 +434,13 @@ export default function UnclassifiedPatientList() {
       {/* 환자 테이블 */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex items-center justify-between gap-3">
             <span>미분류 환자 목록 ({filteredPatients.length}명)</span>
+            {managerNameFilter ? (
+              <Button variant="secondary" size="sm" onClick={() => setManagerNameFilter(null)}>
+                {managerNameFilter} 필터 해제
+              </Button>
+            ) : null}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -543,7 +473,19 @@ export default function UnclassifiedPatientList() {
                       key={patient.id}
                       className="cursor-pointer hover:bg-muted/50"
                     >
-                      <TableCell>{patient.manager_name || '-'}</TableCell>
+                      <TableCell>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const name = patient.manager_name || '-';
+                            setManagerNameFilter(prev => (prev === name ? null : name));
+                          }}
+                          className="text-left text-primary hover:underline"
+                        >
+                          {patient.manager_name || '-'}
+                        </button>
+                      </TableCell>
                       <TableCell>
                         <button
                           onClick={() => handlePatientClick(patient)}
