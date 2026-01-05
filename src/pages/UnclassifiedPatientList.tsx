@@ -126,12 +126,16 @@ export default function UnclassifiedPatientList() {
       }
 
       // 미분류 환자 필터링 및 이유 태깅
+      // 전화상담, 방문상담, 실패는 애초에 방문하지 않은 환자라 미분류 대상에서 제외
+      const excludedInflowStatuses = ['전화상담', '방문상담', '실패'];
+      
       const unclassifiedPatients: UnclassifiedPatient[] = (patientsData || [])
+        .filter(patient => !excludedInflowStatuses.includes(patient.inflow_status || ''))
         .map(patient => {
           const reasons: UnclassifiedReason[] = [];
           const hasActivity = dailyStatusMap.get(patient.id) || false;
 
-          // 유입상태 이상 (유입이 아닌데 관리 중)
+          // 유입상태 이상 (유입이 아닌데 관리 중, 단 제외 대상은 이미 필터됨)
           if (patient.inflow_status !== '유입') {
             reasons.push('inflow_status_mismatch');
           }
