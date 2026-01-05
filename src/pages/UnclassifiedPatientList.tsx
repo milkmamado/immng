@@ -68,7 +68,7 @@ interface Manager {
   branch: string;
 }
 
-type UnclassifiedReason = 'missing_inflow_date' | 'missing_visit_type' | 'no_daily_activity';
+type UnclassifiedReason = 'missing_inflow_date' | 'missing_visit_type' | 'no_daily_activity' | 'inflow_status_mismatch';
 
 interface UnclassifiedPatient extends Patient {
   reasons: UnclassifiedReason[];
@@ -88,7 +88,8 @@ export default function UnclassifiedPatientList() {
   const [selectedReasons, setSelectedReasons] = useState<UnclassifiedReason[]>([
     'missing_inflow_date',
     'missing_visit_type',
-    'no_daily_activity'
+    'no_daily_activity',
+    'inflow_status_mismatch'
   ]);
   
   // 환자 상세정보 모달 상태
@@ -123,11 +124,11 @@ export default function UnclassifiedPatientList() {
       }));
       setManagers(managersList);
 
-      // 환자 데이터 가져오기 (유입상태 = 유입, 관리상태 = 관리 중)
+      // 환자 데이터 가져오기 (관리상태 = 관리 중)
+      // 유입상태가 '유입'인 환자 + 유입상태가 '유입'이 아닌데 관리 중인 환자 모두 포함
       let patientsQuery = supabase
         .from('patients')
         .select('*')
-        .eq('inflow_status', '유입')
         .eq('management_status', '관리 중')
         .order('manager_name', { ascending: true });
 
@@ -160,19 +161,27 @@ export default function UnclassifiedPatientList() {
           const reasons: UnclassifiedReason[] = [];
           const hasActivity = dailyStatusMap.get(patient.id) || false;
 
-          // 유입일 미등록
-          if (!patient.inflow_date) {
-            reasons.push('missing_inflow_date');
+          // 유입상태 이상 (유입이 아닌데 관리 중)
+          if (patient.inflow_status !== '유입') {
+            reasons.push('inflow_status_mismatch');
           }
 
-          // 내원형태 미등록
-          if (!patient.visit_type) {
-            reasons.push('missing_visit_type');
-          }
+          // 유입상태가 '유입'인 경우에만 아래 조건 체크
+          if (patient.inflow_status === '유입') {
+            // 유입일 미등록
+            if (!patient.inflow_date) {
+              reasons.push('missing_inflow_date');
+            }
 
-          // 일별 관리 활동 없음
-          if (!hasActivity) {
-            reasons.push('no_daily_activity');
+            // 내원형태 미등록
+            if (!patient.visit_type) {
+              reasons.push('missing_visit_type');
+            }
+
+            // 일별 관리 활동 없음
+            if (!hasActivity) {
+              reasons.push('no_daily_activity');
+            }
           }
 
           return {
@@ -237,7 +246,8 @@ export default function UnclassifiedPatientList() {
           byReason: {
             missing_inflow_date: 0,
             missing_visit_type: 0,
-            no_daily_activity: 0
+            no_daily_activity: 0,
+            inflow_status_mismatch: 0
           }
         });
       }
@@ -260,6 +270,8 @@ export default function UnclassifiedPatientList() {
         return <Badge variant="outline" className="text-xs border-orange-500 text-orange-600">내원형태 미선택</Badge>;
       case 'no_daily_activity':
         return <Badge variant="secondary" className="text-xs">일별관리 미활동</Badge>;
+      case 'inflow_status_mismatch':
+        return <Badge variant="outline" className="text-xs border-purple-500 text-purple-600 bg-purple-50">유입상태 이상</Badge>;
     }
   };
 
@@ -286,7 +298,9 @@ export default function UnclassifiedPatientList() {
           case 'missing_inflow_date': return '유입일 미등록';
           case 'missing_visit_type': return '내원형태 미선택';
           case 'no_daily_activity': return '일별관리 미활동';
+          case 'inflow_status_mismatch': return '유입상태 이상';
         }
+        return r;
       }).join(', '),
       '등록일': patient.created_at ? new Date(patient.created_at).toLocaleDateString('ko-KR') : '-'
     }));
@@ -351,13 +365,24 @@ export default function UnclassifiedPatientList() {
       </div>
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">전체 미분류 환자</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-orange-500">{patients.length}명</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">유입상태 이상</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-purple-500">
+              {patients.filter(p => p.reasons.includes('inflow_status_mismatch')).length}명
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">유입 아닌데 관리 중</p>
           </CardContent>
         </Card>
         <Card>
@@ -421,8 +446,16 @@ export default function UnclassifiedPatientList() {
             </div>
 
             {/* 미분류 사유 필터 */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <span className="text-sm text-muted-foreground">미분류 사유:</span>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="inflow_status_mismatch"
+                  checked={selectedReasons.includes('inflow_status_mismatch')}
+                  onCheckedChange={() => toggleReason('inflow_status_mismatch')}
+                />
+                <label htmlFor="inflow_status_mismatch" className="text-sm">유입상태 이상</label>
+              </div>
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="missing_inflow_date"
