@@ -5,7 +5,9 @@ import { useBranchFilter } from "@/hooks/useBranchFilter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DailyStatusGrid } from "@/components/DailyStatusGrid";
-import { Calendar as CalendarIcon, Users, Activity, Search, ChevronLeft, ChevronRight, FileDown } from "lucide-react";
+import { Calendar as CalendarIcon, Users, Activity, Search, ChevronLeft, ChevronRight, FileDown, UserCheck } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -86,6 +88,7 @@ export default function DailyStatusTracking() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [includeExemptPatients, setIncludeExemptPatients] = useState(false);
   const [stats, setStats] = useState({
     당월총환자: 0,
     당월매출: 0,
@@ -133,7 +136,7 @@ export default function DailyStatusTracking() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedMonth]);
+  }, [selectedMonth, includeExemptPatients]);
 
   // 검색어에 따른 필터링
   useEffect(() => {
@@ -182,8 +185,13 @@ export default function DailyStatusTracking() {
         .order('display_order', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false });
 
-      // 최종 상태(사망, 상태악화, 치료종료) 및 "아웃", "아웃위기", "면책기간" 환자 제외
-      patientsQuery = patientsQuery.not('management_status', 'in', '("사망","상태악화","치료종료","아웃","아웃위기","면책기간")');
+      // 최종 상태(사망, 상태악화, 치료종료) 및 "아웃", "아웃위기" 환자 제외
+      // 면책기간은 includeExemptPatients 옵션에 따라 포함/제외
+      if (includeExemptPatients) {
+        patientsQuery = patientsQuery.not('management_status', 'in', '("사망","상태악화","치료종료","아웃","아웃위기")');
+      } else {
+        patientsQuery = patientsQuery.not('management_status', 'in', '("사망","상태악화","치료종료","아웃","아웃위기","면책기간")');
+      }
       
       // 지점 필터 적용
       patientsQuery = applyBranchFilter(patientsQuery);
@@ -630,6 +638,17 @@ export default function DailyStatusTracking() {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold">일별 환자 상태 추적</h1>
         <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="includeExempt"
+              checked={includeExemptPatients}
+              onCheckedChange={(checked) => setIncludeExemptPatients(checked === true)}
+            />
+            <Label htmlFor="includeExempt" className="text-sm font-medium cursor-pointer flex items-center gap-1">
+              <UserCheck className="h-4 w-4" />
+              면책환자 포함
+            </Label>
+          </div>
           <Button 
             variant="outline"
             onClick={handleExportToExcel}
