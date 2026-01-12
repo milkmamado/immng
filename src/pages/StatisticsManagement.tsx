@@ -722,69 +722,161 @@ export default function StatisticsManagement() {
       setManagerStats(finalStatsArray);
       setTotalStats(totals);
 
-      // 새로운 통계 계산 로직 추가
-      // 1. 아웃 환자 수 - 전체 기간 아웃 + 아웃위기 환자
+      // ===== 새로운 통계 계산 - 모든 쿼리 병렬 실행 =====
+      
+      // 전월 계산 (재진관리비율용)
+      const [prevYear, prevMonth] = selectedMonth.split('-').map(Number);
+      const prevMonthStart = new Date(prevYear, prevMonth - 2, 1);
+      const prevMonthEnd = new Date(prevYear, prevMonth - 1, 0);
+
+      // 관리 기간 계산용
+      const periodMonthEnd = new Date(year, month, 0);
+      const oneMonthAgoPeriod = new Date(year, month - 1, 0);
+      const twoMonthsAgoPeriod = new Date(year, month - 2, 0);
+      const threeMonthsAgoPeriod = new Date(year, month - 3, 0);
+      const sixMonthsAgoPeriod = new Date(year, month - 6, 0);
+
+      // 매니저 필터 조건
+      const shouldFilterByManager = !isMasterOrAdmin || (selectedManager !== 'all' && selectedManager);
+      const targetManagerForStats = shouldFilterByManager ? (isMasterOrAdmin ? selectedManager : user?.id) : null;
+
+      // 1. 아웃 환자 쿼리
       let outStatusQuery = supabase
         .from('patients')
         .select('id')
         .in('management_status', ['아웃', '아웃위기']);
-      
-      // 담당자 필터 적용 (일반 매니저 또는 특정 매니저 선택 시)
-      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
-        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
-        outStatusQuery = outStatusQuery.eq('assigned_manager', targetManager);
-      }
-      
-      // 지점 필터 적용
+      if (targetManagerForStats) outStatusQuery = outStatusQuery.eq('assigned_manager', targetManagerForStats);
       outStatusQuery = applyBranchFilter(outStatusQuery);
-      
-      const { data: outPatients } = await outStatusQuery;
-      const outPatientsCount = outPatients?.length || 0;
 
-      // 1-1. 11월 아웃 환자 - 11월에 신규 등록됐다가 현재 아웃/아웃위기인 환자
+      // 2. 현재 월 아웃 환자 쿼리
       let outThisMonthQuery = supabase
         .from('patients')
         .select('id, inflow_date, consultation_date, inflow_status')
         .in('management_status', ['아웃', '아웃위기']);
-      
-      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
-        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
-        outThisMonthQuery = outThisMonthQuery.eq('assigned_manager', targetManager);
-      }
+      if (targetManagerForStats) outThisMonthQuery = outThisMonthQuery.eq('assigned_manager', targetManagerForStats);
       outThisMonthQuery = applyBranchFilter(outThisMonthQuery);
+
+      // 3. 유입 환자 쿼리
+      let inflowQuery = supabase
+        .from('patients')
+        .select('id, inflow_date')
+        .eq('inflow_status', '유입')
+        .eq('management_status', '관리 중')
+        .not('inflow_date', 'is', null);
+      if (targetManagerForStats) inflowQuery = inflowQuery.eq('assigned_manager', targetManagerForStats);
+      inflowQuery = applyBranchFilter(inflowQuery);
+
+      // 4. 전화상담 환자 쿼리
+      let phoneConsultQuery = supabase
+        .from('patients')
+        .select('id, consultation_date')
+        .eq('inflow_status', '전화상담')
+        .not('consultation_date', 'is', null);
+      if (targetManagerForStats) phoneConsultQuery = phoneConsultQuery.eq('assigned_manager', targetManagerForStats);
+      phoneConsultQuery = applyBranchFilter(phoneConsultQuery);
+
+      // 5. 방문상담 환자 쿼리
+      let visitConsultQuery = supabase
+        .from('patients')
+        .select('id, consultation_date')
+        .eq('inflow_status', '방문상담')
+        .not('consultation_date', 'is', null);
+      if (targetManagerForStats) visitConsultQuery = visitConsultQuery.eq('assigned_manager', targetManagerForStats);
+      visitConsultQuery = applyBranchFilter(visitConsultQuery);
+
+      // 6. 실패 환자 쿼리
+      let failedQuery = supabase
+        .from('patients')
+        .select('id, consultation_date')
+        .eq('inflow_status', '실패')
+        .not('consultation_date', 'is', null);
+      if (targetManagerForStats) failedQuery = failedQuery.eq('assigned_manager', targetManagerForStats);
+      failedQuery = applyBranchFilter(failedQuery);
+
+      // 7. 치료종료 환자 쿼리
+      let treatmentCompletedQuery = supabase
+        .from('patients')
+        .select('id, inflow_date')
+        .eq('inflow_status', '유입')
+        .eq('management_status', '치료종료')
+        .not('inflow_date', 'is', null);
+      if (targetManagerForStats) treatmentCompletedQuery = treatmentCompletedQuery.eq('assigned_manager', targetManagerForStats);
+      treatmentCompletedQuery = applyBranchFilter(treatmentCompletedQuery);
+
+      // 8. 전월 유입 환자 쿼리 (재진관리비율)
+      let prevMonthQuery = supabase
+        .from('patients')
+        .select('id, inflow_date, management_status')
+        .eq('inflow_status', '유입')
+        .not('inflow_date', 'is', null);
+      if (targetManagerForStats) prevMonthQuery = prevMonthQuery.eq('assigned_manager', targetManagerForStats);
+      prevMonthQuery = applyBranchFilter(prevMonthQuery);
+
+      // 9. 관리 중 환자 쿼리 (관리 기간별)
+      let managedPatientsQuery = supabase
+        .from('patients')
+        .select('id, inflow_date, name')
+        .eq('management_status', '관리 중')
+        .not('inflow_date', 'is', null);
+      if (targetManagerForStats) managedPatientsQuery = managedPatientsQuery.eq('assigned_manager', targetManagerForStats);
+      managedPatientsQuery = applyBranchFilter(managedPatientsQuery);
+
+      // 10. 유입일 미등록 환자 쿼리
+      let missingInflowQuery = supabase
+        .from('patients')
+        .select('id')
+        .eq('inflow_status', '유입')
+        .is('inflow_date', null);
+      if (targetManagerForStats) missingInflowQuery = missingInflowQuery.eq('assigned_manager', targetManagerForStats);
+      missingInflowQuery = applyBranchFilter(missingInflowQuery);
+
+      // ===== 모든 쿼리 병렬 실행 =====
+      const [
+        outStatusResult,
+        outThisMonthResult,
+        inflowResult,
+        phoneConsultResult,
+        visitConsultResult,
+        failedResult,
+        treatmentCompletedResult,
+        prevMonthResult,
+        managedPatientsResult,
+        missingInflowResult
+      ] = await Promise.all([
+        outStatusQuery,
+        outThisMonthQuery,
+        inflowQuery,
+        phoneConsultQuery,
+        visitConsultQuery,
+        failedQuery,
+        treatmentCompletedQuery,
+        prevMonthQuery,
+        managedPatientsQuery,
+        missingInflowQuery
+      ]);
+
+      // ===== 데이터 처리 (기존 로직 100% 동일) =====
       
-      const { data: outThisMonthPatients } = await outThisMonthQuery;
-      
-      // 11월에 등록된 환자 (inflow_date 기준만 사용)
+      // 1. 아웃 환자 수
+      const outPatients = outStatusResult.data;
+      const outPatientsCount = outPatients?.length || 0;
+
+      // 2. 현재 월 아웃 환자
+      const outThisMonthPatients = outThisMonthResult.data;
       const outPatientsThisMonthCount = outThisMonthPatients?.filter(p => {
         if (!p.inflow_date) return false;
         const inflowDate = new Date(p.inflow_date);
         return inflowDate >= selectedMonthStart && inflowDate <= endDate;
       }).length || 0;
 
-      // 2. 11월 유입 환자 (inflow_status = '유입', management_status = '관리 중', inflow_date 필수)
-      let inflowQuery = supabase
-        .from('patients')
-        .select('id, inflow_date')
-        .eq('inflow_status', '유입')
-        .eq('management_status', '관리 중')
-        .not('inflow_date', 'is', null); // inflow_date가 반드시 있어야 함
-      
-      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
-        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
-        inflowQuery = inflowQuery.eq('assigned_manager', targetManager);
-      }
-      inflowQuery = applyBranchFilter(inflowQuery);
-      
-      const { data: inflowPatients } = await inflowQuery;
-      
-      // 유입일이 해당 월에 속한 환자만 카운트
+      // 3. 유입 환자
+      const inflowPatients = inflowResult.data;
       const newPatientsCount = inflowPatients?.filter(p => {
         const inflowDate = new Date(p.inflow_date);
         return inflowDate >= selectedMonthStart && inflowDate <= endDate;
       }).length || 0;
 
-      // 객단가를 newPatientsCount(11월 유입환자) 기준으로 계산
+      // 객단가를 newPatientsCount(해당 월 유입환자) 기준으로 계산
       totals.avgRevenuePerPatient = newPatientsCount > 0
         ? Math.round(totals.monthlyRevenue / newPatientsCount)
         : 0;
@@ -795,111 +887,41 @@ export default function StatisticsManagement() {
         avgRevenuePerPatient: totals.avgRevenuePerPatient
       });
 
-      // 전화상담 환자 수 (inflow_status='전화상담' + consultation_date 필수)
-      let phoneConsultQuery = supabase
-        .from('patients')
-        .select('id, consultation_date')
-        .eq('inflow_status', '전화상담')
-        .not('consultation_date', 'is', null); // 상담일이 반드시 있어야 함
-      
-      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
-        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
-        phoneConsultQuery = phoneConsultQuery.eq('assigned_manager', targetManager);
-      }
-      phoneConsultQuery = applyBranchFilter(phoneConsultQuery);
-      
-      const { data: phoneConsultPatients } = await phoneConsultQuery;
+      // 4. 전화상담 환자
+      const phoneConsultPatients = phoneConsultResult.data;
       const phoneConsultCount = phoneConsultPatients?.filter(p => {
         const consultDate = new Date(p.consultation_date!);
         return consultDate >= selectedMonthStart && consultDate <= endDate;
       }).length || 0;
 
-      // 방문상담 환자 수 (inflow_status='방문상담' + consultation_date 필수)
-      let visitConsultQuery = supabase
-        .from('patients')
-        .select('id, consultation_date')
-        .eq('inflow_status', '방문상담')
-        .not('consultation_date', 'is', null); // 상담일이 반드시 있어야 함
-      
-      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
-        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
-        visitConsultQuery = visitConsultQuery.eq('assigned_manager', targetManager);
-      }
-      visitConsultQuery = applyBranchFilter(visitConsultQuery);
-      
-      const { data: visitConsultPatients } = await visitConsultQuery;
+      // 5. 방문상담 환자
+      const visitConsultPatients = visitConsultResult.data;
       const visitConsultCount = visitConsultPatients?.filter(p => {
         const consultDate = new Date(p.consultation_date!);
         return consultDate >= selectedMonthStart && consultDate <= endDate;
       }).length || 0;
 
-      // 실패 환자 수 (inflow_status='실패' + consultation_date 필수)
-      let failedQuery = supabase
-        .from('patients')
-        .select('id, consultation_date')
-        .eq('inflow_status', '실패')
-        .not('consultation_date', 'is', null); // 상담일이 반드시 있어야 함
-      
-      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
-        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
-        failedQuery = failedQuery.eq('assigned_manager', targetManager);
-      }
-      failedQuery = applyBranchFilter(failedQuery);
-      
-      const { data: failedPatients } = await failedQuery;
+      // 6. 실패 환자
+      const failedPatients = failedResult.data;
       const failedCount = failedPatients?.filter(p => {
         const consultDate = new Date(p.consultation_date!);
         return consultDate >= selectedMonthStart && consultDate <= endDate;
       }).length || 0;
 
-      // 치료종료 환자 수 (inflow_status='유입' + management_status='치료종료' + inflow_date 필수)
-      let treatmentCompletedQuery = supabase
-        .from('patients')
-        .select('id, inflow_date')
-        .eq('inflow_status', '유입')
-        .eq('management_status', '치료종료')
-        .not('inflow_date', 'is', null); // 유입일이 반드시 있어야 함
-      
-      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
-        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
-        treatmentCompletedQuery = treatmentCompletedQuery.eq('assigned_manager', targetManager);
-      }
-      treatmentCompletedQuery = applyBranchFilter(treatmentCompletedQuery);
-      
-      const { data: treatmentCompletedPatients } = await treatmentCompletedQuery;
+      // 7. 치료종료 환자
+      const treatmentCompletedPatients = treatmentCompletedResult.data;
       const treatmentCompletedCount = treatmentCompletedPatients?.filter(p => {
         const inflowDate = new Date(p.inflow_date!);
         return inflowDate >= selectedMonthStart && inflowDate <= endDate;
       }).length || 0;
 
-      // 3. 재진관리비율 계산
-      const [prevYear, prevMonth] = selectedMonth.split('-').map(Number);
-      const prevMonthDate = new Date(prevYear, prevMonth - 2, 1);
-      const prevMonthStart = new Date(prevYear, prevMonth - 2, 1);
-      const prevMonthEnd = new Date(prevYear, prevMonth - 1, 0);
-      
-      // 전월 유입 환자: inflow_status='유입', inflow_date가 전월에 정확히 입력됨
-      let prevMonthQuery = supabase
-        .from('patients')
-        .select('id, inflow_date, management_status')
-        .eq('inflow_status', '유입')
-        .not('inflow_date', 'is', null); // 유입일이 반드시 있어야 함
-      
-      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
-        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
-        prevMonthQuery = prevMonthQuery.eq('assigned_manager', targetManager);
-      }
-      prevMonthQuery = applyBranchFilter(prevMonthQuery);
-      
-      const { data: prevMonthPatientsData } = await prevMonthQuery;
-      
-      // 전월에 유입일이 정확히 기재된 환자만 필터링
+      // 8. 재진관리비율 계산
+      const prevMonthPatientsData = prevMonthResult.data;
       const prevMonthPatients = prevMonthPatientsData?.filter(p => {
         const inflowDate = new Date(p.inflow_date);
         return inflowDate >= prevMonthStart && inflowDate <= prevMonthEnd;
       }) || [];
 
-      // 전월 유입 환자 중 현재도 '관리 중' 또는 '치료종료'인 환자
       const retainedPatients = prevMonthPatients.filter(p => 
         p.management_status === '관리 중' || p.management_status === '치료종료'
       ).length;
@@ -907,91 +929,51 @@ export default function StatisticsManagement() {
         ? Math.round((retainedPatients / prevMonthPatients.length) * 100) 
         : 0;
 
-      // 4. 관리 기간별 환자 수 - 선택한 월의 말일 기준, 독립 구간
-      // 각 기간의 기준일 계산 (선택한 월의 말일 기준)
-      const periodMonthEnd = new Date(year, month, 0); // 선택한 월의 마지막 날
-      const oneMonthAgoPeriod = new Date(year, month - 1, 0); // 1개월 전 말일
-      const twoMonthsAgoPeriod = new Date(year, month - 2, 0); // 2개월 전 말일
-      const threeMonthsAgoPeriod = new Date(year, month - 3, 0); // 3개월 전 말일
-      const sixMonthsAgoPeriod = new Date(year, month - 6, 0); // 6개월 전 말일
-
-      // 관리 중 환자만 조회 (inflow_date 필수)
-      let managedPatientsQuery = supabase
-        .from('patients')
-        .select('id, inflow_date, name')
-        .eq('management_status', '관리 중')
-        .not('inflow_date', 'is', null); // inflow_date가 반드시 있어야 함
+      // 9. 관리 기간별 환자 수
+      const activePatients = managedPatientsResult.data;
       
-      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
-        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
-        managedPatientsQuery = managedPatientsQuery.eq('assigned_manager', targetManager);
-      }
-      managedPatientsQuery = applyBranchFilter(managedPatientsQuery);
-      
-      const { data: activePatients } = await managedPatientsQuery;
-
-      // 각 구간을 독립적으로 계산 (중복 없음)
-      // 1개월 이상: 1개월 전 말일 <= 유입일 < 선택한 월 말일 (1~2개월 사이)
       const patients1MonthPlus = (activePatients || []).filter(p => {
         const inflowDate = new Date(p.inflow_date);
         return inflowDate >= oneMonthAgoPeriod && inflowDate < periodMonthEnd;
       }).length;
 
-      // 2개월 이상: 2개월 전 말일 <= 유입일 < 1개월 전 말일 (2~3개월 사이)
       const patients2MonthPlus = (activePatients || []).filter(p => {
         const inflowDate = new Date(p.inflow_date);
         return inflowDate >= twoMonthsAgoPeriod && inflowDate < oneMonthAgoPeriod;
       }).length;
 
-      // 3개월 이상: 3개월 전 말일 <= 유입일 < 2개월 전 말일 (3~6개월 사이)
       const patients3MonthPlus = (activePatients || []).filter(p => {
         const inflowDate = new Date(p.inflow_date);
         return inflowDate >= threeMonthsAgoPeriod && inflowDate < twoMonthsAgoPeriod;
       }).length;
 
-      // 6개월 이상: 유입일 < 6개월 전 말일 (6개월 이상 전체)
       const patients6MonthPlus = (activePatients || []).filter(p => {
         const inflowDate = new Date(p.inflow_date);
         return inflowDate < sixMonthsAgoPeriod;
       }).length;
 
-      // 치료동의율 계산
-      // 치료동의율 = (11월 유입 환자 수 + 11월 치료종료 환자 수) / (11월 신규 등록 수) × 100
-      // - 분자: (inflow_status='유입' AND management_status='관리 중' AND inflow_date 정확) + (inflow_status='유입' AND management_status='치료종료' AND inflow_date 정확)
-      // - 분모: inflow_date가 11월에 정확히 입력된 모든 환자 (monthNewPatients.length)
+      // 10. 치료동의율 계산
       const totalNewRegistrations = monthNewPatients?.length || 0;
       const treatmentAgreementRate = totalNewRegistrations > 0 
         ? Math.round(((newPatientsCount + treatmentCompletedCount) / totalNewRegistrations) * 100) 
         : 0;
 
-      // 유입상태='유입'인데 유입일(inflow_date) 미등록 환자
-      let missingInflowQuery = supabase
-        .from('patients')
-        .select('id')
-        .eq('inflow_status', '유입')
-        .is('inflow_date', null);
-      
-      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
-        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
-        missingInflowQuery = missingInflowQuery.eq('assigned_manager', targetManager);
-      }
-      missingInflowQuery = applyBranchFilter(missingInflowQuery);
-      
-      const { data: missingInflowPatients } = await missingInflowQuery;
+      // 11. 유입일 미등록 환자
+      const missingInflowPatients = missingInflowResult.data;
       const missingInflowDatePatients = missingInflowPatients?.length || 0;
 
       setAdditionalStats({
         outPatients: outPatientsCount,
-        outPatientsThisMonth: outPatientsThisMonthCount, // 11월 아웃 환자
+        outPatientsThisMonth: outPatientsThisMonthCount,
         newPatientsThisMonth: newPatientsCount,
-        totalNewRegistrations, // 신규 등록 총 수 추가
+        totalNewRegistrations,
         phoneConsultPatientsThisMonth: phoneConsultCount,
         visitConsultPatientsThisMonth: visitConsultCount,
         failedPatientsThisMonth: failedCount,
-        treatmentCompletedThisMonth: treatmentCompletedCount, // 11월 치료종료 환자
+        treatmentCompletedThisMonth: treatmentCompletedCount,
         retentionRate,
-        prevMonthInflowTotal: prevMonthPatients.length, // 전월 유입 총 수
-        retainedPatientsCount: retainedPatients, // 전월 유입 중 현재 관리 중 또는 치료종료
+        prevMonthInflowTotal: prevMonthPatients.length,
+        retainedPatientsCount: retainedPatients,
         treatmentAgreementRate,
         missingInflowDatePatients,
         patients1MonthPlus,
