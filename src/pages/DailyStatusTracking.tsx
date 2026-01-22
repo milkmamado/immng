@@ -252,25 +252,21 @@ export default function DailyStatusTracking() {
       // management_status가 "관리 중"이면 모두 표시
       setPatients(patientsData || []);
 
-      // 전체 일별 상태 가져오기 (모든 월 - 색상 범례 연속성을 위해)
-      const { data: fullStatusData, error: fullStatusError } = await supabase
-        .from('daily_patient_status')
-        .select('*')
-        .order('status_date', { ascending: true });
-
-      if (fullStatusError) throw fullStatusError;
-
-      // 선택된 월의 일별 상태만 필터링 (표시용)
+      // 선택된 월의 일별 상태 가져오기 (limit 없이 해당 월 데이터만)
       const startDate = `${year}-${month}-01`;
       const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
       const endDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
       
-      const currentMonthStatuses = (fullStatusData || []).filter(
-        status => status.status_date >= startDate && status.status_date <= endDate
-      );
+      const { data: monthStatusData, error: monthStatusError } = await supabase
+        .from('daily_patient_status')
+        .select('*')
+        .gte('status_date', startDate)
+        .lte('status_date', endDate)
+        .order('status_date', { ascending: true });
 
-      // 전체 데이터를 DailyStatusGrid에 전달 (색상 범례 계산용)
-      setDailyStatuses(fullStatusData || []);
+      if (monthStatusError) throw monthStatusError;
+
+      setDailyStatuses(monthStatusData || []);
 
       // 통계 계산: 당월 매출 및 누적 총매출
       // 패키지 거래 내역 가져오기 (예치금 입금, 입원매출, 외래매출)
