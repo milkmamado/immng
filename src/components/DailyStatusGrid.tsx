@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { useDiagnosisOptions, useHospitalOptions, useInsuranceTypeOptions, usePatientStatusOptions, useCurrentUserName } from '@/hooks/useOptionsData';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";

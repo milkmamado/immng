@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useDiagnosisOptions, useHospitalOptions, useInsuranceTypeOptions, useTreatmentDetailOptions, usePatientStatusOptions, useCurrentUserName } from '@/hooks/useOptionsData';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
