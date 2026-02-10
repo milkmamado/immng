@@ -25,7 +25,14 @@ import CRMBookmarklet from "./pages/CRMBookmarklet";
 import PackageIntegration from "./pages/PackageIntegration";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 2 * 60 * 1000, // 2분간 캐시 데이터를 신선한 것으로 간주
+      refetchOnWindowFocus: false, // 탭 전환 시 자동 refetch 방지
+    },
+  },
+});
 
 function AppRoutes() {
   const { user, loading } = useAuth();
