@@ -161,8 +161,6 @@ export default function PatientListManagement() {
 
   useEffect(() => {
     fetchPatients();
-    fetchOptions();
-    fetchCurrentUserName();
     
     // Realtime 구독 설정 - patients 및 패키지 테이블 변경 감지
     const channel = supabase
