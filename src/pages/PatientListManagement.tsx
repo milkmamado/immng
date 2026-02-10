@@ -134,7 +134,6 @@ export default function PatientListManagement() {
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const [viewMode, setViewMode] = useState<'full' | 'treatment-only'>('full');
   const [editingFields, setEditingFields] = useState<Record<string, any>>({});
-  const [currentUserName, setCurrentUserName] = useState<string>('');
   
   // 옵션 데이터 - React Query 캐시 사용
   const { data: diagnosisOptions = [] } = useDiagnosisOptions();
