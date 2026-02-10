@@ -109,11 +109,11 @@ export function PatientDetailModal({
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const [viewMode, setViewMode] = useState<'full' | 'treatment-only'>(initialViewMode);
   const [editingFields, setEditingFields] = useState<Record<string, any>>({});
-  const [currentUserName, setCurrentUserName] = useState<string>('');
   
-  // 옵션 데이터 state
-  const [insuranceTypeOptions, setInsuranceTypeOptions] = useState<Option[]>([]);
-  const [patientStatusOptions, setPatientStatusOptions] = useState<PatientStatusOption[]>([]);
+  // 옵션 데이터 - React Query 캐시 사용
+  const { data: insuranceTypeOptions = [] } = useInsuranceTypeOptions();
+  const { data: patientStatusOptions = [] } = usePatientStatusOptions();
+  const { data: currentUserName = '' } = useCurrentUserName();
   const [packageTransactions, setPackageTransactions] = useState<PackageTransaction[]>([]);
   const [syncingPackage, setSyncingPackage] = useState(false);
 
