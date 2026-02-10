@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useInsuranceTypeOptions, usePatientStatusOptions, useCurrentUserName } from '@/hooks/useOptionsData';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -108,11 +109,11 @@ export function PatientDetailModal({
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const [viewMode, setViewMode] = useState<'full' | 'treatment-only'>(initialViewMode);
   const [editingFields, setEditingFields] = useState<Record<string, any>>({});
-  const [currentUserName, setCurrentUserName] = useState<string>('');
   
-  // 옵션 데이터 state
-  const [insuranceTypeOptions, setInsuranceTypeOptions] = useState<Option[]>([]);
-  const [patientStatusOptions, setPatientStatusOptions] = useState<PatientStatusOption[]>([]);
+  // 옵션 데이터 - React Query 캐시 사용
+  const { data: insuranceTypeOptions = [] } = useInsuranceTypeOptions();
+  const { data: patientStatusOptions = [] } = usePatientStatusOptions();
+  const { data: currentUserName = '' } = useCurrentUserName();
   const [packageTransactions, setPackageTransactions] = useState<PackageTransaction[]>([]);
   const [syncingPackage, setSyncingPackage] = useState(false);
 
@@ -121,44 +122,10 @@ export function PatientDetailModal({
       setSelectedPatientDetail(patient);
       setViewMode(initialViewMode);
       setEditingFields({});
-      fetchOptions();
-      fetchCurrentUserName();
       fetchPackageData(patient.id);
     }
   }, [patient, open, initialViewMode]);
-
-  const fetchOptions = async () => {
-    try {
-      const [insurance, patientStatus] = await Promise.all([
-        supabase.from('insurance_type_options').select('*').order('name'),
-        supabase.from('patient_status_options').select('*').order('name')
-      ]);
-
-      if (insurance.data) setInsuranceTypeOptions(insurance.data);
-      if (patientStatus.data) setPatientStatusOptions(patientStatus.data);
-    } catch (error) {
-      console.error('Error fetching options:', error);
-    }
-  };
-
-  const fetchCurrentUserName = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('name')
-          .eq('id', user.id)
-          .single();
-        
-        if (profile) {
-          setCurrentUserName(profile.name);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching user name:', error);
-    }
-  };
+  // fetchOptions와 fetchCurrentUserName은 React Query hooks로 대체됨
 
   const fetchPackageData = async (patientId: string) => {
     try {

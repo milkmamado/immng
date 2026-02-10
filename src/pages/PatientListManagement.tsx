@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useDiagnosisOptions, useHospitalOptions, useInsuranceTypeOptions, useTreatmentDetailOptions, usePatientStatusOptions, useCurrentUserName } from '@/hooks/useOptionsData';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -133,14 +134,14 @@ export default function PatientListManagement() {
   const [selectedPatientDetail, setSelectedPatientDetail] = useState<Patient | null>(null);
   const [viewMode, setViewMode] = useState<'full' | 'treatment-only'>('full');
   const [editingFields, setEditingFields] = useState<Record<string, any>>({});
-  const [currentUserName, setCurrentUserName] = useState<string>('');
   
-  // 옵션 데이터 state
-  const [diagnosisOptions, setDiagnosisOptions] = useState<Option[]>([]);
-  const [hospitalOptions, setHospitalOptions] = useState<Option[]>([]);
-  const [insuranceTypeOptions, setInsuranceTypeOptions] = useState<Option[]>([]);
-  const [treatmentDetailOptions, setTreatmentDetailOptions] = useState<Option[]>([]);
-  const [patientStatusOptions, setPatientStatusOptions] = useState<PatientStatusOption[]>([]);
+  // 옵션 데이터 - React Query 캐시 사용
+  const { data: diagnosisOptions = [] } = useDiagnosisOptions();
+  const { data: hospitalOptions = [] } = useHospitalOptions();
+  const { data: insuranceTypeOptions = [] } = useInsuranceTypeOptions();
+  const { data: treatmentDetailOptions = [] } = useTreatmentDetailOptions();
+  const { data: patientStatusOptions = [] } = usePatientStatusOptions();
+  const { data: currentUserName = '' } = useCurrentUserName();
   const [packageData, setPackageData] = useState<PackageManagement | null>(null);
   const [packageTransactions, setPackageTransactions] = useState<PackageTransaction[]>([]);
   const [syncingPackage, setSyncingPackage] = useState(false);
@@ -160,8 +161,6 @@ export default function PatientListManagement() {
 
   useEffect(() => {
     fetchPatients();
-    fetchOptions();
-    fetchCurrentUserName();
     
     // Realtime 구독 설정 - patients 및 패키지 테이블 변경 감지
     const channel = supabase
@@ -433,44 +432,7 @@ export default function PatientListManagement() {
     }
   };
 
-  const fetchOptions = async () => {
-    try {
-      const [diagnosis, hospital, insurance, treatment, patientStatus] = await Promise.all([
-        supabase.from('diagnosis_options').select('*').order('name'),
-        supabase.from('hospital_options').select('*').order('name'),
-        supabase.from('insurance_type_options').select('*').order('name'),
-        supabase.from('treatment_detail_options').select('*').order('name'),
-        supabase.from('patient_status_options').select('*').order('name')
-      ]);
-
-      if (diagnosis.data) setDiagnosisOptions(diagnosis.data);
-      if (hospital.data) setHospitalOptions(hospital.data);
-      if (insurance.data) setInsuranceTypeOptions(insurance.data);
-      if (treatment.data) setTreatmentDetailOptions(treatment.data);
-      if (patientStatus.data) setPatientStatusOptions(patientStatus.data);
-    } catch (error) {
-      console.error('Error fetching options:', error);
-    }
-  };
-
-  const fetchCurrentUserName = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('name')
-          .eq('id', user.id)
-          .single();
-        
-        if (profile) {
-          setCurrentUserName(profile.name);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching user name:', error);
-    }
-  };
+  // fetchOptions와 fetchCurrentUserName은 React Query hooks로 대체됨
 
   const handleExportToExcel = () => {
     try {
