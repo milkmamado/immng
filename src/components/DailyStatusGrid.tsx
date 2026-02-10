@@ -264,9 +264,7 @@ export function DailyStatusGrid({
 
   // 옵션 데이터 및 사용자 정보 가져오기
   useEffect(() => {
-    fetchOptions();
-    fetchCurrentUserName();
-    
+    // 옵션 데이터와 사용자 이름은 React Query hooks로 대체됨
     // Realtime 구독 설정 - patients 테이블 변경 감지
     const channel = supabase
       .channel('daily-status-modal-changes')
