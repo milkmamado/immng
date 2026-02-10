@@ -321,42 +321,7 @@ export function DailyStatusGrid({
     };
   }, [selectedPatientDetail]); // selectedPatientDetail 의존성 추가
 
-  const fetchOptions = async () => {
-    try {
-      const [diagnosis, hospital, insurance, patientStatus] = await Promise.all([
-        supabase.from('diagnosis_options').select('*').order('name'),
-        supabase.from('hospital_options').select('*').order('name'),
-        supabase.from('insurance_type_options').select('*').order('name'),
-        supabase.from('patient_status_options').select('*').order('name')
-      ]);
-
-      if (diagnosis.data) setDiagnosisOptions(diagnosis.data);
-      if (hospital.data) setHospitalOptions(hospital.data);
-      if (insurance.data) setInsuranceTypeOptions(insurance.data);
-      if (patientStatus.data) setPatientStatusOptions(patientStatus.data);
-    } catch (error) {
-      console.error('Error fetching options:', error);
-    }
-  };
-
-  const fetchCurrentUserName = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('name')
-          .eq('id', user.id)
-          .single();
-        
-        if (profile) {
-          setCurrentUserName(profile.name);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching user name:', error);
-    }
-  };
+  // fetchOptions와 fetchCurrentUserName은 React Query hooks로 대체됨
 
   const fetchPackageData = async (patientId: string) => {
     try {
