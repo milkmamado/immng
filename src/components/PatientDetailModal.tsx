@@ -122,8 +122,6 @@ export function PatientDetailModal({
       setSelectedPatientDetail(patient);
       setViewMode(initialViewMode);
       setEditingFields({});
-      fetchOptions();
-      fetchCurrentUserName();
       fetchPackageData(patient.id);
     }
   }, [patient, open, initialViewMode]);
