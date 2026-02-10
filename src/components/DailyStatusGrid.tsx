@@ -160,14 +160,14 @@ export function DailyStatusGrid({
     };
   } | null>(null);
   const [editingFields, setEditingFields] = useState<Record<string, any>>({});
-  const [currentUserName, setCurrentUserName] = useState<string>('');
-  const [diagnosisOptions, setDiagnosisOptions] = useState<any[]>([]);
-  const [hospitalOptions, setHospitalOptions] = useState<any[]>([]);
-  const [insuranceTypeOptions, setInsuranceTypeOptions] = useState<any[]>([]);
-  const [patientStatusOptions, setPatientStatusOptions] = useState<any[]>([]);
+  // 옵션 데이터 - React Query 캐시 사용
+  const { data: diagnosisOptions = [] } = useDiagnosisOptions();
+  const { data: hospitalOptions = [] } = useHospitalOptions();
+  const { data: insuranceTypeOptions = [] } = useInsuranceTypeOptions();
+  const { data: patientStatusOptions = [] } = usePatientStatusOptions();
+  const { data: currentUserName = '' } = useCurrentUserName();
   const [packageData, setPackageData] = useState<any | null>(null);
   const [packageTransactions, setPackageTransactions] = useState<any[]>([]);
-  const [syncingPackage, setSyncingPackage] = useState(false);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
