@@ -168,6 +168,7 @@ export function DailyStatusGrid({
   const { data: currentUserName = '' } = useCurrentUserName();
   const [packageData, setPackageData] = useState<any | null>(null);
   const [packageTransactions, setPackageTransactions] = useState<any[]>([]);
+  const [syncingPackage, setSyncingPackage] = useState(false);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
