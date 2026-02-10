@@ -136,12 +136,13 @@ export default function PatientListManagement() {
   const [editingFields, setEditingFields] = useState<Record<string, any>>({});
   const [currentUserName, setCurrentUserName] = useState<string>('');
   
-  // 옵션 데이터 state
-  const [diagnosisOptions, setDiagnosisOptions] = useState<Option[]>([]);
-  const [hospitalOptions, setHospitalOptions] = useState<Option[]>([]);
-  const [insuranceTypeOptions, setInsuranceTypeOptions] = useState<Option[]>([]);
-  const [treatmentDetailOptions, setTreatmentDetailOptions] = useState<Option[]>([]);
-  const [patientStatusOptions, setPatientStatusOptions] = useState<PatientStatusOption[]>([]);
+  // 옵션 데이터 - React Query 캐시 사용
+  const { data: diagnosisOptions = [] } = useDiagnosisOptions();
+  const { data: hospitalOptions = [] } = useHospitalOptions();
+  const { data: insuranceTypeOptions = [] } = useInsuranceTypeOptions();
+  const { data: treatmentDetailOptions = [] } = useTreatmentDetailOptions();
+  const { data: patientStatusOptions = [] } = usePatientStatusOptions();
+  const { data: currentUserName = '' } = useCurrentUserName();
   const [packageData, setPackageData] = useState<PackageManagement | null>(null);
   const [packageTransactions, setPackageTransactions] = useState<PackageTransaction[]>([]);
   const [syncingPackage, setSyncingPackage] = useState(false);
