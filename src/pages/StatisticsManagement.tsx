@@ -466,31 +466,52 @@ export default function StatisticsManagement() {
       });
 
       // 전체 기간의 모든 거래 가져오기 (누적 매출 계산용)
-      let allTransactionsQuery = supabase
-        .from('package_transactions')
-        .select('amount, non_covered_amount, transaction_type, patient_id')
-        .in('transaction_type', ['inpatient_revenue', 'outpatient_revenue']);
+      // ⚠️ 건수가 1000건을 초과할 수 있으므로 페이지네이션으로 전체 데이터를 가져옴
+      const fetchAllTransactions = async () => {
+        const PAGE_SIZE = 1000;
+        let allData: { amount: number; non_covered_amount: number | null; transaction_type: string; patient_id: string }[] = [];
+        let from = 0;
+        let hasMore = true;
 
-      // 지점 필터 적용
-      allTransactionsQuery = applyBranchFilter(allTransactionsQuery);
-
-      // 매니저 필터 적용
-      if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
-        const targetManager = isMasterOrAdmin ? selectedManager : user?.id;
-        // 해당 매니저의 환자 ID들 가져오기
-        let managerPatientsQuery = supabase
-          .from('patients')
-          .select('id')
-          .eq('assigned_manager', targetManager);
-        managerPatientsQuery = applyBranchFilter(managerPatientsQuery);
-        const { data: managerPatients } = await managerPatientsQuery;
-        const managerPatientIds = managerPatients?.map(p => p.id) || [];
-        if (managerPatientIds.length > 0) {
-          allTransactionsQuery = allTransactionsQuery.in('patient_id', managerPatientIds);
+        // 매니저 필터용 환자 ID 목록 (필요 시)
+        let managerPatientIds: string[] | null = null;
+        if (!isMasterOrAdmin || (selectedManager !== 'all' && selectedManager)) {
+          const targetMgr = isMasterOrAdmin ? selectedManager : user?.id;
+          let managerPatientsQuery = supabase
+            .from('patients')
+            .select('id')
+            .eq('assigned_manager', targetMgr);
+          managerPatientsQuery = applyBranchFilter(managerPatientsQuery);
+          const { data: managerPatients } = await managerPatientsQuery;
+          managerPatientIds = managerPatients?.map(p => p.id) || [];
         }
-      }
 
-      const { data: allTransactions } = await allTransactionsQuery;
+        while (hasMore) {
+          let query = supabase
+            .from('package_transactions')
+            .select('amount, non_covered_amount, transaction_type, patient_id')
+            .in('transaction_type', ['inpatient_revenue', 'outpatient_revenue'])
+            .range(from, from + PAGE_SIZE - 1);
+
+          query = applyBranchFilter(query);
+
+          if (managerPatientIds !== null && managerPatientIds.length > 0) {
+            query = query.in('patient_id', managerPatientIds);
+          }
+
+          const { data } = await query;
+          if (data && data.length > 0) {
+            allData = allData.concat(data);
+            from += PAGE_SIZE;
+            hasMore = data.length === PAGE_SIZE;
+          } else {
+            hasMore = false;
+          }
+        }
+        return allData;
+      };
+
+      const allTransactions = await fetchAllTransactions();
 
       // 당월 거래 가져오기
       let monthlyTransactionsQuery = supabase
