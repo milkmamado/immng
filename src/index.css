@@ -144,3 +144,18 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;  /* Chrome, Safari and Opera */
 }
+
+/* Performance: CSS Containment for heavy grid tables */
+.grid-table-container {
+  contain: content;
+  will-change: transform;
+}
+
+.grid-table-container table {
+  contain: layout style;
+}
+
+.grid-table-container td,
+.grid-table-container th {
+  contain: inline-size;
+}

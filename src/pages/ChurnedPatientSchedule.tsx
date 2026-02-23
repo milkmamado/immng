@@ -181,10 +181,17 @@ export default function ChurnedPatientSchedule() {
 
       setPatients(patientsData || []);
 
-      // 전체 일별 상태 가져오기
+      // 선택된 월의 일별 상태 가져오기 (해당 월 데이터만 - 1000건 제한 방지)
+      const [year, month] = selectedMonth.split('-');
+      const startDate = `${year}-${month}-01`;
+      const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+      const endDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
+
       const { data: fullStatusData, error: fullStatusError } = await supabase
         .from('daily_patient_status')
         .select('*')
+        .gte('status_date', startDate)
+        .lte('status_date', endDate)
         .order('status_date', { ascending: true });
 
       if (fullStatusError) throw fullStatusError;

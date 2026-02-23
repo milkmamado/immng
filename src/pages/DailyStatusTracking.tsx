@@ -200,12 +200,31 @@ export default function DailyStatusTracking() {
 
       if (patientsError) throw patientsError;
 
-      // 각 환자의 마지막 체크 날짜를 확인하여 management_status 자동 업데이트
-      const { data: allStatusData } = await supabase
-        .from('daily_patient_status')
-        .select('patient_id, status_date')
-        .order('status_date', { ascending: false });
+      // 선택된 월의 시작일/종료일 계산
+      const [year, month] = selectedMonth.split('-');
+      const startDate = `${year}-${month}-01`;
+      const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+      const endDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
 
+      // 병렬 데이터 페칭: 자동상태체크용 + 월별상태 + 패키지거래를 동시에 조회
+      const [allStatusResult, monthStatusResult, packageTransactionsResult] = await Promise.all([
+        supabase
+          .from('daily_patient_status')
+          .select('patient_id, status_date')
+          .order('status_date', { ascending: false }),
+        supabase
+          .from('daily_patient_status')
+          .select('*')
+          .gte('status_date', startDate)
+          .lte('status_date', endDate)
+          .order('status_date', { ascending: true }),
+        supabase
+          .from('package_transactions')
+          .select('transaction_date, amount, transaction_type')
+          .in('transaction_type', ['deposit_in', 'inpatient_revenue', 'outpatient_revenue'])
+      ]);
+
+      const allStatusData = allStatusResult.data;
       const lastCheckMap = new Map<string, string>();
       allStatusData?.forEach(status => {
         if (!lastCheckMap.has(status.patient_id)) {
@@ -243,45 +262,21 @@ export default function DailyStatusTracking() {
         }
       }
 
-      // "아웃" 및 "아웃위기" 상태 환자는 제외 (관리 중만 필터링됨)
-
-      // 선택된 월의 시작일
-      const [year, month] = selectedMonth.split('-');
-      const monthStartDate = `${year}-${month}-01`;
-
-      // management_status가 "관리 중"이면 모두 표시
       setPatients(patientsData || []);
 
-      // 선택된 월의 일별 상태 가져오기 (limit 없이 해당 월 데이터만)
-      const startDate = `${year}-${month}-01`;
-      const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
-      const endDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
-      
-      const { data: monthStatusData, error: monthStatusError } = await supabase
-        .from('daily_patient_status')
-        .select('*')
-        .gte('status_date', startDate)
-        .lte('status_date', endDate)
-        .order('status_date', { ascending: true });
+      if (monthStatusResult.error) throw monthStatusResult.error;
+      setDailyStatuses(monthStatusResult.data || []);
 
-      if (monthStatusError) throw monthStatusError;
-
-      setDailyStatuses(monthStatusData || []);
-
-      // 통계 계산: 당월 매출 및 누적 총매출
-      // 패키지 거래 내역 가져오기 (예치금 입금, 입원매출, 외래매출)
-      const { data: packageTransactions } = await supabase
-        .from('package_transactions')
-        .select('transaction_date, amount, transaction_type')
-        .in('transaction_type', ['deposit_in', 'inpatient_revenue', 'outpatient_revenue']);
+      // 통계 계산
+      const packageTransactions = packageTransactionsResult.data || [];
 
       // 당월 패키지 매출 계산 (거래일자 기준)
-      const currentMonthPackageRevenue = (packageTransactions || [])
+      const currentMonthPackageRevenue = packageTransactions
         .filter(tx => tx.transaction_date && tx.transaction_date >= startDate && tx.transaction_date <= endDate)
         .reduce((sum, tx) => sum + (tx.amount || 0), 0);
 
       // 누적 패키지 매출 계산 (전체 기간)
-      const totalPackageRevenue = (packageTransactions || [])
+      const totalPackageRevenue = packageTransactions
         .reduce((sum, tx) => sum + (tx.amount || 0), 0);
 
       setStats({
