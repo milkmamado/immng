@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
 import { useDiagnosisOptions, useHospitalOptions, useInsuranceTypeOptions, usePatientStatusOptions, useCurrentUserName } from '@/hooks/useOptionsData';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -762,10 +762,33 @@ export function DailyStatusGrid({
     '전화F/U': 'outline'
   } as const;
 
+  // O(1) Map 룩업: dailyStatuses 배열을 "patientId_date" → status Map으로 변환
+  const statusMap = useMemo(() => {
+    const map = new Map<string, DailyStatus>();
+    for (const status of dailyStatuses) {
+      map.set(`${status.patient_id}_${status.status_date}`, status);
+    }
+    return map;
+  }, [dailyStatuses]);
+
+  // 환자별 상태 데이터 Map (getAdmissionStatusForDate 최적화용)
+  const statusByPatientMap = useMemo(() => {
+    const map = new Map<string, DailyStatus[]>();
+    for (const status of dailyStatuses) {
+      if (!map.has(status.patient_id)) {
+        map.set(status.patient_id, []);
+      }
+      map.get(status.patient_id)!.push(status);
+    }
+    // 각 환자별로 날짜순 정렬
+    for (const [, statuses] of map) {
+      statuses.sort((a, b) => a.status_date.localeCompare(b.status_date));
+    }
+    return map;
+  }, [dailyStatuses]);
+
   const getStatusForDate = (patientId: string, date: string) => {
-    return dailyStatuses.find(
-      status => status.patient_id === patientId && status.status_date === date
-    );
+    return statusMap.get(`${patientId}_${date}`);
   };
 
   // 해당 날짜가 입원 기간 내인지 admission_cycles 및 daily_patient_status 데이터로 확인
@@ -789,10 +812,8 @@ export function DailyStatusGrid({
       }
     }
 
-    // 2. admission_cycles에 정보가 없으면 daily_patient_status로 추론
-    const patientStatuses = dailyStatuses
-      .filter(s => s.patient_id === patient.id)
-      .sort((a, b) => a.status_date.localeCompare(b.status_date));
+    // 2. admission_cycles에 정보가 없으면 daily_patient_status로 추론 (사전 계산된 Map 사용)
+    const patientStatuses = statusByPatientMap.get(patient.id) || [];
 
     if (patientStatuses.length === 0) return null;
 
@@ -1341,6 +1362,7 @@ export function DailyStatusGrid({
   };
 
   return (
+    <TooltipProvider>
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2 mb-4">
         <span className="text-sm font-medium">상태 범례:</span>
@@ -1380,7 +1402,7 @@ export function DailyStatusGrid({
 
         <div 
           ref={tableScrollRef} 
-          className="overflow-x-auto select-none scrollbar-hide flex-1"
+          className="overflow-x-auto select-none scrollbar-hide flex-1 grid-table-container"
           style={{ cursor: 'grab' }}
           onMouseDown={handleMouseDown}
           onMouseLeave={handleMouseLeave}
@@ -1530,20 +1552,18 @@ export function DailyStatusGrid({
                     className="p-2 border text-xs cursor-pointer hover:bg-muted/50"
                     onDoubleClick={() => handleMemoDoubleClick(patient.id, 'memo1', patient.memo1 || '')}
                   >
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="truncate max-w-[120px]">
-                            {patient.memo1 || '-'}
-                          </div>
-                        </TooltipTrigger>
-                        {patient.memo1 && (
-                          <TooltipContent className="max-w-[300px] max-h-[200px] overflow-y-auto whitespace-pre-wrap">
-                            <p>{patient.memo1}</p>
-                          </TooltipContent>
-                        )}
-                      </Tooltip>
-                    </TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="truncate max-w-[120px]">
+                          {patient.memo1 || '-'}
+                        </div>
+                      </TooltipTrigger>
+                      {patient.memo1 && (
+                        <TooltipContent className="max-w-[300px] max-h-[200px] overflow-y-auto whitespace-pre-wrap">
+                          <p>{patient.memo1}</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
                   </td>
                   {renderPatientRow(patient)}
                 </tr>
@@ -2642,5 +2662,6 @@ export function DailyStatusGrid({
         </DialogContent>
       </Dialog>
     </div>
+    </TooltipProvider>
   );
 }
