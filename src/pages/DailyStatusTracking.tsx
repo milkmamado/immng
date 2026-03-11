@@ -206,8 +206,8 @@ export default function DailyStatusTracking() {
       const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
       const endDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
 
-      // 병렬 데이터 페칭: 자동상태체크용 + 월별상태 + 패키지거래를 동시에 조회
-      const [allStatusResult, monthStatusResult, packageTransactionsResult] = await Promise.all([
+      // 병렬 데이터 페칭: 자동상태체크용 + 월별상태 + 이전달입원상태 + 패키지거래를 동시에 조회
+      const [allStatusResult, monthStatusResult, prevMonthAdmissionResult, packageTransactionsResult] = await Promise.all([
         supabase
           .from('daily_patient_status')
           .select('patient_id, status_date')
@@ -217,6 +217,13 @@ export default function DailyStatusTracking() {
           .select('*')
           .gte('status_date', startDate)
           .lte('status_date', endDate)
+          .order('status_date', { ascending: true }),
+        // 이전 달의 입원/재원/퇴원 기록 가져오기 (월 넘김 핑크색 유지용)
+        supabase
+          .from('daily_patient_status')
+          .select('*')
+          .lt('status_date', startDate)
+          .in('status_type', ['입원', '재원', '퇴원'])
           .order('status_date', { ascending: true }),
         supabase
           .from('package_transactions')
@@ -265,7 +272,13 @@ export default function DailyStatusTracking() {
       setPatients(patientsData || []);
 
       if (monthStatusResult.error) throw monthStatusResult.error;
-      setDailyStatuses(monthStatusResult.data || []);
+      
+      // 이전 달 입원/재원/퇴원 기록과 당월 기록을 합쳐서 전달
+      // (핑크색 배경이 월을 넘어가도 이어지도록)
+      const prevAdmissionData = prevMonthAdmissionResult.data || [];
+      const monthData = monthStatusResult.data || [];
+      const combinedStatuses = [...prevAdmissionData, ...monthData];
+      setDailyStatuses(combinedStatuses);
 
       // 통계 계산
       const packageTransactions = packageTransactionsResult.data || [];
