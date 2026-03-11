@@ -272,7 +272,13 @@ export default function DailyStatusTracking() {
       setPatients(patientsData || []);
 
       if (monthStatusResult.error) throw monthStatusResult.error;
-      setDailyStatuses(monthStatusResult.data || []);
+      
+      // 이전 달 입원/재원/퇴원 기록과 당월 기록을 합쳐서 전달
+      // (핑크색 배경이 월을 넘어가도 이어지도록)
+      const prevAdmissionData = prevMonthAdmissionResult.data || [];
+      const monthData = monthStatusResult.data || [];
+      const combinedStatuses = [...prevAdmissionData, ...monthData];
+      setDailyStatuses(combinedStatuses);
 
       // 통계 계산
       const packageTransactions = packageTransactionsResult.data || [];
